@@ -16,6 +16,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    // Verify that the lead belongs to the authenticated user
+    const lead = await prisma.lead.findFirst({
+      where: {
+        id: leadId,
+        createdBy: session.user?.id
+      }
+    })
+
+    if (!lead) {
+      return NextResponse.json({ error: 'Lead not found or access denied' }, { status: 404 })
+    }
+
     // Upsert the stage data (create if doesn't exist, update if exists)
     const stageData = await prisma.stageData.upsert({
       where: {
@@ -65,6 +77,18 @@ export async function GET(request: NextRequest) {
 
     if (!leadId) {
       return NextResponse.json({ error: 'Lead ID is required' }, { status: 400 })
+    }
+
+    // Verify that the lead belongs to the authenticated user
+    const lead = await prisma.lead.findFirst({
+      where: {
+        id: leadId,
+        createdBy: session.user?.id
+      }
+    })
+
+    if (!lead) {
+      return NextResponse.json({ error: 'Lead not found or access denied' }, { status: 404 })
     }
 
     let whereClause: any = { leadId }

@@ -11,6 +11,9 @@ export async function GET() {
     }
 
     const leads = await prisma.lead.findMany({
+      where: {
+        createdBy: session.user?.id
+      },
       include: {
         assignedUser: true,
         commission: true
@@ -42,6 +45,7 @@ export async function POST(request: NextRequest) {
         dealValue: dealValue ? parseFloat(dealValue) : null,
         notes,
         assignedTo: assignedTo || session.user?.id,
+        createdBy: session.user?.id,
         stage: 'FIND_LEADS'
       },
       include: {

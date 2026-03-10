@@ -17,6 +17,7 @@ model User {
   password  String
   role      String   @default("SALES")
   leads     Lead[]
+  createdLeads Lead[] @relation("CreatedLeads")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -32,6 +33,8 @@ model Lead {
   notes             String?
   assignedTo        String
   assignedUser      User         @relation(fields: [assignedTo], references: [id])
+  createdBy         String
+  createdByUser     User         @relation("CreatedLeads", fields: [createdBy], references: [id])
   stage             String       @default("FIND_LEADS")
   dateCreated       DateTime     @default(now())
   activities        Activity[]

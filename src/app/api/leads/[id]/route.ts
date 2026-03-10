@@ -13,6 +13,18 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params
     const { stage, ...updateData } = await request.json()
 
+    // First verify that the lead belongs to the authenticated user
+    const existingLead = await prisma.lead.findFirst({
+      where: {
+        id: id,
+        createdBy: session.user?.id
+      }
+    })
+
+    if (!existingLead) {
+      return NextResponse.json({ error: 'Lead not found or access denied' }, { status: 404 })
+    }
+
     const lead = await prisma.lead.update({
       where: { id: id },
       data: {

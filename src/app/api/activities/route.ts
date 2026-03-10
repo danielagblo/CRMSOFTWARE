@@ -14,7 +14,12 @@ export async function GET(request: NextRequest) {
     const leadId = searchParams.get('leadId')
 
     const activities = await prisma.activity.findMany({
-      where: leadId ? { leadId } : {},
+      where: {
+        lead: {
+          createdBy: session.user?.id
+        },
+        ...(leadId && { leadId })
+      },
       include: {
         lead: {
           select: {

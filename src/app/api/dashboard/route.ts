@@ -10,9 +10,14 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const totalLeads = await prisma.lead.count()
+    const totalLeads = await prisma.lead.count({
+      where: {
+        createdBy: session.user?.id
+      }
+    })
     const leadsInProgress = await prisma.lead.count({
       where: {
+        createdBy: session.user?.id,
         stage: {
           not: 'CLIENT_RETENTION'
         }
@@ -20,12 +25,14 @@ export async function GET() {
     })
     const dealsClosed = await prisma.lead.count({
       where: {
+        createdBy: session.user?.id,
         stage: 'PAYMENT'
       }
     })
 
     const totalRevenue = await prisma.lead.aggregate({
       where: {
+        createdBy: session.user?.id,
         stage: 'PAYMENT'
       },
       _sum: {
@@ -35,6 +42,9 @@ export async function GET() {
 
     const totalCommissionPaid = await prisma.commission.aggregate({
       where: {
+        lead: {
+          createdBy: session.user?.id
+        },
         status: 'PAID'
       },
       _sum: {
@@ -44,6 +54,9 @@ export async function GET() {
 
     const pipelineData = await prisma.lead.groupBy({
       by: ['stage'],
+      where: {
+        createdBy: session.user?.id
+      },
       _count: {
         id: true
       }

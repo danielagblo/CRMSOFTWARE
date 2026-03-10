@@ -11,6 +11,11 @@ export async function GET() {
     }
 
     const commissions = await prisma.commission.findMany({
+      where: {
+        lead: {
+          createdBy: session.user?.id
+        }
+      },
       include: {
         lead: {
           select: {
