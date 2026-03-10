@@ -47,8 +47,17 @@ const navigation = [
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const pathname = usePathname()
+
+  // Only show navigation if user is authenticated
+  if (status === 'loading') {
+    return null // Don't show anything while loading
+  }
+
+  if (!session) {
+    return null // Don't show navigation if not authenticated
+  }
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/login' })
