@@ -1,9 +1,9 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { fetchWithAuth } from '@/lib/fetchWithAuth'
 
 interface DashboardData {
   totalLeads: number
@@ -15,16 +15,23 @@ interface DashboardData {
 }
 
 export default function Dashboard() {
-  const { data: session } = useSession()
+  const [user, setUser] = useState<any>(null)
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchDashboardData()
+    // Load user from localStorage
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+      fetchDashboardData()
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   const fetchDashboardData = async () => {
-    const res = await fetch('/api/dashboard')
+    const res = await fetchWithAuth('/api/dashboard')
     const dashboardData = await res.json()
     setData(dashboardData)
     setLoading(false)

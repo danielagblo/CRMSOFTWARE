@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useSession, signOut } from 'next-auth/react'
+import { usePathname, useRouter } from 'next/navigation'
 
 const navigation = [
   {
@@ -47,11 +46,22 @@ const navigation = [
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const { data: session, status } = useSession()
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
   const pathname = usePathname()
+  const router = useRouter()
 
-  // Show loading state while session is being determined
-  if (status === 'loading') {
+  // Load user from localStorage on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+    }
+    setLoading(false)
+  }, [])
+
+  // Show loading state while user is being loaded
+  if (loading) {
     return (
       <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
@@ -77,12 +87,13 @@ export default function Navigation() {
   }
 
   // Don't show navigation if not authenticated
-  if (!session) {
+  if (!user) {
     return null
   }
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: '/login' })
+    localStorage.removeItem('user')
+    router.push('/login')
   }
 
   return (
@@ -148,12 +159,12 @@ export default function Navigation() {
               >
                 <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-md">
                   <span className="text-white text-sm font-semibold">
-                    {session?.user?.name?.charAt(0).toUpperCase() || 'U'}
+                    {user?.name?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className="text-sm font-medium text-gray-900">{session?.user?.name}</div>
-                  <div className="text-xs text-gray-500">{session?.user?.role}</div>
+                  <div className="text-sm font-medium text-gray-900">{user?.name}</div>
+                  <div className="text-xs text-gray-500">{user?.role}</div>
                 </div>
                 <svg
                   className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
@@ -165,13 +176,12 @@ export default function Navigation() {
                 </svg>
               </button>
 
-              {/* User Dropdown */}
               {userMenuOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
                   <div className="px-4 py-3 border-b border-gray-200">
-                    <div className="text-sm font-medium text-gray-900">{session?.user?.name}</div>
-                    <div className="text-sm text-gray-500">{session?.user?.email}</div>
-                    <div className="text-xs text-indigo-600 font-medium mt-1">{session?.user?.role}</div>
+                    <div className="text-sm font-medium text-gray-900">{user?.name}</div>
+                    <div className="text-sm text-gray-500">{user?.email}</div>
+                    <div className="text-xs text-indigo-600 font-medium mt-1">{user?.role}</div>
                   </div>
                   <div className="py-1">
                     <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900">

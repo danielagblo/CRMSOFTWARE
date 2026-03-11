@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react'
 import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
-import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import LeadCard from '@/components/LeadCard'
 import StageDataModal from '@/components/StageDataModal'
 import LeadDataViewer from '@/components/LeadDataViewer'
+import { fetchWithAuth } from '@/lib/fetchWithAuth'
 
 interface Lead {
   id: string
@@ -49,7 +49,7 @@ const stageColors = {
 }
 
 export default function PipelinePage() {
-  const { data: session } = useSession()
+  const [user, setUser] = useState<any>(null)
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -72,7 +72,7 @@ export default function PipelinePage() {
   }, [])
 
   const fetchLeads = async () => {
-    const res = await fetch('/api/leads')
+    const res = await fetchWithAuth('/api/leads')
     const data = await res.json()
     setLeads(data)
 
@@ -80,7 +80,7 @@ export default function PipelinePage() {
     const leadsWithStageData = new Set<string>()
     for (const lead of data) {
       try {
-        const stageDataRes = await fetch(`/api/stage-data?leadId=${lead.id}`)
+        const stageDataRes = await fetchWithAuth(`/api/stage-data?leadId=${lead.id}`)
         if (stageDataRes.ok) {
           const stageData = await stageDataRes.json()
           if (stageData.length > 0) {
@@ -214,11 +214,8 @@ export default function PipelinePage() {
 
   const handleSaveStageData = async (leadId: string, data: any) => {
     try {
-      const response = await fetch('/api/stage-data', {
+      const response = await fetchWithAuth('/api/stage-data', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           leadId,
           stage: selectedLead?.stage,

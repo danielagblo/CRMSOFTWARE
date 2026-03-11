@@ -1,22 +1,26 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import LeadForm from '@/components/LeadForm'
 import LeadList from '@/components/LeadList'
+import { fetchWithAuth } from '@/lib/fetchWithAuth'
 
 export default function LeadsPage() {
-  const { data: session } = useSession()
+  const [user, setUser] = useState<any>(null)
   const [leads, setLeads] = useState([])
   const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
-    fetchLeads()
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+      fetchLeads()
+    }
   }, [])
 
   const fetchLeads = async () => {
-    const res = await fetch('/api/leads')
+    const res = await fetchWithAuth('/api/leads')
     const data = await res.json()
     setLeads(data)
   }

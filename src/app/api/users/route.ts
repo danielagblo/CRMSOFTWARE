@@ -1,17 +1,20 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
+function getUserRoleFromRequest(request: NextRequest): string | null {
+  const role = request.headers.get('X-User-Role')
+  return role
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
+    const role = getUserRoleFromRequest(request)
+    if (!role) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Only admins can fetch users
-    if (session.user?.role !== 'ADMIN') {
+    if (role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

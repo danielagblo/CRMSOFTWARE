@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { useSession } from 'next-auth/react'
+import { fetchWithAuth } from '@/lib/fetchWithAuth'
 
 const leadSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
@@ -32,23 +32,28 @@ interface LeadFormProps {
 
 export default function LeadForm({ onLeadAdded }: LeadFormProps) {
   const [loading, setLoading] = useState(false)
+  const [user, setUser] = useState<any>(null)
   const [users, setUsers] = useState<User[]>([])
-  const { data: session } = useSession()
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema)
   })
 
-  const isAdmin = session?.user?.role === 'ADMIN'
-
   useEffect(() => {
-    if (isAdmin) {
-      fetchUsers()
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser)
+      setUser(parsedUser)
+      if (parsedUser?.role === 'ADMIN') {
+        fetchUsers()
+      }
     }
-  }, [isAdmin])
+  }, [])
+
+  const isAdmin = user?.role === 'ADMIN'
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('/api/users')
+      const res = await fetchWithAuth('/api/users')
       if (res.ok) {
         const data = await res.json()
         setUsers(data)
@@ -61,9 +66,8 @@ export default function LeadForm({ onLeadAdded }: LeadFormProps) {
   const onSubmit = async (data: LeadFormData) => {
     setLoading(true)
     try {
-      const res = await fetch('/api/leads', {
+      const res = await fetchWithAuth('/api/leads', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       })
 

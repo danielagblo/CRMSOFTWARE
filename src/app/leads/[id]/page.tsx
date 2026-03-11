@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { fetchWithAuth } from '@/lib/fetchWithAuth'
 
 interface Lead {
   id: string
@@ -43,23 +44,22 @@ export default function LeadDetailPage() {
   }, [params.id])
 
   const fetchLead = async () => {
-    const res = await fetch(`/api/leads/${params.id}`)
+    const res = await fetchWithAuth(`/api/leads/${params.id}`)
     const data = await res.json()
     setLead(data)
     setLoading(false)
   }
 
   const fetchActivities = async () => {
-    const res = await fetch(`/api/activities?leadId=${params.id}`)
+    const res = await fetchWithAuth(`/api/activities?leadId=${params.id}`)
     const data = await res.json()
     setActivities(data)
   }
 
   const handleAddActivity = async (e: React.FormEvent) => {
     e.preventDefault()
-    const res = await fetch('/api/activities', {
+    const res = await fetchWithAuth('/api/activities', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         leadId: params.id,
         type: activityType,

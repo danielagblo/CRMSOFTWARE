@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+
+function getUserIdFromRequest(request: NextRequest): string | null {
+  const userId = request.headers.get('X-User-Id')
+  return userId
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -16,7 +19,7 @@ export async function GET(request: NextRequest) {
     const activities = await prisma.activity.findMany({
       where: {
         lead: {
-          createdBy: session.user?.id
+          createdBy: userId
         },
         ...(leadId && { leadId })
       },
@@ -40,8 +43,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

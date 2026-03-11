@@ -1,23 +1,26 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
+function getUserIdFromRequest(request: NextRequest): string | null {
+  const userId = request.headers.get('X-User-Id')
+  return userId
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const totalLeads = await prisma.lead.count({
       where: {
-        createdBy: session.user?.id
+        createdBy: userId
       }
     })
     const leadsInProgress = await prisma.lead.count({
       where: {
-        createdBy: session.user?.id,
+        createdBy: userId,
         stage: {
           not: 'CLIENT_RETENTION'
         }
@@ -25,14 +28,14 @@ export async function GET() {
     })
     const dealsClosed = await prisma.lead.count({
       where: {
-        createdBy: session.user?.id,
+        createdBy: userId,
         stage: 'PAYMENT'
       }
     })
 
     const totalRevenue = await prisma.lead.aggregate({
       where: {
-        createdBy: session.user?.id,
+        createdBy: userId,
         stage: 'PAYMENT'
       },
       _sum: {
@@ -43,7 +46,7 @@ export async function GET() {
     const totalCommissionPaid = await prisma.commission.aggregate({
       where: {
         lead: {
-          createdBy: session.user?.id
+          createdBy: userId
         },
         status: 'PAID'
       },
@@ -55,7 +58,7 @@ export async function GET() {
     const pipelineData = await prisma.lead.groupBy({
       by: ['stage'],
       where: {
-        createdBy: session.user?.id
+        createdBy: userId
       },
       _count: {
         id: true

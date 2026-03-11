@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { fetchWithAuth } from '@/lib/fetchWithAuth'
 
 interface Commission {
   id: string
@@ -18,16 +18,22 @@ interface Commission {
 }
 
 export default function CommissionsPage() {
-  const { data: session } = useSession()
+  const [user, setUser] = useState<any>(null)
   const [commissions, setCommissions] = useState<Commission[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchCommissions()
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+      fetchCommissions()
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   const fetchCommissions = async () => {
-    const res = await fetch('/api/commissions')
+    const res = await fetchWithAuth('/api/commissions')
     const data = await res.json()
     setCommissions(data)
     setLoading(false)
