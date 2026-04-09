@@ -25,7 +25,7 @@ interface StageDataModalProps {
 
 const stageFields = {
   FIND_LEADS: [
-    { key: 'leadSource', label: 'Lead Source', type: 'select', options: ['Website', 'Referral', 'Social Media', 'Cold Call', 'Email Campaign', 'Trade Show', 'Other'] },
+    { key: 'leadSource', label: 'Lead Source', type: 'select', options: ['Website', 'Referral', 'Social Media', 'Cold Call', 'Email Campaign', 'Trade Show', 'Sticker Marketing', 'Other'] },
     { key: 'initialContact', label: 'Initial Contact Method', type: 'select', options: ['Phone', 'Email', 'Website Form', 'Social Media', 'In-Person', 'Other'] },
     { key: 'leadQuality', label: 'Lead Quality', type: 'select', options: ['Hot', 'Warm', 'Cold'] },
     { key: 'discoveryNotes', label: 'Discovery Notes', type: 'textarea' }
