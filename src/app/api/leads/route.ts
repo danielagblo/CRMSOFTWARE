@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { clientName, companyName, phone, email, serviceInterested, dealValue, notes, assignedTo } = await request.json()
+    const { clientName, companyName, phone, email, serviceType, serviceCategory, serviceInterested, dealValue, notes, assignedTo } = await request.json()
     const assignedUserId = assignedTo || userId
 
     await ensureUserExists(userId)
@@ -65,7 +65,9 @@ export async function POST(request: NextRequest) {
         clientName,
         companyName,
         phone,
-        email,
+        email: email || '',
+        serviceType,
+        serviceCategory,
         serviceInterested,
         dealValue: dealValue ? parseFloat(dealValue) : null,
         notes,

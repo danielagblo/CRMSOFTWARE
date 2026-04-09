@@ -41,6 +41,11 @@ export default function Navigation() {
   const [loading, setLoading] = useState(true)
   const pathname = usePathname()
   const router = useRouter()
+  const isProtectedRoute =
+    pathname === '/dashboard' ||
+    pathname === '/pipeline' ||
+    pathname === '/leads' ||
+    pathname.startsWith('/leads/')
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -51,8 +56,8 @@ export default function Navigation() {
     setLoading(false)
   }, [])
 
-  // Show loading state while user is being loaded
-  if (loading) {
+  // Keep header visible on protected pages while user data hydrates.
+  if (loading && isProtectedRoute) {
     return (
       <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
@@ -77,14 +82,20 @@ export default function Navigation() {
     )
   }
 
-  // Don't show navigation if not authenticated
-  if (!user) {
+  // Keep nav hidden on non-protected routes (home/login).
+  if (!isProtectedRoute && !user) {
     return null
   }
 
   const handleSignOut = () => {
     localStorage.removeItem('user')
     router.push('/login')
+  }
+
+  const handleNavigate = (href: string) => {
+    setUserMenuOpen(false)
+    setMobileMenuOpen(false)
+    router.push(href)
   }
 
   return (
@@ -134,14 +145,6 @@ export default function Navigation() {
 
           {/* Right side - User menu */}
           <div className="flex items-center space-x-4">
-            {/* Notifications */}
-            <button className="hidden sm:flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200 relative">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM15 17H9a6 6 0 01-6-6V9a6 6 0 0110.293-4.293L15 9v8z" />
-              </svg>
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">3</span>
-            </button>
-
             {/* User Menu */}
             <div className="relative">
               <button
@@ -154,8 +157,8 @@ export default function Navigation() {
                   </span>
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className="text-sm font-medium text-gray-900">{user?.name}</div>
-                  <div className="text-xs text-gray-500">{user?.role}</div>
+                  <div className="text-sm font-medium text-gray-900">{user?.name || 'Super Admin'}</div>
+                  <div className="text-xs text-gray-500">{user?.role || 'ADMIN'}</div>
                 </div>
                 <svg
                   className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
@@ -168,25 +171,39 @@ export default function Navigation() {
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
+                <div className="absolute right-0 mt-2 w-56 bg-white text-gray-900 rounded-xl shadow-xl border border-gray-200 py-2 z-50">
                   <div className="px-4 py-3 border-b border-gray-200">
-                    <div className="text-sm font-medium text-gray-900">{user?.name}</div>
-                    <div className="text-sm text-gray-500">{user?.email}</div>
-                    <div className="text-xs text-indigo-600 font-medium mt-1">{user?.role}</div>
+                    <div className="text-sm font-medium text-gray-900">{user?.name || 'Super Admin'}</div>
+                    <div className="text-sm text-gray-500">{user?.email || 'admin@crm.com'}</div>
+                    <div className="text-xs text-indigo-600 font-medium mt-1">{user?.role || 'ADMIN'}</div>
                   </div>
                   <div className="py-1">
-                    <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                    <button
+                      onClick={() => handleNavigate('/dashboard')}
+                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    >
+                      <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 12h18M3 17h18" />
+                      </svg>
+                      Go to Dashboard
+                    </button>
+                    <button
+                      onClick={() => handleNavigate('/pipeline')}
+                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    >
+                      <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                      </svg>
+                      Go to Pipeline
+                    </button>
+                    <button
+                      onClick={() => handleNavigate('/leads')}
+                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    >
                       <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
-                      Profile Settings
-                    </button>
-                    <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900">
-                      <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      Preferences
+                      Go to Leads
                     </button>
                   </div>
                   <div className="border-t border-gray-200 pt-1">
@@ -232,7 +249,7 @@ export default function Navigation() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
+        <div className="md:hidden bg-white text-gray-900 border-t border-gray-200 shadow-lg">
           <div className="px-2 pt-2 pb-3 space-y-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href
@@ -244,7 +261,7 @@ export default function Navigation() {
                   className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                     isActive
                       ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-indigo-600'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 hover:text-indigo-600'
                   }`}
                 >
                   <span className={isActive ? 'text-white' : 'text-gray-500'}>{item.icon}</span>
@@ -262,7 +279,7 @@ export default function Navigation() {
       {/* Overlay for mobile menu */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-25 z-40 md:hidden"
+          className="fixed inset-0 bg-black/20 z-40 md:hidden"
           onClick={() => setMobileMenuOpen(false)}
         ></div>
       )}

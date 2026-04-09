@@ -28,6 +28,8 @@ model Lead {
   companyName       String?
   phone             String
   email             String
+  serviceType       String?
+  serviceCategory   String?
   serviceInterested String?
   dealValue         Float?
   notes             String?

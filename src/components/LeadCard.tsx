@@ -18,6 +18,8 @@ interface LeadCardProps {
   onEditData?: (lead: Lead) => void
   onViewData?: (lead: Lead) => void
   hasStageData?: boolean
+  isSelected?: boolean
+  onToggleSelect?: (leadId: string) => void
 }
 
 const stages = [
@@ -30,7 +32,15 @@ const stages = [
   'CLIENT_RETENTION'
 ]
 
-export default function LeadCard({ lead, onMoveToNext, onEditData, onViewData, hasStageData }: LeadCardProps) {
+export default function LeadCard({
+  lead,
+  onMoveToNext,
+  onEditData,
+  onViewData,
+  hasStageData,
+  isSelected,
+  onToggleSelect
+}: LeadCardProps) {
   const {
     attributes,
     listeners,
@@ -74,14 +84,28 @@ export default function LeadCard({ lead, onMoveToNext, onEditData, onViewData, h
       onClick={handleCardClick}
     >
       {/* Header with name and badges */}
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex-1 flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+      <div className="mb-3 space-y-2">
+        <div className="flex items-start gap-2 min-w-0">
+          {onToggleSelect && (
+            <input
+              type="checkbox"
+              checked={!!isSelected}
+              onChange={(e) => {
+                e.stopPropagation()
+                onToggleSelect(lead.id)
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              title="Select lead for export"
+            />
+          )}
+          <div className="w-8 h-8 shrink-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm">
             {lead.clientName.charAt(0).toUpperCase()}
           </div>
-          <h3 className="font-semibold text-gray-900 text-sm truncate">{lead.clientName}</h3>
+          <h3 className="font-semibold text-gray-900 text-sm truncate min-w-0 flex-1">{lead.clientName}</h3>
           {hasStageData && (
-            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-medium flex items-center gap-1" title="Has stage data">
+            <span className="shrink-0 text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-medium flex items-center gap-1" title="Has stage data">
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
@@ -89,7 +113,7 @@ export default function LeadCard({ lead, onMoveToNext, onEditData, onViewData, h
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           {canMoveNext && (
             <button
               onClick={handleMoveToNext}
@@ -122,11 +146,11 @@ export default function LeadCard({ lead, onMoveToNext, onEditData, onViewData, h
 
       {/* Contact Information */}
       <div className="space-y-2 mb-3">
-        <div className="flex items-center text-sm text-gray-600">
+        <div className="flex items-center text-sm text-gray-600 min-w-0">
           <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
           </svg>
-          {lead.phone}
+          <span className="truncate">{lead.phone}</span>
         </div>
         <div className="flex items-center text-sm text-gray-600">
           <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +161,7 @@ export default function LeadCard({ lead, onMoveToNext, onEditData, onViewData, h
       </div>
 
       {/* Stage and Assignment */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100">
         <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
           lead.stage === 'FIND_LEADS' ? 'bg-blue-100 text-blue-700' :
           lead.stage === 'CONTACT_CLIENT' ? 'bg-yellow-100 text-yellow-700' :
@@ -153,7 +177,7 @@ export default function LeadCard({ lead, onMoveToNext, onEditData, onViewData, h
           <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          {lead.assignedUser.name}
+          <span className="truncate max-w-[10rem]">{lead.assignedUser.name}</span>
         </div>
       </div>
 

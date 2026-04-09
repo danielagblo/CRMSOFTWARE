@@ -10,7 +10,9 @@ const leadSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
   companyName: z.string().optional(),
   phone: z.string().min(1, 'Phone is required'),
-  email: z.string().email('Invalid email'),
+  email: z.union([z.literal(''), z.string().email('Invalid email')]).optional(),
+  serviceType: z.string().optional(),
+  serviceCategory: z.string().optional(),
   serviceInterested: z.string().optional(),
   dealValue: z.string().optional(),
   notes: z.string().optional(),
@@ -18,6 +20,33 @@ const leadSchema = z.object({
 })
 
 type LeadFormData = z.infer<typeof leadSchema>
+
+const serviceTypeOptions = [
+  'Website',
+  'Mobile App',
+  'Web Application',
+  'E-commerce Store',
+  'CRM / ERP Solution',
+  'UI/UX Design',
+  'Digital Marketing',
+  'Consulting',
+  'Other'
+]
+
+const serviceCategoryOptions = [
+  'Startup',
+  'Small Business',
+  'Enterprise',
+  'E-commerce',
+  'Education',
+  'Healthcare',
+  'Finance',
+  'Real Estate',
+  'Hospitality',
+  'NGO / Non-profit',
+  'Government',
+  'Other'
+]
 
 interface User {
   id: string
@@ -163,8 +192,7 @@ export default function LeadForm({ onLeadAdded }: LeadFormProps) {
                 <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <span className="text-red-500 mr-1">*</span>
-                Email
+                Email (Optional)
               </label>
               <input
                 {...register('email')}
@@ -199,13 +227,30 @@ export default function LeadForm({ onLeadAdded }: LeadFormProps) {
                 <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Service Interested In
+                Service Type
               </label>
-              <input
-                {...register('serviceInterested')}
+              <select
+                {...register('serviceType')}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
-                placeholder="e.g., Web Development, Consulting"
-              />
+              >
+                <option value="">Select service type</option>
+                {serviceTypeOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Service Category</label>
+              <select
+                {...register('serviceCategory')}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
+              >
+                <option value="">Select category</option>
+                {serviceCategoryOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-1">
@@ -221,6 +266,15 @@ export default function LeadForm({ onLeadAdded }: LeadFormProps) {
                 step="0.01"
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
                 placeholder="0.00"
+              />
+            </div>
+
+            <div className="space-y-1 md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700">Service Notes (Optional)</label>
+              <input
+                {...register('serviceInterested')}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
+                placeholder="Specific requirements or requested service details"
               />
             </div>
           </div>

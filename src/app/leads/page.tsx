@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import LeadForm from '@/components/LeadForm'
 import LeadList from '@/components/LeadList'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
 
 export default function LeadsPage() {
+  const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [leads, setLeads] = useState([])
   const [showForm, setShowForm] = useState(false)
@@ -16,8 +18,10 @@ export default function LeadsPage() {
     if (storedUser) {
       setUser(JSON.parse(storedUser))
       fetchLeads()
+    } else {
+      router.replace('/login')
     }
-  }, [])
+  }, [router])
 
   const fetchLeads = async () => {
     const res = await fetchWithAuth('/api/leads')
@@ -28,6 +32,10 @@ export default function LeadsPage() {
   const handleLeadAdded = () => {
     setShowForm(false)
     fetchLeads()
+  }
+
+  if (!user) {
+    return null
   }
 
   return (

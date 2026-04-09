@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
@@ -24,6 +25,7 @@ interface ReminderItem {
 }
 
 export default function Dashboard() {
+  const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [data, setData] = useState<DashboardData | null>(null)
   const [reminders, setReminders] = useState<ReminderItem[]>([])
@@ -36,9 +38,10 @@ export default function Dashboard() {
       setUser(JSON.parse(storedUser))
       fetchDashboardData()
     } else {
+      router.replace('/login')
       setLoading(false)
     }
-  }, [])
+  }, [router])
 
   const fetchDashboardData = async () => {
     const [dashboardRes, remindersRes] = await Promise.all([
@@ -81,6 +84,10 @@ export default function Dashboard() {
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>
+  }
+
+  if (!user) {
+    return null
   }
 
   return (

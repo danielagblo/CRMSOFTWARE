@@ -11,6 +11,8 @@ interface Lead {
   companyName: string | null
   phone: string
   email: string
+  serviceType: string | null
+  serviceCategory: string | null
   serviceInterested: string | null
   dealValue: number | null
   notes: string | null
@@ -29,6 +31,7 @@ interface Activity {
 export default function LeadDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const [user, setUser] = useState<any>(null)
   const [lead, setLead] = useState<Lead | null>(null)
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
@@ -37,11 +40,19 @@ export default function LeadDetailPage() {
   const [activityDescription, setActivityDescription] = useState('')
 
   useEffect(() => {
+    const storedUser = localStorage.getItem('user')
+    if (!storedUser) {
+      router.replace('/login')
+      setLoading(false)
+      return
+    }
+
+    setUser(JSON.parse(storedUser))
     if (params.id) {
       fetchLead()
       fetchActivities()
     }
-  }, [params.id])
+  }, [params.id, router])
 
   const fetchLead = async () => {
     const res = await fetchWithAuth(`/api/leads/${params.id}`)
@@ -88,6 +99,10 @@ export default function LeadDetailPage() {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>
   }
 
+  if (!user) {
+    return null
+  }
+
   if (!lead) {
     return <div className="flex justify-center items-center min-h-screen">Lead not found</div>
   }
@@ -124,6 +139,14 @@ export default function LeadDetailPage() {
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Email</dt>
                   <dd className="text-sm text-gray-900">{lead.email}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Service Type</dt>
+                  <dd className="text-sm text-gray-900">{lead.serviceType || 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Service Category</dt>
+                  <dd className="text-sm text-gray-900">{lead.serviceCategory || 'N/A'}</dd>
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Service Interested</dt>

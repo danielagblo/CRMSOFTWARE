@@ -24,6 +24,34 @@ async function ensureUserExists(userId: string) {
   }
 }
 
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { id } = await params
+    const lead = await prisma.lead.findFirst({
+      where: {
+        id,
+        createdBy: userId
+      },
+      include: {
+        assignedUser: true
+      }
+    })
+
+    if (!lead) {
+      return NextResponse.json({ error: 'Lead not found or access denied' }, { status: 404 })
+    }
+
+    return NextResponse.json(lead)
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = getUserIdFromRequest(request)
