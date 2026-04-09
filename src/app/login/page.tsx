@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+import { signIn } from 'next-auth/react'
+
 const SUPER_USER_EMAIL = 'admin@crm.com'
-const SUPER_USER_PASSWORD = 'admin123'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -19,28 +20,29 @@ export default function LoginPage() {
     setError('')
 
     try {
-      if (!email || !password) {
-        setError('Please fill in all fields')
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setError('Invalid credentials')
         return
       }
 
-      if (email.toLowerCase() !== SUPER_USER_EMAIL || password !== SUPER_USER_PASSWORD) {
-        setError('Invalid super user credentials')
-        return
+      // Keep localStorage for backward compatibility with some components
+      const userData = {
+        name: email === SUPER_USER_EMAIL ? 'SkyTech' : 'Team Member',
+        email,
+        role: email === SUPER_USER_EMAIL ? 'ADMIN' : 'SALES'
       }
-
-      if (email && password) {
-        const userData = {
-          id: 'super-admin',
-          email: SUPER_USER_EMAIL,
-          name: 'SkyTech',
-          role: 'ADMIN'
-        }
-        localStorage.setItem('user', JSON.stringify(userData))
-        router.push('/dashboard')
-      }
+      localStorage.setItem('user', JSON.stringify(userData))
+      
+      router.push('/dashboard')
+      router.refresh() // Refresh to update server components with new session
     } catch (err) {
-      setError('Login failed')
+      setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }

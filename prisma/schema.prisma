@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -34,13 +34,14 @@ model Lead {
   dealValue         Float?
   notes             String?
   assignedTo        String
-  assignedUser      User         @relation(fields: [assignedTo], references: [id])
+  assignedUser      User         @relation(fields: [assignedTo], references: [id], onDelete: Cascade)
   createdBy         String
-  createdByUser     User         @relation("CreatedLeads", fields: [createdBy], references: [id])
+  createdByUser     User         @relation("CreatedLeads", fields: [createdBy], references: [id], onDelete: Cascade)
   stage             String       @default("FIND_LEADS")
   dateCreated       DateTime     @default(now())
   activities        Activity[]
   stageData         StageData[]
+  commission        Commission?
   updatedAt         DateTime     @updatedAt
 }
 
@@ -61,4 +62,15 @@ model StageData {
   data      String   // JSON string containing stage-specific data
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Commission {
+  id        String   @id @default(cuid())
+  leadId    String   @unique
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  amount    Float
+  rate      Float
+  earned    Float
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
 }
