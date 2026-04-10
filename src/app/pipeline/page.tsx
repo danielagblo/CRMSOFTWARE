@@ -14,6 +14,7 @@ interface Lead {
   id: string
   clientName: string
   phone: string
+  email?: string | null
   dealValue: number | null
   assignedUser: { name: string }
   stage: string

@@ -10,7 +10,7 @@ import { fetchWithAuth } from '@/lib/fetchWithAuth'
 export default function LeadsPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
-  const [leads, setLeads] = useState([])
+  const [leads, setLeads] = useState<any[]>([])
   const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
