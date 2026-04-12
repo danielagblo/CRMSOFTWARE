@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
-// Helper function to get user ID from request headers
-function getUserIdFromRequest(request: NextRequest): string | null {
-  const userId = request.headers.get('X-User-Id')
-  if (!userId || userId === 'undefined' || userId === 'null') return null
-  return userId
+async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
+  const headerUserId = request.headers.get('X-User-Id')
+  if (headerUserId && headerUserId !== 'undefined' && headerUserId !== 'null') {
+    return headerUserId
+  }
+
+  const session = await getServerSession(authOptions)
+  const sessionUserId = session?.user?.id
+  if (!sessionUserId || sessionUserId === 'undefined' || sessionUserId === 'null') {
+    return null
+  }
+
+  return sessionUserId
 }
 
 async function ensureUserExists(userId: string) {
@@ -28,7 +38,7 @@ async function ensureUserExists(userId: string) {
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const userId = await getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -59,12 +69,21 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const userId = await getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { clientName, companyName, phone, email, serviceType, serviceCategory, serviceInterested, dealValue, notes, assignedTo } = await request.json()
+    if (!clientName?.trim() || !phone?.trim()) {
+      return NextResponse.json({ error: 'Client name and phone are required' }, { status: 400 })
+    }
+
+    const parsedDealValue = dealValue ? parseFloat(dealValue) : null
+    if (parsedDealValue !== null && Number.isNaN(parsedDealValue)) {
+      return NextResponse.json({ error: 'Deal value must be a valid number' }, { status: 400 })
+    }
+
     const assignedUserId = assignedTo || userId
 
     await ensureUserExists(userId)
@@ -79,7 +98,7 @@ export async function POST(request: NextRequest) {
         serviceType,
         serviceCategory,
         serviceInterested,
-        dealValue: dealValue ? parseFloat(dealValue) : null,
+        dealValue: parsedDealValue,
         notes,
         assignedTo: assignedUserId,
         createdBy: userId,

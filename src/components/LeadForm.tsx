@@ -106,10 +106,12 @@ export default function LeadForm({ onLeadAdded }: LeadFormProps) {
         reset()
         onLeadAdded()
       } else {
-        alert('Error adding lead')
+        const payload = await res.json().catch(() => null)
+        alert(payload?.error || 'Error adding lead')
       }
     } catch (error) {
-      alert('Error adding lead')
+      const message = error instanceof Error ? error.message : 'Error adding lead'
+      alert(message)
     }
     setLoading(false)
   }
