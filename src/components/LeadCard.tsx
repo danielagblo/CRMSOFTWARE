@@ -30,8 +30,6 @@ interface LeadCardProps {
 const stages = [
   'FIND_LEADS',
   'CONTACT_CLIENT',
-  'PRESENT_SERVICE',
-  'NEGOTIATE',
   'CLOSE_DEAL',
   'PAYMENT',
   'CLIENT_RETENTION'
@@ -206,11 +204,9 @@ export default function LeadCard({
       <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100">
         <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${lead.stage === 'FIND_LEADS' ? 'bg-blue-100 text-blue-700' :
             lead.stage === 'CONTACT_CLIENT' ? 'bg-yellow-100 text-yellow-700' :
-              lead.stage === 'PRESENT_SERVICE' ? 'bg-purple-100 text-purple-700' :
-                lead.stage === 'NEGOTIATE' ? 'bg-orange-100 text-orange-700' :
-                  lead.stage === 'CLOSE_DEAL' ? 'bg-green-100 text-green-700' :
-                    lead.stage === 'PAYMENT' ? 'bg-emerald-100 text-emerald-700' :
-                      'bg-indigo-100 text-indigo-700'
+              lead.stage === 'CLOSE_DEAL' ? 'bg-green-100 text-green-700' :
+                lead.stage === 'PAYMENT' ? 'bg-emerald-100 text-emerald-700' :
+                  'bg-indigo-100 text-indigo-700'
           }`}>
           {lead.stage.replace(/_/g, ' ').toLowerCase()}
         </span>

@@ -26,6 +26,7 @@ model Lead {
   id                String       @id @default(cuid())
   clientName        String
   companyName       String?
+  leadSource        String?
   phone             String
   email             String
   serviceType       String?

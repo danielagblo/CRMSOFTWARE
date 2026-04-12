@@ -9,6 +9,7 @@ import { fetchWithAuth } from '@/lib/fetchWithAuth'
 const leadSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
   companyName: z.string().optional(),
+  leadSource: z.string().optional(),
   phone: z.string().min(1, 'Phone is required'),
   email: z.union([z.literal(''), z.string().email('Invalid email')]).optional(),
   serviceType: z.string().optional(),
@@ -45,6 +46,17 @@ const serviceCategoryOptions = [
   'Hospitality',
   'NGO / Non-profit',
   'Government',
+  'Other'
+]
+
+const leadSourceOptions = [
+  'Website',
+  'Referral',
+  'Social Media',
+  'Cold Call',
+  'Email Campaign',
+  'Trade Show',
+  'Walk-in',
   'Other'
 ]
 
@@ -282,6 +294,19 @@ export default function LeadForm({ onLeadAdded }: LeadFormProps) {
               >
                 <option value="">Select category</option>
                 {serviceCategoryOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Lead Source</label>
+              <select
+                {...register('leadSource')}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
+              >
+                <option value="">Select lead source</option>
+                {leadSourceOptions.map((option) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </select>

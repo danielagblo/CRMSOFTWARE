@@ -24,43 +24,13 @@ interface StageDataModalProps {
 }
 
 const stageFields = {
-  FIND_LEADS: [
-    { key: 'leadSource', label: 'Lead Source', type: 'select', options: ['Website', 'Referral', 'Social Media', 'Cold Call', 'Email Campaign', 'Trade Show', 'Sticker Marketing', 'Other'] },
-    { key: 'initialContact', label: 'Initial Contact Method', type: 'select', options: ['Phone', 'Email', 'Website Form', 'Social Media', 'In-Person', 'Other'] },
-    { key: 'leadQuality', label: 'Lead Quality', type: 'select', options: ['Hot', 'Warm', 'Cold'] },
-    { key: 'discoveryNotes', label: 'Discovery Notes', type: 'textarea' }
-  ],
+  FIND_LEADS: [],
   CONTACT_CLIENT: [
     { key: 'contactDate', label: 'Contact Date', type: 'date' },
     { key: 'contactMethod', label: 'Contact Method', type: 'select', options: ['Phone', 'Email', 'In-Person', 'Video Call', 'Text Message'] },
     { key: 'responseType', label: 'Response Type', type: 'select', options: ['Positive', 'Neutral', 'Negative', 'No Response'] },
     { key: 'contactNotes', label: 'Contact Notes', type: 'textarea' },
     { key: 'followUpDate', label: 'Follow-up Date', type: 'date' }
-  ],
-  PRESENT_SERVICE: [
-    { key: 'presentationDate', label: 'Presentation Date', type: 'date' },
-    { key: 'presentationMethod', label: 'Presentation Method', type: 'select', options: ['In-Person', 'Video Call', 'Phone', 'Email', 'Demo'] },
-    { key: 'clientNeedsSummary', label: 'Client Needs Summary', type: 'textarea' },
-    { key: 'requiredFeatures', label: 'Required Features', type: 'textarea' },
-    { key: 'mustHaveRequirements', label: 'Must-Have Requirements', type: 'textarea' },
-    { key: 'niceToHaveRequirements', label: 'Nice-to-Have Requirements', type: 'textarea' },
-    { key: 'technicalRequirements', label: 'Technical Requirements', type: 'textarea' },
-    { key: 'integrationRequirements', label: 'Integration Requirements', type: 'textarea' },
-    { key: 'timelineExpectation', label: 'Timeline Expectation', type: 'text' },
-    { key: 'budgetExpectation', label: 'Budget Expectation (GHS)', type: 'number' },
-    { key: 'successCriteria', label: 'Success Criteria', type: 'textarea' },
-    { key: 'materialsUsed', label: 'Materials Used', type: 'text' },
-    { key: 'clientInterest', label: 'Client Interest Level', type: 'select', options: ['Very High', 'High', 'Medium', 'Low', 'Very Low'] },
-    { key: 'presentationNotes', label: 'Presentation Notes', type: 'textarea' },
-    { key: 'nextSteps', label: 'Next Steps', type: 'textarea' }
-  ],
-  NEGOTIATE: [
-    { key: 'negotiationStartDate', label: 'Negotiation Start Date', type: 'date' },
-    { key: 'keyObjections', label: 'Key Objections', type: 'textarea' },
-    { key: 'proposedTerms', label: 'Proposed Terms', type: 'textarea' },
-    { key: 'counteroffers', label: 'Counteroffers Made', type: 'textarea' },
-    { key: 'negotiationStatus', label: 'Negotiation Status', type: 'select', options: ['Ongoing', 'Stalled', 'Agreement Reached', 'Terminated'] },
-    { key: 'negotiationNotes', label: 'Negotiation Notes', type: 'textarea' }
   ],
   CLOSE_DEAL: [
     { key: 'closingDate', label: 'Expected Closing Date', type: 'date' },
@@ -235,6 +205,9 @@ export default function StageDataModal({ lead, isOpen, onClose, stage, initialDa
         <div className="space-y-4">
           {isLoading ? (
             <p className="text-sm text-gray-500">Loading saved stage data...</p>
+          ) : null}
+          {!isLoading && currentFields.length === 0 ? (
+            <p className="text-sm text-gray-500">No data entry fields for this stage.</p>
           ) : null}
           {currentFields.map((field: any) => (
             <div key={field.key}>

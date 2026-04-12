@@ -32,8 +32,6 @@ interface LeadDataViewerProps {
 const stageLabels = {
   FIND_LEADS: 'Find Leads',
   CONTACT_CLIENT: 'Contact Client',
-  PRESENT_SERVICE: 'Present Service',
-  NEGOTIATE: 'Negotiate',
   CLOSE_DEAL: 'Close Deal',
   PAYMENT: 'Payment',
   CLIENT_RETENTION: 'Client Retention'
@@ -42,11 +40,16 @@ const stageLabels = {
 const stageColors = {
   FIND_LEADS: 'bg-blue-100 border-blue-300',
   CONTACT_CLIENT: 'bg-yellow-100 border-yellow-300',
-  PRESENT_SERVICE: 'bg-purple-100 border-purple-300',
-  NEGOTIATE: 'bg-orange-100 border-orange-300',
   CLOSE_DEAL: 'bg-green-100 border-green-300',
   PAYMENT: 'bg-emerald-100 border-emerald-300',
   CLIENT_RETENTION: 'bg-indigo-100 border-indigo-300'
+}
+
+const normalizeStage = (stage: string) => {
+  if (stage === 'PRESENT_SERVICE' || stage === 'NEGOTIATE') {
+    return 'CONTACT_CLIENT'
+  }
+  return stage
 }
 
 export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: LeadDataViewerProps) {
@@ -153,10 +156,11 @@ export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: L
 
   const renderStageData = (stageDataItem: StageData, index: number) => {
     const data = stageDataItem.data
-    const stageName = stageLabels[stageDataItem.stage as keyof typeof stageLabels] || stageDataItem.stage
+    const normalizedStage = normalizeStage(stageDataItem.stage)
+    const stageName = stageLabels[normalizedStage as keyof typeof stageLabels] || normalizedStage
 
     return (
-      <div key={stageDataItem.id} className={`p-4 rounded-lg border-2 mb-4 ${stageColors[stageDataItem.stage as keyof typeof stageColors]}`}>
+      <div key={stageDataItem.id} className={`p-4 rounded-lg border-2 mb-4 ${stageColors[normalizedStage as keyof typeof stageColors] || 'bg-gray-100 border-gray-300'}`}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold text-gray-800">{stageName}</h3>
@@ -229,7 +233,7 @@ export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: L
             <div>
               <div className="text-sm font-medium text-gray-600">Current Stage</div>
               <div className="text-sm text-gray-800">
-                {stageLabels[lead.stage as keyof typeof stageLabels] || lead.stage}
+                {stageLabels[normalizeStage(lead.stage) as keyof typeof stageLabels] || normalizeStage(lead.stage)}
               </div>
             </div>
             <div>

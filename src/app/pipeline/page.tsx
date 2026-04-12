@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent, closestCenter, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
-import Link from 'next/link'
 import LeadCard from '@/components/LeadCard'
 import StageDataModal from '@/components/StageDataModal'
 import LeadDataViewer from '@/components/LeadDataViewer'
@@ -15,6 +14,7 @@ interface Lead {
   clientName: string
   phone: string
   email?: string | null
+  companyName?: string | null
   dealValue: number | null
   assignedUser: { name: string }
   stage: string
@@ -36,18 +36,19 @@ interface StageEditContext {
 const stages = [
   'FIND_LEADS',
   'CONTACT_CLIENT',
-  'PRESENT_SERVICE',
-  'NEGOTIATE',
   'CLOSE_DEAL',
   'PAYMENT',
   'CLIENT_RETENTION'
 ]
 
+const legacyStageMap: Record<string, string> = {
+  PRESENT_SERVICE: 'CONTACT_CLIENT',
+  NEGOTIATE: 'CONTACT_CLIENT'
+}
+
 const stageLabels = {
   FIND_LEADS: 'Find Leads',
   CONTACT_CLIENT: 'Contact Client',
-  PRESENT_SERVICE: 'Present Service',
-  NEGOTIATE: 'Negotiate',
   CLOSE_DEAL: 'Close Deal',
   PAYMENT: 'Payment',
   CLIENT_RETENTION: 'Client Retention'
@@ -56,11 +57,14 @@ const stageLabels = {
 const stageColors = {
   FIND_LEADS: 'bg-blue-50 border-blue-200',
   CONTACT_CLIENT: 'bg-yellow-50 border-yellow-200',
-  PRESENT_SERVICE: 'bg-purple-50 border-purple-200',
-  NEGOTIATE: 'bg-orange-50 border-orange-200',
   CLOSE_DEAL: 'bg-green-50 border-green-200',
   PAYMENT: 'bg-emerald-50 border-emerald-200',
   CLIENT_RETENTION: 'bg-indigo-50 border-indigo-200'
+}
+
+const normalizeLeadStage = (stage: string) => {
+  if (stages.includes(stage)) return stage
+  return legacyStageMap[stage] || 'FIND_LEADS'
 }
 
 function StageDropZone({
@@ -103,6 +107,7 @@ export default function PipelinePage() {
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set())
   const [issuingInvoiceLeadId, setIssuingInvoiceLeadId] = useState<string | null>(null)
   const [downloadingInvoiceLeadId, setDownloadingInvoiceLeadId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -135,11 +140,15 @@ export default function PipelinePage() {
         return
       }
 
-      setLeads(data)
+      const normalizedLeads = data.map((lead) => ({
+        ...lead,
+        stage: normalizeLeadStage(lead.stage)
+      }))
+      setLeads(normalizedLeads)
 
       // Fetch stage data for all leads to determine which ones have data
       const leadsWithStageData = new Set<string>()
-      for (const lead of data) {
+      for (const lead of normalizedLeads) {
         try {
           const stageDataRes = await fetchWithAuth(`/api/stage-data?leadId=${lead.id}`)
           if (stageDataRes.ok) {
@@ -285,10 +294,25 @@ export default function PipelinePage() {
   }
 
   const getLeadsByStage = (stage: string) => {
-    return leads.filter(lead => lead.stage === stage)
+    const query = searchQuery.trim().toLowerCase()
+    return leads.filter((lead) => {
+      if (lead.stage !== stage) return false
+      if (!query) return true
+
+      const searchableFields = [
+        lead.clientName,
+        lead.phone,
+        lead.email || '',
+        lead.companyName || '',
+        lead.assignedUser?.name || ''
+      ]
+      return searchableFields.some((value) => value.toLowerCase().includes(query))
+    })
   }
 
   const handleEditLeadData = (lead: Lead) => {
+    if (lead.stage === 'FIND_LEADS') return
+
     setStageEditContext({
       lead,
       stage: lead.stage
@@ -536,7 +560,7 @@ export default function PipelinePage() {
             <div>
               <p className="text-sm font-medium text-indigo-600">Opportunity Tracking</p>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Sales Pipeline</h1>
-              <p className="text-sm text-gray-500 mt-1">Drag cards between stages or use the Next button to progress deals.</p>
+              <p className="text-sm text-gray-500 mt-1">Drag cards between stages. Find Leads is view-only and has no data entry.</p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -573,6 +597,16 @@ export default function PipelinePage() {
             </div>
           </div>
 
+          <div className="mb-4">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search leads by name, phone, email, company, or assignee..."
+              className="w-full lg:max-w-xl px-4 py-2 rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -600,7 +634,7 @@ export default function PipelinePage() {
                               key={lead.id}
                               lead={lead}
                               onMoveToNext={moveToNextStage}
-                              onEditData={handleEditLeadData}
+                              onEditData={stage === 'FIND_LEADS' ? undefined : handleEditLeadData}
                               onViewData={handleViewLeadData}
                               onIssueInvoice={handleIssueInvoice}
                               isIssuingInvoice={issuingInvoiceLeadId === lead.id}

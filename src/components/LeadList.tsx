@@ -41,8 +41,6 @@ export default function LeadList({ leads, onLeadUpdated }: LeadListProps) {
   const stageLabels = {
     FIND_LEADS: 'Find Leads',
     CONTACT_CLIENT: 'Contact Client',
-    PRESENT_SERVICE: 'Present Service',
-    NEGOTIATE: 'Negotiate',
     CLOSE_DEAL: 'Close Deal',
     PAYMENT: 'Payment',
     CLIENT_RETENTION: 'Client Retention'
@@ -81,7 +79,7 @@ export default function LeadList({ leads, onLeadUpdated }: LeadListProps) {
                     GHS {Number(lead.dealValue || 0).toLocaleString()}
                   </span>
                   <span className="text-xs px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700">
-                    {stageLabels[lead.stage as keyof typeof stageLabels]}
+                    {stageLabels[lead.stage as keyof typeof stageLabels] || 'Contact Client'}
                   </span>
                   <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
                     {lead.assignedUser.name}

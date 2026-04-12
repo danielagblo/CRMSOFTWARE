@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { clientName, companyName, phone, email, serviceType, serviceCategory, serviceInterested, dealValue, notes, assignedTo } = await request.json()
+    const { clientName, companyName, leadSource, phone, email, serviceType, serviceCategory, serviceInterested, dealValue, notes, assignedTo } = await request.json()
     if (!clientName?.trim() || !phone?.trim()) {
       return NextResponse.json({ error: 'Client name and phone are required' }, { status: 400 })
     }
@@ -93,6 +93,7 @@ export async function POST(request: NextRequest) {
       data: {
         clientName,
         companyName,
+        leadSource,
         phone,
         email: email || '',
         serviceType,
