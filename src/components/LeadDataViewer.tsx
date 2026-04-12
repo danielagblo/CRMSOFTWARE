@@ -142,14 +142,19 @@ export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: L
       paymentDueDate: 'Payment Due Date',
       paymentStatus: 'Payment Status',
       amountReceived: 'Amount Received',
+      totalPaidToDate: 'Total Paid To Date',
+      remainingBalance: 'Remaining Balance',
+      nextPaymentDate: 'Next Payment Date',
       paymentMethod: 'Payment Method',
+      paymentReference: 'Payment Reference',
       paymentNotes: 'Payment Notes',
       onboardingDate: 'Onboarding Completion Date',
       satisfactionRating: 'Client Satisfaction',
       retentionNotes: 'Retention Notes',
       followUpSchedule: 'Follow-up Schedule',
       upsellOpportunities: 'Upsell Opportunities',
-      contractRenewalDate: 'Contract Renewal Date'
+      domainExpiryDate: 'Domain Expiry Date',
+      serverExpiryDate: 'Server Expiry Date'
     }
     return fieldLabelMap[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
   }

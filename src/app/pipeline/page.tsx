@@ -348,6 +348,7 @@ export default function PipelinePage() {
         })
       })
 
+      const result = await response.json().catch(() => null)
       if (response.ok) {
         // Update the leadsWithData set to include this lead
         setLeadsWithData(prev => new Set([...prev, leadId]))
@@ -357,16 +358,23 @@ export default function PipelinePage() {
           alert(`Stage data saved successfully! Deal amount updated to GHS ${Number(payload.data.contractValue).toLocaleString()}`)
           // Refresh the leads to show updated dealValue
           fetchLeads()
+        } else if (payload.stage === 'PAYMENT' && result?.paymentSummary) {
+          alert(
+            `Payment saved. Paid so far: GHS ${Number(result.paymentSummary.totalPaidToDate).toLocaleString()} / ` +
+            `GHS ${Number(result.paymentSummary.agreedAmount).toLocaleString()} ` +
+            `(Remaining: GHS ${Number(result.paymentSummary.remainingBalance).toLocaleString()})`
+          )
         } else {
           alert('Stage data saved successfully!')
         }
         return true
       } else {
-        throw new Error('Failed to save stage data')
+        throw new Error(result?.error || 'Failed to save stage data')
       }
     } catch (error) {
       console.error('Error saving stage data:', error)
-      alert('Error saving stage data. Please try again.')
+      const message = error instanceof Error ? error.message : 'Error saving stage data. Please try again.'
+      alert(message)
       return false
     }
   }

@@ -44,9 +44,10 @@ const stageFields = {
     { key: 'invoiceDate', label: 'Invoice Date', type: 'date' },
     { key: 'invoiceNumber', label: 'Invoice Number', type: 'text' },
     { key: 'paymentDueDate', label: 'Payment Due Date', type: 'date' },
-    { key: 'paymentStatus', label: 'Payment Status', type: 'select', options: ['Pending', 'Partial Payment', 'Paid in Full', 'Overdue', 'Cancelled'] },
     { key: 'amountReceived', label: 'Amount Received (GHS)', type: 'number' },
+    { key: 'nextPaymentDate', label: 'Next Payment Date', type: 'date' },
     { key: 'paymentMethod', label: 'Payment Method', type: 'select', options: ['Bank Transfer', 'Cash', 'Cheque', 'Mobile Money', 'Credit Card'] },
+    { key: 'paymentReference', label: 'Payment Reference', type: 'text' },
     { key: 'paymentNotes', label: 'Payment Notes', type: 'textarea' }
   ],
   CLIENT_RETENTION: [
@@ -55,7 +56,8 @@ const stageFields = {
     { key: 'retentionNotes', label: 'Retention Notes', type: 'textarea' },
     { key: 'followUpSchedule', label: 'Follow-up Schedule', type: 'text' },
     { key: 'upsellOpportunities', label: 'Upsell Opportunities', type: 'textarea' },
-    { key: 'contractRenewalDate', label: 'Contract Renewal Date', type: 'date' }
+    { key: 'domainExpiryDate', label: 'Domain Expiry Date', type: 'date' },
+    { key: 'serverExpiryDate', label: 'Server Expiry Date', type: 'date' }
   ]
 }
 
@@ -205,6 +207,11 @@ export default function StageDataModal({ lead, isOpen, onClose, stage, initialDa
         <div className="space-y-4">
           {isLoading ? (
             <p className="text-sm text-gray-500">Loading saved stage data...</p>
+          ) : null}
+          {!isLoading && activeStage === 'PAYMENT' ? (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+              Payment totals are validated against the agreed close-deal amount. Add each installment as a separate payment entry.
+            </p>
           ) : null}
           {!isLoading && currentFields.length === 0 ? (
             <p className="text-sm text-gray-500">No data entry fields for this stage.</p>
