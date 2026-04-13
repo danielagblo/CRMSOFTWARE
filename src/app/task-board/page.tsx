@@ -58,8 +58,8 @@ const statusMeta: Record<TaskStatus, { label: string; chip: string; border: stri
   },
   COMPLETED: {
     label: 'Completed',
-    chip: 'bg-emerald-100 text-emerald-700',
-    border: 'border-emerald-300'
+    chip: 'bg-indigo-100 text-indigo-700',
+    border: 'border-indigo-300'
   }
 }
 
@@ -234,7 +234,7 @@ export default function TaskBoardPage() {
     const mondayOffset = day === 0 ? -6 : 1 - day
     anchor.setDate(anchor.getDate() + mondayOffset)
 
-    return Array.from({ length: 7 }).map((_, index) => {
+    return Array.from({ length: 5 }).map((_, index) => {
       const date = new Date(anchor)
       date.setDate(anchor.getDate() + index)
       const dateKey = toDateKey(date)
@@ -328,6 +328,26 @@ export default function TaskBoardPage() {
     setTimeline(task.timeline)
     setStartTime(task.startTime)
     setDeadline(task.deadline)
+  }
+
+  const deleteTask = (taskId: string, dateKey: string) => {
+    if (!currentUser || !isAdmin) return
+    const confirmed = window.confirm('Delete this task permanently?')
+    if (!confirmed) return
+
+    setTasksByDate((prev) => {
+      const dailyTasks = prev[dateKey] || []
+      const nextDailyTasks = dailyTasks.filter((task) => task.id !== taskId)
+      if (nextDailyTasks.length === dailyTasks.length) return prev
+
+      const next = { ...prev, [dateKey]: nextDailyTasks }
+      saveTasks(next)
+      return next
+    })
+
+    if (editingTaskId === taskId) {
+      resetForm()
+    }
   }
 
   const appendCommentToTask = (task: BoardTask, message: string): BoardTask => {
@@ -432,12 +452,12 @@ export default function TaskBoardPage() {
   }, [visibleTasksByDate, searchQuery])
 
   return (
-    <div className={`${boardExpanded ? 'fixed inset-0 z-40' : 'h-[calc(100vh-4rem)]'} bg-gradient-to-br from-emerald-50 via-white to-cyan-50 p-3 sm:p-4 overflow-hidden`}>
-      <div className="h-full w-full rounded-2xl border border-emerald-100 bg-white/80 backdrop-blur shadow-[0_10px_40px_rgba(15,23,42,0.08)] flex flex-col min-h-0">
-        <div className="px-4 py-3 border-b border-emerald-100 bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
+    <div className={`${boardExpanded ? 'fixed inset-0 z-40' : 'h-[calc(100vh-4rem)]'} bg-gradient-to-br from-indigo-50 via-white to-sky-50 p-3 sm:p-4 overflow-hidden`}>
+      <div className="h-full w-full rounded-2xl border border-indigo-100 bg-white/80 backdrop-blur shadow-[0_10px_40px_rgba(15,23,42,0.08)] flex flex-col min-h-0">
+        <div className="px-4 py-3 border-b border-indigo-100 bg-gradient-to-r from-indigo-600 to-sky-600 text-white">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em] font-semibold text-emerald-100">Task Board</p>
+              <p className="text-[11px] uppercase tracking-[0.2em] font-semibold text-indigo-100">Task Board</p>
               <h1 className="text-xl font-semibold">{prettySelectedDate}</h1>
             </div>
             <div className="flex items-center gap-2">
@@ -449,7 +469,7 @@ export default function TaskBoardPage() {
               </button>
               <button
                 onClick={() => setSelectedDate(today)}
-                className="px-3 py-1.5 rounded-lg bg-white text-emerald-700 text-sm font-medium"
+                className="px-3 py-1.5 rounded-lg bg-white text-indigo-700 text-sm font-medium"
               >
                 Today
               </button>
@@ -484,18 +504,18 @@ export default function TaskBoardPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Task title"
-                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <input
                 value={timeline}
                 onChange={(e) => setTimeline(e.target.value)}
                 placeholder="Timeline"
-                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <select
                 value={assignedTo}
                 onChange={(e) => setAssignedTo(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">Assign user</option>
                 {users.map((user) => (
@@ -506,17 +526,17 @@ export default function TaskBoardPage() {
                 type="datetime-local"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <input
                 type="datetime-local"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <button
                 onClick={upsertTask}
-                className="px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                className="px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
               >
                 {editingTaskId ? 'Update' : 'Add'}
               </button>
@@ -534,24 +554,24 @@ export default function TaskBoardPage() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Task details / instructions"
               rows={2}
-              className="mt-2 w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="mt-2 w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
         )}
 
         <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden p-4">
-          <div className="h-full min-w-[1400px] grid grid-cols-7 gap-3">
+          <div className="h-full min-w-[1024px] grid grid-cols-5 gap-3">
             {weekDates.map((day) => {
               const dayTasks = boardSearchResults[day.dateKey] || []
               return (
                 <div key={day.dateKey} className={`h-full min-h-0 rounded-xl border ${
-                  day.isSelected ? 'border-emerald-300 bg-emerald-50/60' : 'border-gray-200 bg-white'
+                  day.isSelected ? 'border-indigo-300 bg-indigo-50/60' : 'border-gray-200 bg-white'
                 } flex flex-col`}>
                   <button
                     onClick={() => setSelectedDate(day.dateKey)}
                     className="px-3 py-2 border-b border-gray-200 text-left"
                   >
-                    <p className={`text-xs uppercase tracking-wide ${day.isToday ? 'text-emerald-600 font-semibold' : 'text-gray-500'}`}>
+                    <p className={`text-xs uppercase tracking-wide ${day.isToday ? 'text-indigo-600 font-semibold' : 'text-gray-500'}`}>
                       {day.dayLabel}
                     </p>
                     <p className="text-sm font-semibold text-gray-900">{day.dateLabel}</p>
@@ -591,7 +611,7 @@ export default function TaskBoardPage() {
                                       updateTaskStatus(task.id, nextStatus, undefined, day.dateKey)
                                     }}
                                     disabled={!isAdmin && currentUser?.id !== task.assignedTo}
-                                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
+                                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
                                   >
                                     {statusFlow.map((statusOption) => {
                                       const isBackward = getStatusRank(statusOption) < getStatusRank(task.status)
@@ -609,17 +629,25 @@ export default function TaskBoardPage() {
                                         addComment(task.id, quickComment, day.dateKey)
                                       }
                                     }}
-                                    className="mt-2 w-full rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100"
+                                    className="mt-2 w-full rounded-md border border-indigo-300 bg-indigo-50 px-2 py-1 text-[11px] font-medium text-indigo-700 hover:bg-indigo-100"
                                   >
                                     Add Comment
                                   </button>
                                   {isAdmin ? (
-                                    <button
-                                      onClick={() => editTask(task, day.dateKey)}
-                                      className="mt-1.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50"
-                                    >
-                                      Edit Task
-                                    </button>
+                                    <>
+                                      <button
+                                        onClick={() => editTask(task, day.dateKey)}
+                                        className="mt-1.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50"
+                                      >
+                                        Edit Task
+                                      </button>
+                                      <button
+                                        onClick={() => deleteTask(task.id, day.dateKey)}
+                                        className="mt-1.5 w-full rounded-md border border-red-300 bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 hover:bg-red-100"
+                                      >
+                                        Delete Task
+                                      </button>
+                                    </>
                                   ) : null}
                                 </div>
                               </details>
