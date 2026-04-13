@@ -119,6 +119,7 @@ export default function TaskBoardPage() {
   const [deadline, setDeadline] = useState('')
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
   const [boardExpanded, setBoardExpanded] = useState(false)
+  const [showTaskForm, setShowTaskForm] = useState(false)
 
   const isAdmin = currentUser?.role === 'ADMIN'
 
@@ -266,6 +267,7 @@ export default function TaskBoardPage() {
     setStartTime('')
     setDeadline('')
     setEditingTaskId(null)
+    setShowTaskForm(false)
   }
 
   const upsertTask = () => {
@@ -321,6 +323,7 @@ export default function TaskBoardPage() {
 
   const editTask = (task: BoardTask, dateKey: string) => {
     setSelectedDate(dateKey)
+    setShowTaskForm(true)
     setEditingTaskId(task.id)
     setTitle(task.title)
     setDescription(task.description)
@@ -495,9 +498,25 @@ export default function TaskBoardPage() {
               className="w-full bg-white/95 text-gray-800 rounded-xl px-4 py-2.5 border border-white/40 focus:outline-none focus:ring-2 focus:ring-white"
             />
           </div>
+          {isAdmin ? (
+            <div className="mt-2 flex justify-end">
+              <button
+                onClick={() => {
+                  if (showTaskForm) {
+                    resetForm()
+                    return
+                  }
+                  setShowTaskForm(true)
+                }}
+                className="px-3 py-1.5 rounded-lg bg-white text-indigo-700 text-sm font-medium hover:bg-indigo-50"
+              >
+                {showTaskForm ? 'Close Task Form' : 'Create New Task'}
+              </button>
+            </div>
+          ) : null}
         </div>
 
-        {isAdmin && (
+        {isAdmin && showTaskForm && (
           <div className="px-4 py-3 border-b border-gray-200 bg-white">
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-2">
               <input
