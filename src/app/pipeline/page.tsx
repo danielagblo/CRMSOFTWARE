@@ -80,7 +80,7 @@ function StageDropZone({
     <div
       ref={setNodeRef}
       id={stageId}
-      className={`min-h-[500px] space-y-3 rounded-md transition-colors ${
+      className={`min-h-[220px] space-y-3 rounded-md transition-colors ${
         isOver ? 'bg-white/70 ring-2 ring-indigo-300' : ''
       }`}
     >
@@ -588,16 +588,25 @@ export default function PipelinePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-full mx-auto py-6 sm:px-6 lg:px-8 2xl:px-12">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 mb-6">
-            <div>
-              <p className="text-sm font-medium text-indigo-600">Opportunity Tracking</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Sales Pipeline</h1>
-              <p className="text-sm text-gray-500 mt-1">Drag cards between stages. Find Leads is view-only and has no data entry.</p>
-            </div>
-            <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-[1800px] mx-auto py-4 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium text-indigo-600">Opportunity Tracking</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Sales Pipeline</h1>
+            <p className="text-sm text-gray-500 mt-1">Drag cards between stages. Find Leads is view-only and has no data entry.</p>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm space-y-3">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search leads by name, phone, email, company, or assignee..."
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={handleExportPipeline}
                 disabled={isExporting}
@@ -632,16 +641,6 @@ export default function PipelinePage() {
             </div>
           </div>
 
-          <div className="mb-4">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search leads by name, phone, email, company, or assignee..."
-              className="w-full lg:max-w-xl px-4 py-2 rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -649,51 +648,47 @@ export default function PipelinePage() {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
-            <div className="overflow-x-auto pb-4">
-              <div className="flex space-x-4 lg:space-x-5 min-w-max">
-                {stages.map(stage => (
-                  <div key={stage} className="flex-shrink-0 w-72 lg:w-80 xl:w-96">
-                    <div className="p-1">
-                      <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-gray-900">
-                          {stageLabels[stage as keyof typeof stageLabels]}
-                        </h2>
-                        <span className="bg-white px-2 py-1 rounded-full text-sm font-medium text-gray-600 border border-gray-200">
-                          {getLeadsByStage(stage).length}
-                        </span>
-                      </div>
-                      <StageDropZone stageId={stage}>
-                        <SortableContext items={getLeadsByStage(stage).map(l => l.id)} strategy={verticalListSortingStrategy}>
-                          {getLeadsByStage(stage).map(lead => (
-                            <LeadCard
-                              key={lead.id}
-                              lead={lead}
-                              onMoveToNext={moveToNextStage}
-                              onEditData={stage === 'FIND_LEADS' ? undefined : handleEditLeadData}
-                              onViewData={handleViewLeadData}
-                              onIssueInvoice={handleIssueInvoice}
-                              isIssuingInvoice={issuingInvoiceLeadId === lead.id}
-                              onDownloadInvoice={handleDownloadInvoice}
-                              isDownloadingInvoice={downloadingInvoiceLeadId === lead.id}
-                              hasStageData={leadsWithData.has(lead.id)}
-                              isSelected={selectedLeadIds.has(lead.id)}
-                              onToggleSelect={toggleLeadSelection}
-                              isDraggable={true}
-                              paymentSnapshot={paymentSnapshots[lead.id]}
-                            />
-                          ))}
-                        </SortableContext>
-                        {getLeadsByStage(stage).length === 0 && (
-                          <div className="text-center py-8 text-gray-500">
-                            <div className="text-4xl mb-2">📋</div>
-                            <p>No leads in this stage</p>
-                          </div>
-                        )}
-                      </StageDropZone>
-                    </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 pb-2">
+              {stages.map(stage => (
+                <div key={stage}>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-base font-semibold text-gray-900">
+                      {stageLabels[stage as keyof typeof stageLabels]}
+                    </h2>
+                    <span className="bg-white px-2 py-1 rounded-full text-xs font-medium text-gray-600 border border-gray-200">
+                      {getLeadsByStage(stage).length}
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <StageDropZone stageId={stage}>
+                    <SortableContext items={getLeadsByStage(stage).map(l => l.id)} strategy={verticalListSortingStrategy}>
+                      {getLeadsByStage(stage).map(lead => (
+                        <LeadCard
+                          key={lead.id}
+                          lead={lead}
+                          onMoveToNext={moveToNextStage}
+                          onEditData={stage === 'FIND_LEADS' ? undefined : handleEditLeadData}
+                          onViewData={handleViewLeadData}
+                          onIssueInvoice={handleIssueInvoice}
+                          isIssuingInvoice={issuingInvoiceLeadId === lead.id}
+                          onDownloadInvoice={handleDownloadInvoice}
+                          isDownloadingInvoice={downloadingInvoiceLeadId === lead.id}
+                          hasStageData={leadsWithData.has(lead.id)}
+                          isSelected={selectedLeadIds.has(lead.id)}
+                          onToggleSelect={toggleLeadSelection}
+                          isDraggable={true}
+                          paymentSnapshot={paymentSnapshots[lead.id]}
+                        />
+                      ))}
+                    </SortableContext>
+                    {getLeadsByStage(stage).length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <div className="text-4xl mb-2">📋</div>
+                        <p>No leads in this stage</p>
+                      </div>
+                    )}
+                  </StageDropZone>
+                </div>
+              ))}
             </div>
           </DndContext>
         </div>
