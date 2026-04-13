@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
 
-type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
+type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'DELIVERED' | 'COMPLETED'
 type GroupMode = 'user' | 'flat'
 
 interface BoardUser {
@@ -50,6 +50,11 @@ const statusMeta: Record<TaskStatus, { label: string; chip: string; border: stri
     label: 'In Progress',
     chip: 'bg-blue-100 text-blue-700',
     border: 'border-blue-300'
+  },
+  DELIVERED: {
+    label: 'Delivered',
+    chip: 'bg-violet-100 text-violet-700',
+    border: 'border-violet-300'
   },
   COMPLETED: {
     label: 'Completed',
@@ -112,6 +117,7 @@ export default function TaskBoardPage() {
   const [deadline, setDeadline] = useState('')
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
+  const [boardExpanded, setBoardExpanded] = useState(false)
 
   const isAdmin = currentUser?.role === 'ADMIN'
 
@@ -166,7 +172,7 @@ export default function TaskBoardPage() {
       const previousDateKey = moveDateKey(selectedDate, -1)
       const previousDayTasks = prev[previousDateKey] || []
       const carryOverTasks = previousDayTasks
-        .filter((task) => task.status !== 'COMPLETED')
+        .filter((task) => task.status !== 'COMPLETED' && task.status !== 'DELIVERED')
         .map((task) => ({
           ...task,
           id: createTaskId(),
@@ -183,6 +189,43 @@ export default function TaskBoardPage() {
       return nextState
     })
   }, [selectedDate, currentUser])
+
+  useEffect(() => {
+    const autoStartTasks = () => {
+      setTasksByDate((prev) => {
+        const now = Date.now()
+        let hasChanges = false
+        const nextState: DailyTasks = {}
+
+        for (const [dateKey, tasks] of Object.entries(prev)) {
+          let changedInDay = false
+          const updatedTasks = tasks.map((task) => {
+            if (task.status !== 'PENDING') return task
+            const startAt = new Date(task.startTime).getTime()
+            if (Number.isNaN(startAt) || startAt > now) return task
+
+            changedInDay = true
+            return {
+              ...task,
+              status: 'IN_PROGRESS' as TaskStatus,
+              updatedAt: new Date().toISOString()
+            }
+          })
+
+          nextState[dateKey] = changedInDay ? updatedTasks : tasks
+          if (changedInDay) hasChanges = true
+        }
+
+        if (!hasChanges) return prev
+        saveTasks(nextState)
+        return nextState
+      })
+    }
+
+    autoStartTasks()
+    const intervalId = window.setInterval(autoStartTasks, 30000)
+    return () => window.clearInterval(intervalId)
+  }, [])
 
   const selectedDateTasks = tasksByDate[selectedDate] || []
   const visibleTasks = useMemo(() => {
@@ -277,7 +320,7 @@ export default function TaskBoardPage() {
     setDeadline(task.deadline)
   }
 
-  const updateTaskStatus = (taskId: string, status: TaskStatus) => {
+  const updateTaskStatus = (taskId: string, status: TaskStatus, completionComment?: string) => {
     if (!currentUser) return
     setTasksByDate((prev) => {
       const dailyTasks = [...(prev[selectedDate] || [])]
@@ -287,7 +330,23 @@ export default function TaskBoardPage() {
       const task = dailyTasks[index]
       if (!isAdmin && task.assignedTo !== currentUser.id) return prev
 
-      dailyTasks[index] = { ...task, status, updatedAt: new Date().toISOString() }
+      const updatedComments = [...task.comments]
+      if (status === 'COMPLETED' && completionComment?.trim()) {
+        updatedComments.push({
+          id: createCommentId(),
+          authorId: currentUser.id,
+          authorName: currentUser.name || 'Team Member',
+          message: `Completion note: ${completionComment.trim()}`,
+          createdAt: new Date().toISOString()
+        })
+      }
+
+      dailyTasks[index] = {
+        ...task,
+        status,
+        comments: updatedComments,
+        updatedAt: new Date().toISOString()
+      }
       const next = { ...prev, [selectedDate]: dailyTasks }
       saveTasks(next)
       return next
@@ -346,17 +405,18 @@ export default function TaskBoardPage() {
   }, [selectedDate])
 
   const taskSummary = useMemo(() => {
-    const summary = { total: visibleTasks.length, pending: 0, progress: 0, completed: 0 }
+    const summary = { total: visibleTasks.length, pending: 0, progress: 0, delivered: 0, completed: 0 }
     visibleTasks.forEach((task) => {
       if (task.status === 'PENDING') summary.pending += 1
       if (task.status === 'IN_PROGRESS') summary.progress += 1
+      if (task.status === 'DELIVERED') summary.delivered += 1
       if (task.status === 'COMPLETED') summary.completed += 1
     })
     return summary
   }, [visibleTasks])
 
   return (
-    <div className="h-[calc(100vh-4rem)] bg-gray-100 p-4 sm:p-5 overflow-hidden">
+    <div className={`${boardExpanded ? 'fixed inset-0 z-40' : 'h-[calc(100vh-4rem)]'} bg-gray-100 p-4 sm:p-5 overflow-hidden`}>
       <div className="h-full w-full rounded-2xl border border-gray-200 bg-white shadow-md flex flex-col min-h-0">
         <div className="border-b border-gray-200 px-4 py-4 bg-gradient-to-r from-slate-50 to-indigo-50">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -366,6 +426,12 @@ export default function TaskBoardPage() {
               <p className="text-sm text-gray-600">Daily activities and collaboration for all team members.</p>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setBoardExpanded((prev) => !prev)}
+                className="px-3 py-1.5 rounded-lg border border-indigo-200 text-indigo-700 bg-white hover:bg-indigo-50 text-sm"
+              >
+                {boardExpanded ? 'Collapse Board' : 'Expand Board'}
+              </button>
               <button
                 onClick={() => setSelectedDate(today)}
                 className="px-3 py-1.5 rounded-lg border border-indigo-200 text-indigo-700 bg-white hover:bg-indigo-50 text-sm"
@@ -393,7 +459,7 @@ export default function TaskBoardPage() {
             </div>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-5 gap-2">
             <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
               <p className="text-xs text-gray-500">Total Tasks</p>
               <p className="text-lg font-semibold text-gray-900">{taskSummary.total}</p>
@@ -405,6 +471,10 @@ export default function TaskBoardPage() {
             <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
               <p className="text-xs text-blue-700">In Progress</p>
               <p className="text-lg font-semibold text-blue-800">{taskSummary.progress}</p>
+            </div>
+            <div className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2">
+              <p className="text-xs text-violet-700">Delivered</p>
+              <p className="text-lg font-semibold text-violet-800">{taskSummary.delivered}</p>
             </div>
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
               <p className="text-xs text-emerald-700">Completed</p>
@@ -508,50 +578,68 @@ export default function TaskBoardPage() {
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600 bg-white border border-gray-200 rounded-lg px-3 py-2">{group.label}</h2>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                   {group.tasks.map((task) => (
-                    <div key={task.id} className={`rounded-xl border-2 p-3 bg-white shadow-sm ${getTaskBorder(task)}`}>
+                    <div
+                      key={task.id}
+                      className={`relative rounded-2xl border-2 p-4 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 shadow-md hover:shadow-lg transition-all ${getTaskBorder(task)} ${
+                        task.status === 'PENDING' ? '-rotate-[0.4deg]' : task.status === 'IN_PROGRESS' ? 'rotate-[0.2deg]' : 'rotate-0'
+                      }`}
+                    >
+                      <div className="absolute -top-2 left-5 h-5 w-5 rounded-full bg-rose-500 border-2 border-white shadow" />
+                      <div className="absolute -top-1 left-6 h-2 w-2 rounded-full bg-rose-300 opacity-90" />
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <h3 className="font-semibold text-gray-900">{task.title}</h3>
-                          <p className="text-xs text-gray-500">{task.assignedToName}</p>
+                          <h3 className="font-semibold text-gray-900 leading-tight">{task.title}</h3>
+                          <p className="text-xs text-gray-600 mt-1">Assigned: {task.assignedToName}</p>
                         </div>
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusMeta[task.status].chip}`}>
                           {statusMeta[task.status].label}
                         </span>
                       </div>
 
-                      <p className="text-sm text-gray-700 mt-2">{task.description || 'No task details provided.'}</p>
+                      <p className="text-sm text-gray-700 mt-3 bg-white/70 border border-amber-100 rounded-lg px-3 py-2">
+                        {task.description || 'No task details provided.'}
+                      </p>
 
                       <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                        <div className="rounded-md bg-gray-50 p-2 border border-gray-200">
-                          <p className="text-gray-500">Timeline</p>
-                          <p className="font-medium text-gray-800">{task.timeline}</p>
+                        <div className="rounded-md bg-white p-2 border border-amber-200">
+                          <p className="text-gray-500 uppercase tracking-wide text-[10px]">Timeline</p>
+                          <p className="font-semibold text-gray-800">{task.timeline}</p>
                         </div>
-                        <div className="rounded-md bg-gray-50 p-2 border border-gray-200">
-                          <p className="text-gray-500">Start</p>
-                          <p className="font-medium text-gray-800">{new Date(task.startTime).toLocaleString()}</p>
+                        <div className="rounded-md bg-white p-2 border border-amber-200">
+                          <p className="text-gray-500 uppercase tracking-wide text-[10px]">Start</p>
+                          <p className="font-semibold text-gray-800">{new Date(task.startTime).toLocaleString()}</p>
                         </div>
-                        <div className="rounded-md bg-gray-50 p-2 border border-gray-200">
-                          <p className="text-gray-500">Deadline</p>
-                          <p className="font-medium text-gray-800">{new Date(task.deadline).toLocaleString()}</p>
+                        <div className="rounded-md bg-white p-2 border border-amber-200">
+                          <p className="text-gray-500 uppercase tracking-wide text-[10px]">Deadline</p>
+                          <p className="font-semibold text-gray-800">{new Date(task.deadline).toLocaleString()}</p>
                         </div>
                       </div>
 
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         <select
                           value={task.status}
-                          onChange={(e) => updateTaskStatus(task.id, e.target.value as TaskStatus)}
+                          onChange={(e) => {
+                            const nextStatus = e.target.value as TaskStatus
+                            if (nextStatus === 'COMPLETED') {
+                              const completionNote = window.prompt('Add completion comment for this task (optional):', '')
+                              updateTaskStatus(task.id, nextStatus, completionNote ?? '')
+                              return
+                            }
+                            updateTaskStatus(task.id, nextStatus)
+                          }}
                           disabled={!isAdmin && currentUser?.id !== task.assignedTo}
-                          className="px-2 py-1.5 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
+                          className="px-2 py-1.5 rounded-md border border-amber-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
                         >
                           <option value="PENDING">Pending</option>
                           <option value="IN_PROGRESS">In Progress</option>
+                          <option value="DELIVERED">Delivered</option>
                           <option value="COMPLETED">Completed</option>
                         </select>
 
                         {isAdmin && (
                           <button
                             onClick={() => editTask(task)}
-                            className="px-2 py-1.5 rounded-md border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"
+                            className="px-2 py-1.5 rounded-md border border-amber-300 bg-white text-sm text-gray-700 hover:bg-amber-50"
                           >
                             Edit Task
                           </button>
@@ -559,9 +647,9 @@ export default function TaskBoardPage() {
                       </div>
 
                       {task.comments.length > 0 && (
-                        <div className="mt-3 space-y-2 border-t border-gray-200 pt-3">
+                        <div className="mt-3 space-y-2 border-t border-amber-200 pt-3">
                           {task.comments.map((comment) => (
-                            <div key={comment.id} className="text-xs bg-gray-50 border border-gray-200 rounded-md p-2">
+                            <div key={comment.id} className="text-xs bg-white border border-amber-200 rounded-md p-2">
                               <p className="font-medium text-gray-700">
                                 {comment.authorName}{' '}
                                 <span className="font-normal text-gray-500">
@@ -579,11 +667,11 @@ export default function TaskBoardPage() {
                           value={commentDrafts[task.id] || ''}
                           onChange={(e) => setCommentDrafts((prev) => ({ ...prev, [task.id]: e.target.value }))}
                           placeholder="Add comment"
-                          className="flex-1 px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="flex-1 px-3 py-2 rounded-md border border-amber-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                         <button
                           onClick={() => addComment(task.id)}
-                          className="px-3 py-2 rounded-md bg-gray-900 text-white text-sm hover:bg-black"
+                          className="px-3 py-2 rounded-md bg-amber-700 text-white text-sm hover:bg-amber-800"
                         >
                           Comment
                         </button>
@@ -596,6 +684,7 @@ export default function TaskBoardPage() {
           )}
         </div>
       </div>
+
     </div>
   )
 }
