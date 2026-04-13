@@ -38,22 +38,23 @@ interface BoardTask {
 type DailyTasks = Record<string, BoardTask[]>
 
 const STORAGE_KEY = 'taskboard_daily_tasks_v1'
+const statusFlow: TaskStatus[] = ['PENDING', 'IN_PROGRESS', 'DELIVERED', 'COMPLETED']
 
 const statusMeta: Record<TaskStatus, { label: string; chip: string; border: string }> = {
   PENDING: {
     label: 'Pending',
-    chip: 'bg-amber-100 text-amber-700',
-    border: 'border-amber-300'
+    chip: 'bg-slate-100 text-slate-700',
+    border: 'border-slate-300'
   },
   IN_PROGRESS: {
     label: 'In Progress',
-    chip: 'bg-blue-100 text-blue-700',
-    border: 'border-blue-300'
+    chip: 'bg-cyan-100 text-cyan-700',
+    border: 'border-cyan-300'
   },
   DELIVERED: {
     label: 'Delivered',
-    chip: 'bg-violet-100 text-violet-700',
-    border: 'border-violet-300'
+    chip: 'bg-indigo-100 text-indigo-700',
+    border: 'border-indigo-300'
   },
   COMPLETED: {
     label: 'Completed',
@@ -69,6 +70,8 @@ const moveDateKey = (dateKey: string, amount: number) => {
   next.setDate(next.getDate() + amount)
   return toDateKey(next)
 }
+
+const getStatusRank = (status: TaskStatus) => statusFlow.indexOf(status)
 
 const parseTasks = (): DailyTasks => {
   const raw = localStorage.getItem(STORAGE_KEY)
@@ -317,7 +320,8 @@ export default function TaskBoardPage() {
     resetForm()
   }
 
-  const editTask = (task: BoardTask) => {
+  const editTask = (task: BoardTask, dateKey: string) => {
+    setSelectedDate(dateKey)
     setEditingTaskId(task.id)
     setTitle(task.title)
     setDescription(task.description)
@@ -327,71 +331,79 @@ export default function TaskBoardPage() {
     setDeadline(task.deadline)
   }
 
-  const updateTaskStatus = (taskId: string, status: TaskStatus, completionComment?: string) => {
+  const appendCommentToTask = (task: BoardTask, message: string): BoardTask => {
+    if (!currentUser || !message.trim()) return task
+    return {
+      ...task,
+      comments: [
+        ...task.comments,
+        {
+          id: createCommentId(),
+          authorId: currentUser.id,
+          authorName: currentUser.name || 'Team Member',
+          message: message.trim(),
+          createdAt: new Date().toISOString()
+        }
+      ],
+      updatedAt: new Date().toISOString()
+    }
+  }
+
+  const updateTaskStatus = (taskId: string, status: TaskStatus, completionComment?: string, dateKey = selectedDate) => {
     if (!currentUser) return
     setTasksByDate((prev) => {
-      const dailyTasks = [...(prev[selectedDate] || [])]
+      const dailyTasks = [...(prev[dateKey] || [])]
       const index = dailyTasks.findIndex((task) => task.id === taskId)
       if (index < 0) return prev
 
       const task = dailyTasks[index]
       if (!isAdmin && task.assignedTo !== currentUser.id) return prev
+      const currentRank = getStatusRank(task.status)
+      const nextRank = getStatusRank(status)
 
-      const updatedComments = [...task.comments]
-      if (status === 'COMPLETED' && completionComment?.trim()) {
-        updatedComments.push({
-          id: createCommentId(),
-          authorId: currentUser.id,
-          authorName: currentUser.name || 'Team Member',
-          message: `Completion note: ${completionComment.trim()}`,
-          createdAt: new Date().toISOString()
-        })
+      // Enforce irreversible status progression (forward only).
+      if (nextRank < currentRank) {
+        alert('Status updates are irreversible. You can only move a task forward.')
+        return prev
       }
 
-      dailyTasks[index] = {
+      let updatedTask: BoardTask = {
         ...task,
         status,
-        comments: updatedComments,
         updatedAt: new Date().toISOString()
       }
-      const next = { ...prev, [selectedDate]: dailyTasks }
+      if (status === 'COMPLETED' && completionComment?.trim()) {
+        updatedTask = appendCommentToTask(updatedTask, `Completion note: ${completionComment.trim()}`)
+      }
+
+      dailyTasks[index] = updatedTask
+      const next = { ...prev, [dateKey]: dailyTasks }
       saveTasks(next)
       return next
     })
   }
 
-  const addComment = (taskId: string) => {
+  const addComment = (taskId: string, messageOverride?: string, dateKey = selectedDate) => {
     if (!currentUser) return
-    const message = (commentDrafts[taskId] || '').trim()
+    const message = (messageOverride ?? commentDrafts[taskId] ?? '').trim()
     if (!message) return
 
     setTasksByDate((prev) => {
-      const dailyTasks = [...(prev[selectedDate] || [])]
+      const dailyTasks = [...(prev[dateKey] || [])]
       const index = dailyTasks.findIndex((task) => task.id === taskId)
       if (index < 0) return prev
 
       const task = dailyTasks[index]
-      dailyTasks[index] = {
-        ...task,
-        comments: [
-          ...task.comments,
-          {
-            id: createCommentId(),
-            authorId: currentUser.id,
-            authorName: currentUser.name || 'Team Member',
-            message,
-            createdAt: new Date().toISOString()
-          }
-        ],
-        updatedAt: new Date().toISOString()
-      }
+      dailyTasks[index] = appendCommentToTask(task, message)
 
-      const next = { ...prev, [selectedDate]: dailyTasks }
+      const next = { ...prev, [dateKey]: dailyTasks }
       saveTasks(next)
       return next
     })
 
-    setCommentDrafts((prev) => ({ ...prev, [taskId]: '' }))
+    if (!messageOverride) {
+      setCommentDrafts((prev) => ({ ...prev, [taskId]: '' }))
+    }
   }
 
   const getTaskBorder = (task: BoardTask) => {
@@ -564,7 +576,7 @@ export default function TaskBoardPage() {
                             </span>
                           </div>
                           <p className="text-[11px] text-gray-500 mt-1 truncate">{task.assignedToName}</p>
-                          <p className="text-[11px] text-gray-600 mt-1 line-clamp-2">{task.description || 'No details.'}</p>
+                          <p className="text-[11px] text-gray-600 mt-1 line-clamp-2 break-words">{task.description || 'No details.'}</p>
 
                           <div className="mt-2 text-[10px] text-gray-500 space-y-0.5">
                             <p><span className="font-medium">Timeline:</span> {task.timeline}</p>
@@ -579,38 +591,63 @@ export default function TaskBoardPage() {
                                 const nextStatus = e.target.value as TaskStatus
                                 if (nextStatus === 'COMPLETED') {
                                   const completionNote = window.prompt('Add completion comment for this task (optional):', '')
-                                  updateTaskStatus(task.id, nextStatus, completionNote ?? '')
+                                  updateTaskStatus(task.id, nextStatus, completionNote ?? '', day.dateKey)
                                   return
                                 }
-                                updateTaskStatus(task.id, nextStatus)
+                                updateTaskStatus(task.id, nextStatus, undefined, day.dateKey)
                               }}
                               disabled={!isAdmin && currentUser?.id !== task.assignedTo}
-                              className="flex-1 px-2 py-1 rounded-md border border-gray-300 bg-white text-[11px] focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
+                              className="flex-1 px-2 py-1 rounded-md border border-slate-300 bg-white text-[11px] focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
                             >
-                              <option value="PENDING">Pending</option>
-                              <option value="IN_PROGRESS">In Progress</option>
-                              <option value="DELIVERED">Delivered</option>
-                              <option value="COMPLETED">Completed</option>
+                              {statusFlow.map((statusOption) => {
+                                const isBackward = getStatusRank(statusOption) < getStatusRank(task.status)
+                                return (
+                                  <option key={statusOption} value={statusOption} disabled={isBackward}>
+                                    {statusMeta[statusOption].label}
+                                  </option>
+                                )
+                              })}
                             </select>
+                            <button
+                              onClick={() => {
+                                const quickComment = window.prompt('Add a comment (optional):', '')
+                                if (quickComment?.trim()) {
+                                  addComment(task.id, quickComment, day.dateKey)
+                                }
+                              }}
+                              className="px-2 py-1 rounded-md border border-emerald-300 text-[11px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                            >
+                              Comment
+                            </button>
                             {isAdmin ? (
                               <button
-                                onClick={() => editTask(task)}
-                                className="px-2 py-1 rounded-md border border-gray-300 text-[11px] text-gray-700 hover:bg-gray-50"
+                                onClick={() => editTask(task, day.dateKey)}
+                                className="px-2 py-1 rounded-md border border-slate-300 text-[11px] text-slate-700 hover:bg-slate-50"
                               >
                                 Edit
                               </button>
                             ) : null}
                           </div>
 
+                          {task.comments.length > 0 ? (
+                            <div className="mt-2 max-h-20 overflow-y-auto space-y-1 border border-slate-200 rounded-md bg-slate-50 p-1.5">
+                              {task.comments.slice(-2).map((comment) => (
+                                <div key={comment.id} className="text-[10px] text-slate-700 break-words">
+                                  <span className="font-semibold">{comment.authorName}:</span> {comment.message}
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
+
                           <div className="mt-2 flex gap-1.5">
                             <input
                               value={commentDrafts[task.id] || ''}
                               onChange={(e) => setCommentDrafts((prev) => ({ ...prev, [task.id]: e.target.value }))}
                               placeholder="Comment..."
-                              className="flex-1 px-2 py-1 rounded-md border border-gray-300 bg-white text-[11px] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                              className="flex-1 px-2 py-1 rounded-md border border-slate-300 bg-white text-[11px] focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             />
                             <button
-                              onClick={() => addComment(task.id)}
+                              onClick={() => addComment(task.id, undefined, day.dateKey)}
                               className="px-2 py-1 rounded-md bg-emerald-600 text-white text-[11px] hover:bg-emerald-700"
                             >
                               Send
