@@ -24,6 +24,8 @@ interface PaymentSnapshot {
   agreedAmount: number
   totalPaid: number
   remainingBalance: number
+  nextDuePaymentDate: string | null
+  nextInstallmentNumber: number | null
 }
 
 interface StageDataEntry {
@@ -172,10 +174,20 @@ export default function PipelinePage() {
             }, 0)
             const agreedAmount = Number(lead.dealValue || 0)
             const remainingBalance = Math.max(agreedAmount - totalPaid, 0)
+            const latestPaymentEntry = paymentEntries[0]
+            const nextDuePaymentDate = remainingBalance > 0
+              ? (latestPaymentEntry?.data?.nextPaymentDate || latestPaymentEntry?.data?.paymentDueDate || null)
+              : null
+            const maxInstallmentNumber = paymentEntries.reduce((max: number, entry: StageDataEntry) => {
+              const installment = Number(entry?.data?.installmentNumber)
+              return Number.isInteger(installment) ? Math.max(max, installment) : max
+            }, 0)
             nextPaymentSnapshots[lead.id] = {
               agreedAmount,
               totalPaid,
-              remainingBalance
+              remainingBalance,
+              nextDuePaymentDate,
+              nextInstallmentNumber: remainingBalance > 0 ? maxInstallmentNumber + 1 : null
             }
           }
         } catch (error) {

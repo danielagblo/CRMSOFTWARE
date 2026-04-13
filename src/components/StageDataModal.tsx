@@ -44,7 +44,9 @@ const stageFields = {
     { key: 'invoiceDate', label: 'Invoice Date', type: 'date' },
     { key: 'invoiceNumber', label: 'Invoice Number', type: 'text' },
     { key: 'paymentDueDate', label: 'Payment Due Date', type: 'date' },
-    { key: 'amountReceived', label: 'Amount Received (GHS)', type: 'number' },
+    { key: 'installmentNumber', label: 'Installment Number', type: 'number' },
+    { key: 'paymentDate', label: 'Payment Date', type: 'date' },
+    { key: 'paymentAmount', label: 'Payment Amount (GHS)', type: 'number' },
     { key: 'nextPaymentDate', label: 'Next Payment Date', type: 'date' },
     { key: 'paymentMethod', label: 'Payment Method', type: 'select', options: ['Bank Transfer', 'Cash', 'Cheque', 'Mobile Money', 'Credit Card'] },
     { key: 'paymentReference', label: 'Payment Reference', type: 'text' },
@@ -66,6 +68,7 @@ export default function StageDataModal({ lead, isOpen, onClose, stage, initialDa
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const activeStage = stage || lead.stage
+  const isFreshPaymentEntry = activeStage === 'PAYMENT' && !stageDataId && !initialData
 
   const draftStorageKey = useMemo(
     () => `stage-draft:${lead.id}:${activeStage}`,
@@ -74,6 +77,13 @@ export default function StageDataModal({ lead, isOpen, onClose, stage, initialDa
 
   useEffect(() => {
     if (!isOpen) return
+
+    if (isFreshPaymentEntry) {
+      localStorage.removeItem(draftStorageKey)
+      setFormData({})
+      setIsLoading(false)
+      return
+    }
 
     let cancelled = false
     const loadData = async () => {
@@ -106,7 +116,7 @@ export default function StageDataModal({ lead, isOpen, onClose, stage, initialDa
     return () => {
       cancelled = true
     }
-  }, [isOpen, lead.id, activeStage, draftStorageKey, initialData])
+  }, [isOpen, lead.id, activeStage, draftStorageKey, initialData, isFreshPaymentEntry, stageDataId])
 
   if (!isOpen) return null
 
@@ -118,7 +128,9 @@ export default function StageDataModal({ lead, isOpen, onClose, stage, initialDa
         ...prev,
         [key]: value
       }
-      localStorage.setItem(draftStorageKey, JSON.stringify(next))
+      if (!isFreshPaymentEntry) {
+        localStorage.setItem(draftStorageKey, JSON.stringify(next))
+      }
       return next
     })
   }

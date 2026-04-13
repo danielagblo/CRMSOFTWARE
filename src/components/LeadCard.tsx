@@ -29,6 +29,8 @@ interface LeadCardProps {
     agreedAmount: number
     totalPaid: number
     remainingBalance: number
+    nextDuePaymentDate: string | null
+    nextInstallmentNumber: number | null
   }
 }
 
@@ -86,13 +88,41 @@ export default function LeadCard({
     }
   }
 
+  const formatDueDate = (dateValue: string | null) => {
+    if (!dateValue) return 'Not set'
+    const parsed = new Date(dateValue)
+    if (Number.isNaN(parsed.getTime())) return 'Not set'
+    return parsed.toLocaleDateString()
+  }
+
+  const isDueDateReached = (dateValue: string | null) => {
+    if (!dateValue) return false
+    const due = new Date(dateValue)
+    if (Number.isNaN(due.getTime())) return false
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    due.setHours(0, 0, 0, 0)
+    return due.getTime() <= today.getTime()
+  }
+
+  const hasReachedDueDate =
+    lead.stage === 'PAYMENT' &&
+    !!paymentSnapshot &&
+    paymentSnapshot.remainingBalance > 0.009 &&
+    isDueDateReached(paymentSnapshot.nextDuePaymentDate)
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-indigo-300 transition-all duration-200 transform hover:-translate-y-1 ${isDraggable ? 'cursor-move' : 'cursor-default'
+      className={`bg-white p-4 rounded-xl shadow-sm border transition-all duration-200 transform hover:-translate-y-1 ${
+        hasReachedDueDate
+          ? 'border-2 border-red-500 hover:border-red-600'
+          : 'border-gray-200 hover:border-indigo-300'
+        } ${isDraggable ? 'cursor-move' : 'cursor-default'
         } ${isDragging ? 'opacity-50 rotate-2 scale-105' : ''
         }`}
       onClick={handleCardClick}
@@ -222,6 +252,26 @@ export default function LeadCard({
           <p className="mt-2 text-[11px] text-gray-600">
             Agreed Amount: <span className="font-semibold text-gray-800">GHS {paymentSnapshot.agreedAmount.toLocaleString()}</span>
           </p>
+          {paymentSnapshot.remainingBalance > 0.009 && (
+            <div className={`mt-2 rounded-md p-2 ${
+              hasReachedDueDate
+                ? 'border-2 border-red-400 bg-red-50'
+                : 'border border-amber-300 bg-amber-100/70'
+            }`}>
+              <p className={`text-[11px] font-semibold uppercase tracking-wide ${
+                hasReachedDueDate ? 'text-red-700' : 'text-amber-800'
+              }`}>Next Due Payment</p>
+              <p className="text-xs text-gray-700 mt-1">
+                Date: <span className="font-semibold">{formatDueDate(paymentSnapshot.nextDuePaymentDate)}</span>
+              </p>
+              <p className="text-xs text-gray-700">
+                Installment: <span className="font-semibold">{paymentSnapshot.nextInstallmentNumber || 'N/A'}</span>
+              </p>
+              <p className="text-xs text-gray-700">
+                Expected Amount: <span className="font-semibold text-amber-700">GHS {paymentSnapshot.remainingBalance.toLocaleString()}</span>
+              </p>
+            </div>
+          )}
         </div>
       )}
 

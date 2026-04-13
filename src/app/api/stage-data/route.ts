@@ -14,7 +14,7 @@ function toNumber(value: unknown): number | null {
 }
 
 function getPaymentAmount(data: Record<string, unknown>): number | null {
-  return toNumber(data.amountReceived ?? data.paymentAmount)
+  return toNumber(data.paymentAmount ?? data.amountReceived)
 }
 
 export async function POST(request: NextRequest) {
@@ -62,6 +62,19 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         )
       }
+      const installmentNumber = toNumber(data.installmentNumber)
+      if (installmentNumber === null || installmentNumber <= 0 || !Number.isInteger(installmentNumber)) {
+        return NextResponse.json(
+          { error: 'Installment number must be a whole number greater than zero.' },
+          { status: 400 }
+        )
+      }
+      if (!data.paymentDate) {
+        return NextResponse.json(
+          { error: 'Payment date is required for each installment.' },
+          { status: 400 }
+        )
+      }
 
       const existingPaymentEntries = await prisma.stageData.findMany({
         where: { leadId, stage: 'PAYMENT' }
@@ -88,6 +101,8 @@ export async function POST(request: NextRequest) {
       }
 
       const remainingBalance = lead.dealValue - totalPaidToDate
+      data.installmentNumber = installmentNumber
+      data.paymentAmount = paymentAmount
       data.amountReceived = paymentAmount
       data.totalPaidToDate = totalPaidToDate
       data.remainingBalance = remainingBalance
