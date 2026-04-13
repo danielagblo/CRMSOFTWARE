@@ -62,14 +62,6 @@ const stageLabels = {
   CLIENT_RETENTION: 'Client Retention'
 }
 
-const stageColors = {
-  FIND_LEADS: 'bg-blue-50 border-blue-200',
-  CONTACT_CLIENT: 'bg-yellow-50 border-yellow-200',
-  CLOSE_DEAL: 'bg-green-50 border-green-200',
-  PAYMENT: 'bg-emerald-50 border-emerald-200',
-  CLIENT_RETENTION: 'bg-indigo-50 border-indigo-200'
-}
-
 const normalizeLeadStage = (stage: string) => {
   if (stages.includes(stage)) return stage
   return legacyStageMap[stage] || 'FIND_LEADS'
@@ -661,12 +653,12 @@ export default function PipelinePage() {
               <div className="flex space-x-4 lg:space-x-5 min-w-max">
                 {stages.map(stage => (
                   <div key={stage} className="flex-shrink-0 w-72 lg:w-80 xl:w-96">
-                    <div className={`rounded-lg border-2 p-4 ${stageColors[stage as keyof typeof stageColors]}`}>
+                    <div className="p-1">
                       <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold text-gray-900">
                           {stageLabels[stage as keyof typeof stageLabels]}
                         </h2>
-                        <span className="bg-white px-2 py-1 rounded-full text-sm font-medium text-gray-600">
+                        <span className="bg-white px-2 py-1 rounded-full text-sm font-medium text-gray-600 border border-gray-200">
                           {getLeadsByStage(stage).length}
                         </span>
                       </div>
