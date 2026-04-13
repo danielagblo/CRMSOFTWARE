@@ -101,10 +101,6 @@ export default function PipelinePage() {
   const [dataViewerOpen, setDataViewerOpen] = useState(false)
   const [dataViewerLead, setDataViewerLead] = useState<Lead | null>(null)
   const [leadsWithData, setLeadsWithData] = useState<Set<string>>(new Set())
-  const [isExporting, setIsExporting] = useState(false)
-  const [isExportingByUser, setIsExportingByUser] = useState(false)
-  const [isExportingSelected, setIsExportingSelected] = useState(false)
-  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set())
   const [issuingInvoiceLeadId, setIssuingInvoiceLeadId] = useState<string | null>(null)
   const [downloadingInvoiceLeadId, setDownloadingInvoiceLeadId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -406,116 +402,6 @@ export default function PipelinePage() {
     }
   }
 
-  const handleExportPipeline = async () => {
-    setIsExporting(true)
-    try {
-      const response = await fetchWithAuth('/api/export/pipeline')
-      if (!response.ok) {
-        throw new Error('Export failed')
-      }
-
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      const contentDisposition = response.headers.get('Content-Disposition') || ''
-      const filenameMatch = contentDisposition.match(/filename="(.+)"/)
-      const filename = filenameMatch?.[1] || 'pipeline-export-report.doc'
-
-      link.href = url
-      link.download = filename
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
-    } catch (error) {
-      alert('Failed to export pipeline data. Please try again.')
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
-  const handleExportPerUser = async () => {
-    setIsExportingByUser(true)
-    try {
-      const response = await fetchWithAuth('/api/export/pipeline/users')
-      if (!response.ok) throw new Error('Export failed')
-
-      const payload = await response.json()
-      const files: Array<{ filename: string; content: string; mimeType?: string }> = payload.files || []
-
-      if (!files.length) {
-        alert('No user pipeline files available to download.')
-        return
-      }
-
-      for (const file of files) {
-        const blob = new Blob([file.content], { type: file.mimeType || 'application/msword;charset=utf-8' })
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = file.filename
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
-        window.URL.revokeObjectURL(url)
-      }
-    } catch (error) {
-      alert('Failed to export user pipeline files. Please try again.')
-    } finally {
-      setIsExportingByUser(false)
-    }
-  }
-
-  const toggleLeadSelection = (leadId: string) => {
-    setSelectedLeadIds(prev => {
-      const next = new Set(prev)
-      if (next.has(leadId)) {
-        next.delete(leadId)
-      } else {
-        next.add(leadId)
-      }
-      return next
-    })
-  }
-
-  const clearSelectedLeads = () => {
-    setSelectedLeadIds(new Set())
-  }
-
-  const handleExportSelectedLeads = async () => {
-    if (selectedLeadIds.size === 0) {
-      alert('Select at least one lead to download.')
-      return
-    }
-
-    setIsExportingSelected(true)
-    try {
-      const idsParam = encodeURIComponent(Array.from(selectedLeadIds).join(','))
-      const response = await fetchWithAuth(`/api/export/pipeline?leadIds=${idsParam}`)
-      if (!response.ok) {
-        throw new Error('Export failed')
-      }
-
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      const contentDisposition = response.headers.get('Content-Disposition') || ''
-      const filenameMatch = contentDisposition.match(/filename="(.+)"/)
-      const filename = filenameMatch?.[1] || 'selected-leads-report.doc'
-
-      link.href = url
-      link.download = filename
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
-    } catch (error) {
-      alert('Failed to export selected leads. Please try again.')
-    } finally {
-      setIsExportingSelected(false)
-    }
-  }
-
   const handleIssueInvoice = async (leadId: string) => {
     const lead = leads.find(l => l.id === leadId)
     const emailStr = window.prompt("Please enter the client's email address:", lead?.email || '')
@@ -591,13 +477,7 @@ export default function PipelinePage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-[1800px] mx-auto py-4 px-4 sm:px-6 lg:px-8">
         <div className="space-y-4">
-          <div>
-            <p className="text-sm font-medium text-indigo-600">Opportunity Tracking</p>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Sales Pipeline</h1>
-            <p className="text-sm text-gray-500 mt-1">Drag cards between stages. Find Leads is view-only and has no data entry.</p>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm space-y-3">
+          <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
             <input
               type="text"
               value={searchQuery}
@@ -605,40 +485,6 @@ export default function PipelinePage() {
               placeholder="Search leads by name, phone, email, company, or assignee..."
               className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={handleExportPipeline}
-                disabled={isExporting}
-                className="text-sm bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-lg px-3 py-2 shadow-sm transition-colors"
-              >
-                {isExporting ? 'Exporting...' : 'Download Pipeline Word Report'}
-              </button>
-              <button
-                onClick={handleExportPerUser}
-                disabled={isExportingByUser}
-                className="text-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg px-3 py-2 shadow-sm transition-colors"
-              >
-                {isExportingByUser ? 'Preparing files...' : 'Download Per User'}
-              </button>
-              <button
-                onClick={handleExportSelectedLeads}
-                disabled={isExportingSelected || selectedLeadIds.size === 0}
-                className="text-sm bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white rounded-lg px-3 py-2 shadow-sm transition-colors"
-              >
-                {isExportingSelected ? 'Exporting selected...' : `Download Selected (${selectedLeadIds.size})`}
-              </button>
-              <button
-                onClick={clearSelectedLeads}
-                disabled={selectedLeadIds.size === 0}
-                className="text-sm bg-white hover:bg-gray-50 disabled:opacity-60 text-gray-700 border border-gray-300 rounded-lg px-3 py-2 shadow-sm transition-colors"
-              >
-                Clear Selection
-              </button>
-              <div className="text-sm text-gray-600 bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
-                Total Leads: {leads.length}
-              </div>
-            </div>
           </div>
 
           <DndContext
@@ -673,19 +519,12 @@ export default function PipelinePage() {
                           onDownloadInvoice={handleDownloadInvoice}
                           isDownloadingInvoice={downloadingInvoiceLeadId === lead.id}
                           hasStageData={leadsWithData.has(lead.id)}
-                          isSelected={selectedLeadIds.has(lead.id)}
-                          onToggleSelect={toggleLeadSelection}
                           isDraggable={true}
                           paymentSnapshot={paymentSnapshots[lead.id]}
                         />
                       ))}
                     </SortableContext>
-                    {getLeadsByStage(stage).length === 0 && (
-                      <div className="text-center py-8 text-gray-500">
-                        <div className="text-4xl mb-2">📋</div>
-                        <p>No leads in this stage</p>
-                      </div>
-                    )}
+                    {getLeadsByStage(stage).length === 0 && null}
                   </StageDropZone>
                 </div>
               ))}
