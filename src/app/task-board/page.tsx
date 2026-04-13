@@ -582,9 +582,13 @@ export default function TaskBoardPage() {
                     {dayTasks.length === 0 ? (
                       <div className="h-full flex items-center justify-center text-[11px] text-gray-400">No tasks</div>
                     ) : (
-                      dayTasks.map((task) => (
-                        <div key={task.id} className={`rounded-lg border p-2.5 bg-white shadow-sm ${getTaskBorder(task)}`}>
-                          <div className="flex items-start justify-between gap-1.5">
+                      dayTasks.map((task) => {
+                        const instructionNote = task.description?.trim() || 'No details.'
+                        const hasLongInstruction = instructionNote.split(/\s+/).length > 18 || instructionNote.length > 120
+
+                        return (
+                          <div key={task.id} className={`rounded-lg border p-2.5 bg-white shadow-sm ${getTaskBorder(task)}`}>
+                            <div className="flex items-start justify-between gap-1.5">
                             <h3 className="text-xs font-semibold text-gray-900 leading-tight">{task.title}</h3>
                             <div className="flex items-center gap-1.5">
                               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${statusMeta[task.status].chip}`}>
@@ -654,7 +658,17 @@ export default function TaskBoardPage() {
                             </div>
                           </div>
                           <p className="text-[11px] text-gray-500 mt-1 truncate">{task.assignedToName}</p>
-                          <p className="text-[11px] text-gray-600 mt-1 line-clamp-2 break-words">{task.description || 'No details.'}</p>
+                          <p className="text-[11px] text-gray-600 mt-1 line-clamp-2 break-words">{instructionNote}</p>
+                          {hasLongInstruction ? (
+                            <details className="mt-1">
+                              <summary className="cursor-pointer text-[10px] font-medium text-indigo-700 hover:text-indigo-900">
+                                View full note
+                              </summary>
+                              <p className="mt-1 rounded-md border border-indigo-100 bg-indigo-50/70 p-2 text-[11px] text-gray-700 break-words">
+                                {instructionNote}
+                              </p>
+                            </details>
+                          ) : null}
 
                           <div className="mt-2 text-[10px] text-gray-500 space-y-0.5">
                             <p><span className="font-medium">Timeline:</span> {task.timeline}</p>
@@ -671,8 +685,9 @@ export default function TaskBoardPage() {
                               ))}
                             </div>
                           ) : null}
-                        </div>
-                      ))
+                          </div>
+                        )
+                      })
                     )}
                   </div>
                 </div>
