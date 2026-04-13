@@ -80,7 +80,7 @@ function StageDropZone({
     <div
       ref={setNodeRef}
       id={stageId}
-      className={`min-h-[220px] space-y-3 rounded-md transition-colors ${
+      className={`h-full min-h-0 overflow-y-auto space-y-3 pr-1 rounded-md transition-colors ${
         isOver ? 'bg-white/70 ring-2 ring-indigo-300' : ''
       }`}
     >
@@ -474,19 +474,19 @@ export default function PipelinePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1800px] mx-auto py-4 px-4 sm:px-6 lg:px-8">
-        <div className="space-y-4">
-          <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search leads by name, phone, email, company, or assignee..."
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
+    <div className="h-screen overflow-hidden bg-gray-50">
+      <div className="max-w-[1800px] mx-auto h-full py-4 px-4 sm:px-6 lg:px-8 flex flex-col gap-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search leads by name, phone, email, company, or assignee..."
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
 
+        <div className="flex-1 min-h-0">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -494,10 +494,10 @@ export default function PipelinePage() {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 pb-2">
+            <div className="h-full min-h-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {stages.map(stage => (
-                <div key={stage}>
-                  <div className="flex items-center justify-between mb-3">
+                <div key={stage} className="h-full min-h-0 flex flex-col">
+                  <div className="flex items-center justify-between mb-3 py-1">
                     <h2 className="text-base font-semibold text-gray-900">
                       {stageLabels[stage as keyof typeof stageLabels]}
                     </h2>
