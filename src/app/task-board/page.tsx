@@ -416,9 +416,9 @@ export default function TaskBoardPage() {
   }, [visibleTasks])
 
   return (
-    <div className={`${boardExpanded ? 'fixed inset-0 z-40' : 'h-[calc(100vh-4rem)]'} bg-gray-100 p-4 sm:p-5 overflow-hidden`}>
-      <div className="h-full w-full rounded-2xl border border-gray-200 bg-white shadow-md flex flex-col min-h-0">
-        <div className="border-b border-gray-200 px-4 py-4 bg-gradient-to-r from-slate-50 to-indigo-50">
+    <div className={`${boardExpanded ? 'fixed inset-0 z-40' : 'h-[calc(100vh-4rem)]'} bg-gray-50 p-3 sm:p-4 overflow-hidden`}>
+      <div className="h-full w-full rounded-xl border border-gray-200 bg-white shadow-sm flex flex-col min-h-0">
+        <div className="border-b border-gray-200 px-4 py-3 bg-white">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs uppercase tracking-wide font-semibold text-indigo-600">Task Board</p>
@@ -460,25 +460,25 @@ export default function TaskBoardPage() {
           </div>
 
           <div className="mt-3 grid grid-cols-2 sm:grid-cols-5 gap-2">
-            <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
-              <p className="text-xs text-gray-500">Total Tasks</p>
-              <p className="text-lg font-semibold text-gray-900">{taskSummary.total}</p>
+            <div className="rounded-md border border-gray-200 bg-gray-50 px-2 py-1.5">
+              <p className="text-[11px] text-gray-500">Total</p>
+              <p className="text-base font-semibold text-gray-900">{taskSummary.total}</p>
             </div>
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
-              <p className="text-xs text-amber-700">Pending</p>
-              <p className="text-lg font-semibold text-amber-800">{taskSummary.pending}</p>
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5">
+              <p className="text-[11px] text-amber-700">Pending</p>
+              <p className="text-base font-semibold text-amber-800">{taskSummary.pending}</p>
             </div>
-            <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
-              <p className="text-xs text-blue-700">In Progress</p>
-              <p className="text-lg font-semibold text-blue-800">{taskSummary.progress}</p>
+            <div className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1.5">
+              <p className="text-[11px] text-blue-700">In Progress</p>
+              <p className="text-base font-semibold text-blue-800">{taskSummary.progress}</p>
             </div>
-            <div className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2">
-              <p className="text-xs text-violet-700">Delivered</p>
-              <p className="text-lg font-semibold text-violet-800">{taskSummary.delivered}</p>
+            <div className="rounded-md border border-violet-200 bg-violet-50 px-2 py-1.5">
+              <p className="text-[11px] text-violet-700">Delivered</p>
+              <p className="text-base font-semibold text-violet-800">{taskSummary.delivered}</p>
             </div>
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-              <p className="text-xs text-emerald-700">Completed</p>
-              <p className="text-lg font-semibold text-emerald-800">{taskSummary.completed}</p>
+            <div className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1.5">
+              <p className="text-[11px] text-emerald-700">Completed</p>
+              <p className="text-base font-semibold text-emerald-800">{taskSummary.completed}</p>
             </div>
           </div>
         </div>
@@ -576,46 +576,42 @@ export default function TaskBoardPage() {
             groupedTasks.map((group) => (
               <div key={group.label} className="space-y-3">
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600 bg-white border border-gray-200 rounded-lg px-3 py-2">{group.label}</h2>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5">
                   {group.tasks.map((task) => (
                     <div
                       key={task.id}
-                      className={`relative rounded-2xl border-2 p-4 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 shadow-md hover:shadow-lg transition-all ${getTaskBorder(task)} ${
-                        task.status === 'PENDING' ? '-rotate-[0.4deg]' : task.status === 'IN_PROGRESS' ? 'rotate-[0.2deg]' : 'rotate-0'
-                      }`}
+                      className={`rounded-lg border p-3 bg-white shadow-sm hover:shadow transition-all ${getTaskBorder(task)}`}
                     >
-                      <div className="absolute -top-2 left-5 h-5 w-5 rounded-full bg-rose-500 border-2 border-white shadow" />
-                      <div className="absolute -top-1 left-6 h-2 w-2 rounded-full bg-rose-300 opacity-90" />
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <h3 className="font-semibold text-gray-900 leading-tight">{task.title}</h3>
-                          <p className="text-xs text-gray-600 mt-1">Assigned: {task.assignedToName}</p>
+                          <h3 className="font-semibold text-gray-900 leading-tight text-sm">{task.title}</h3>
+                          <p className="text-[11px] text-gray-500 mt-0.5">Assigned: {task.assignedToName}</p>
                         </div>
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusMeta[task.status].chip}`}>
                           {statusMeta[task.status].label}
                         </span>
                       </div>
 
-                      <p className="text-sm text-gray-700 mt-3 bg-white/70 border border-amber-100 rounded-lg px-3 py-2">
+                      <p className="text-xs text-gray-700 mt-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5 max-h-16 overflow-y-auto">
                         {task.description || 'No task details provided.'}
                       </p>
 
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                        <div className="rounded-md bg-white p-2 border border-amber-200">
+                      <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-xs">
+                        <div className="rounded-md bg-gray-50 p-2 border border-gray-200">
                           <p className="text-gray-500 uppercase tracking-wide text-[10px]">Timeline</p>
                           <p className="font-semibold text-gray-800">{task.timeline}</p>
                         </div>
-                        <div className="rounded-md bg-white p-2 border border-amber-200">
+                        <div className="rounded-md bg-gray-50 p-2 border border-gray-200">
                           <p className="text-gray-500 uppercase tracking-wide text-[10px]">Start</p>
                           <p className="font-semibold text-gray-800">{new Date(task.startTime).toLocaleString()}</p>
                         </div>
-                        <div className="rounded-md bg-white p-2 border border-amber-200">
+                        <div className="rounded-md bg-gray-50 p-2 border border-gray-200">
                           <p className="text-gray-500 uppercase tracking-wide text-[10px]">Deadline</p>
                           <p className="font-semibold text-gray-800">{new Date(task.deadline).toLocaleString()}</p>
                         </div>
                       </div>
 
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                         <select
                           value={task.status}
                           onChange={(e) => {
@@ -628,7 +624,7 @@ export default function TaskBoardPage() {
                             updateTaskStatus(task.id, nextStatus)
                           }}
                           disabled={!isAdmin && currentUser?.id !== task.assignedTo}
-                          className="px-2 py-1.5 rounded-md border border-amber-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
+                          className="px-2 py-1.5 rounded-md border border-gray-300 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
                         >
                           <option value="PENDING">Pending</option>
                           <option value="IN_PROGRESS">In Progress</option>
@@ -639,7 +635,7 @@ export default function TaskBoardPage() {
                         {isAdmin && (
                           <button
                             onClick={() => editTask(task)}
-                            className="px-2 py-1.5 rounded-md border border-amber-300 bg-white text-sm text-gray-700 hover:bg-amber-50"
+                            className="px-2 py-1.5 rounded-md border border-gray-300 bg-white text-xs text-gray-700 hover:bg-gray-50"
                           >
                             Edit Task
                           </button>
@@ -647,9 +643,9 @@ export default function TaskBoardPage() {
                       </div>
 
                       {task.comments.length > 0 && (
-                        <div className="mt-3 space-y-2 border-t border-amber-200 pt-3">
+                        <div className="mt-2.5 space-y-1.5 border-t border-gray-200 pt-2.5 max-h-28 overflow-y-auto">
                           {task.comments.map((comment) => (
-                            <div key={comment.id} className="text-xs bg-white border border-amber-200 rounded-md p-2">
+                            <div key={comment.id} className="text-xs bg-gray-50 border border-gray-200 rounded-md p-2">
                               <p className="font-medium text-gray-700">
                                 {comment.authorName}{' '}
                                 <span className="font-normal text-gray-500">
@@ -662,16 +658,16 @@ export default function TaskBoardPage() {
                         </div>
                       )}
 
-                      <div className="mt-3 flex gap-2">
+                      <div className="mt-2.5 flex gap-1.5">
                         <input
                           value={commentDrafts[task.id] || ''}
                           onChange={(e) => setCommentDrafts((prev) => ({ ...prev, [task.id]: e.target.value }))}
                           placeholder="Add comment"
-                          className="flex-1 px-3 py-2 rounded-md border border-amber-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="flex-1 px-2.5 py-1.5 rounded-md border border-gray-300 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                         <button
                           onClick={() => addComment(task.id)}
-                          className="px-3 py-2 rounded-md bg-amber-700 text-white text-sm hover:bg-amber-800"
+                          className="px-2.5 py-1.5 rounded-md bg-indigo-600 text-white text-xs hover:bg-indigo-700"
                         >
                           Comment
                         </button>
