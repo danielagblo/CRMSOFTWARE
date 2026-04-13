@@ -24,6 +24,15 @@ const navigation = [
     ),
   },
   {
+    name: 'Task Bar',
+    href: '/task-board',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 12h18M3 17h18" />
+      </svg>
+    ),
+  },
+  {
     name: 'Leads',
     href: '/leads',
     icon: (
@@ -44,6 +53,7 @@ export default function Navigation() {
   const isProtectedRoute =
     pathname === '/dashboard' ||
     pathname === '/pipeline' ||
+    pathname === '/task-board' ||
     pathname === '/leads' ||
     pathname.startsWith('/leads/') ||
     pathname === '/users'
@@ -92,7 +102,7 @@ export default function Navigation() {
   const isAdmin = user?.role === 'ADMIN'
   const visibleNavigation = navigation.filter(item => {
     if (!isAdmin) {
-      return item.href === '/pipeline'
+      return item.href === '/pipeline' || item.href === '/task-board'
     }
     return true
   })
@@ -225,6 +235,15 @@ export default function Navigation() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
                       </svg>
                       Go to Pipeline
+                    </button>
+                    <button
+                      onClick={() => handleNavigate('/task-board')}
+                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    >
+                      <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 12h18M3 17h18" />
+                      </svg>
+                      Go to Task Bar
                     </button>
                     {isAdmin && (
                       <button

@@ -477,6 +477,7 @@ export default function PipelinePage() {
     <div className="h-screen overflow-hidden bg-gray-50">
       <div className="max-w-[1800px] mx-auto h-full py-4 px-4 sm:px-6 lg:px-8 flex flex-col gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Search Pipeline</p>
           <input
             type="text"
             value={searchQuery}
@@ -497,7 +498,7 @@ export default function PipelinePage() {
             <div className="h-full min-h-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {stages.map(stage => (
                 <div key={stage} className="h-full min-h-0 flex flex-col">
-                  <div className="flex items-center justify-between mb-3 py-1">
+                  <div className="flex items-center justify-between mb-3 px-3 py-2 rounded-lg bg-white border border-gray-200 shadow-sm">
                     <h2 className="text-base font-semibold text-gray-900">
                       {stageLabels[stage as keyof typeof stageLabels]}
                     </h2>
