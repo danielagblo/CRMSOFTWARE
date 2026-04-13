@@ -39,6 +39,7 @@ const leadSourceOptions = [
   'Website',
   'Referral',
   'Social Media',
+  'Sticker/Banner Advertising',
   'Cold Call',
   'Email Campaign',
   'Trade Show',

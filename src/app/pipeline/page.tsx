@@ -20,6 +20,12 @@ interface Lead {
   stage: string
 }
 
+interface PaymentSnapshot {
+  agreedAmount: number
+  totalPaid: number
+  remainingBalance: number
+}
+
 interface StageDataEntry {
   id: string
   stage: string
@@ -108,6 +114,7 @@ export default function PipelinePage() {
   const [issuingInvoiceLeadId, setIssuingInvoiceLeadId] = useState<string | null>(null)
   const [downloadingInvoiceLeadId, setDownloadingInvoiceLeadId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [paymentSnapshots, setPaymentSnapshots] = useState<Record<string, PaymentSnapshot>>({})
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -148,6 +155,7 @@ export default function PipelinePage() {
 
       // Fetch stage data for all leads to determine which ones have data
       const leadsWithStageData = new Set<string>()
+      const nextPaymentSnapshots: Record<string, PaymentSnapshot> = {}
       for (const lead of normalizedLeads) {
         try {
           const stageDataRes = await fetchWithAuth(`/api/stage-data?leadId=${lead.id}`)
@@ -156,12 +164,26 @@ export default function PipelinePage() {
             if (stageData.length > 0) {
               leadsWithStageData.add(lead.id)
             }
+
+            const paymentEntries = stageData.filter((entry: StageDataEntry) => entry.stage === 'PAYMENT')
+            const totalPaid = paymentEntries.reduce((sum: number, entry: StageDataEntry) => {
+              const amount = Number(entry?.data?.amountReceived ?? entry?.data?.paymentAmount ?? 0)
+              return Number.isFinite(amount) ? sum + amount : sum
+            }, 0)
+            const agreedAmount = Number(lead.dealValue || 0)
+            const remainingBalance = Math.max(agreedAmount - totalPaid, 0)
+            nextPaymentSnapshots[lead.id] = {
+              agreedAmount,
+              totalPaid,
+              remainingBalance
+            }
           }
         } catch (error) {
           console.error(`Error fetching stage data for lead ${lead.id}:`, error)
         }
       }
       setLeadsWithData(leadsWithStageData)
+      setPaymentSnapshots(nextPaymentSnapshots)
     } catch (error) {
       console.error('Error in fetchLeads:', error)
       setLeads([])
@@ -364,6 +386,7 @@ export default function PipelinePage() {
             `GHS ${Number(result.paymentSummary.agreedAmount).toLocaleString()} ` +
             `(Remaining: GHS ${Number(result.paymentSummary.remainingBalance).toLocaleString()})`
           )
+          fetchLeads()
         } else {
           alert('Stage data saved successfully!')
         }
@@ -652,6 +675,7 @@ export default function PipelinePage() {
                               isSelected={selectedLeadIds.has(lead.id)}
                               onToggleSelect={toggleLeadSelection}
                               isDraggable={true}
+                              paymentSnapshot={paymentSnapshots[lead.id]}
                             />
                           ))}
                         </SortableContext>

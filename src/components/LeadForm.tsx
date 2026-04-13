@@ -53,6 +53,7 @@ const leadSourceOptions = [
   'Website',
   'Referral',
   'Social Media',
+  'Sticker/Banner Advertising',
   'Cold Call',
   'Email Campaign',
   'Trade Show',
@@ -75,9 +76,7 @@ export default function LeadForm({ onLeadAdded }: LeadFormProps) {
   const [loading, setLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [users, setUsers] = useState<User[]>([])
-  const [newAssigneeName, setNewAssigneeName] = useState('')
-  const [addingAssignee, setAddingAssignee] = useState(false)
-  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<LeadFormData>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema)
   })
 
@@ -126,36 +125,6 @@ export default function LeadForm({ onLeadAdded }: LeadFormProps) {
       alert(message)
     }
     setLoading(false)
-  }
-
-  const handleAddAssignee = async () => {
-    const trimmedName = newAssigneeName.trim()
-    if (!trimmedName) {
-      alert('Enter a name first.')
-      return
-    }
-
-    setAddingAssignee(true)
-    try {
-      const res = await fetchWithAuth('/api/users', {
-        method: 'POST',
-        body: JSON.stringify({ name: trimmedName })
-      })
-
-      const payload = await res.json()
-      if (!res.ok) {
-        throw new Error(payload?.error || 'Failed to add assignee')
-      }
-
-      setUsers((prev) => [...prev, payload])
-      setValue('assignedTo', payload.id)
-      setNewAssigneeName('')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to add assignee'
-      alert(message)
-    } finally {
-      setAddingAssignee(false)
-    }
   }
 
   return (
@@ -362,25 +331,6 @@ export default function LeadForm({ onLeadAdded }: LeadFormProps) {
                   </option>
                 ))}
               </select>
-            </div>
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Add Assignee Name</label>
-              <div className="flex items-center gap-2">
-                <input
-                  value={newAssigneeName}
-                  onChange={(e) => setNewAssigneeName(e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
-                  placeholder="e.g., John Doe"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddAssignee}
-                  disabled={addingAssignee}
-                  className="px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700 disabled:opacity-60"
-                >
-                  {addingAssignee ? 'Adding...' : 'Add'}
-                </button>
-              </div>
             </div>
           </div>
         )}

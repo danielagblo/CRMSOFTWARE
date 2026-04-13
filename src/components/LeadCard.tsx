@@ -25,6 +25,11 @@ interface LeadCardProps {
   isSelected?: boolean
   onToggleSelect?: (leadId: string) => void
   isDraggable?: boolean
+  paymentSnapshot?: {
+    agreedAmount: number
+    totalPaid: number
+    remainingBalance: number
+  }
 }
 
 const stages = [
@@ -47,7 +52,8 @@ export default function LeadCard({
   hasStageData,
   isSelected,
   onToggleSelect,
-  isDraggable = true
+  isDraggable = true,
+  paymentSnapshot
 }: LeadCardProps) {
   const {
     attributes,
@@ -199,6 +205,25 @@ export default function LeadCard({
           <span className="font-medium text-emerald-600">GHS {lead.dealValue?.toLocaleString() || '0'}</span>
         </div>
       </div>
+
+      {lead.stage === 'PAYMENT' && paymentSnapshot && (
+        <div className="mb-3 rounded-lg border-2 border-emerald-200 bg-emerald-50 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-800">Payment Progress</p>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+            <div className="rounded-md bg-white p-2 border border-emerald-200">
+              <p className="text-gray-500">Paid</p>
+              <p className="font-bold text-emerald-700">GHS {paymentSnapshot.totalPaid.toLocaleString()}</p>
+            </div>
+            <div className="rounded-md bg-white p-2 border border-amber-200">
+              <p className="text-gray-500">Remaining</p>
+              <p className="font-bold text-amber-700">GHS {paymentSnapshot.remainingBalance.toLocaleString()}</p>
+            </div>
+          </div>
+          <p className="mt-2 text-[11px] text-gray-600">
+            Agreed Amount: <span className="font-semibold text-gray-800">GHS {paymentSnapshot.agreedAmount.toLocaleString()}</span>
+          </p>
+        </div>
+      )}
 
       {/* Stage and Assignment */}
       <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100">
