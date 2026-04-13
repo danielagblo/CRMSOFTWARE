@@ -335,29 +335,88 @@ export default function TaskBoardPage() {
     return statusMeta[task.status].border
   }
 
+  const prettySelectedDate = useMemo(() => {
+    const parsed = fromDateKey(selectedDate)
+    return parsed.toLocaleDateString(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }, [selectedDate])
+
+  const taskSummary = useMemo(() => {
+    const summary = { total: visibleTasks.length, pending: 0, progress: 0, completed: 0 }
+    visibleTasks.forEach((task) => {
+      if (task.status === 'PENDING') summary.pending += 1
+      if (task.status === 'IN_PROGRESS') summary.progress += 1
+      if (task.status === 'COMPLETED') summary.completed += 1
+    })
+    return summary
+  }, [visibleTasks])
+
   return (
-    <div className="h-[calc(100vh-4rem)] bg-gray-50 p-4 sm:p-6 overflow-hidden">
-      <div className="h-full w-full rounded-xl border border-gray-200 bg-white shadow-sm flex flex-col min-h-0">
-        <div className="border-b border-gray-200 px-4 py-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSelectedDate((prev) => moveDateKey(prev, -1))}
-              className="px-2 py-1 rounded-md border border-gray-200 hover:bg-gray-100 text-gray-700"
-            >
-              Prev
-            </button>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <button
-              onClick={() => setSelectedDate((prev) => moveDateKey(prev, 1))}
-              className="px-2 py-1 rounded-md border border-gray-200 hover:bg-gray-100 text-gray-700"
-            >
-              Next
-            </button>
+    <div className="h-[calc(100vh-4rem)] bg-gray-100 p-4 sm:p-5 overflow-hidden">
+      <div className="h-full w-full rounded-2xl border border-gray-200 bg-white shadow-md flex flex-col min-h-0">
+        <div className="border-b border-gray-200 px-4 py-4 bg-gradient-to-r from-slate-50 to-indigo-50">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-wide font-semibold text-indigo-600">Task Board</p>
+              <h1 className="text-xl font-bold text-gray-900">{prettySelectedDate}</h1>
+              <p className="text-sm text-gray-600">Daily activities and collaboration for all team members.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSelectedDate(today)}
+                className="px-3 py-1.5 rounded-lg border border-indigo-200 text-indigo-700 bg-white hover:bg-indigo-50 text-sm"
+              >
+                Today
+              </button>
+              <button
+                onClick={() => setSelectedDate((prev) => moveDateKey(prev, -1))}
+                className="px-2 py-1 rounded-md border border-gray-200 hover:bg-gray-100 text-gray-700"
+              >
+                Prev
+              </button>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <button
+                onClick={() => setSelectedDate((prev) => moveDateKey(prev, 1))}
+                className="px-2 py-1 rounded-md border border-gray-200 hover:bg-gray-100 text-gray-700"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+              <p className="text-xs text-gray-500">Total Tasks</p>
+              <p className="text-lg font-semibold text-gray-900">{taskSummary.total}</p>
+            </div>
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+              <p className="text-xs text-amber-700">Pending</p>
+              <p className="text-lg font-semibold text-amber-800">{taskSummary.pending}</p>
+            </div>
+            <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+              <p className="text-xs text-blue-700">In Progress</p>
+              <p className="text-lg font-semibold text-blue-800">{taskSummary.progress}</p>
+            </div>
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+              <p className="text-xs text-emerald-700">Completed</p>
+              <p className="text-lg font-semibold text-emerald-800">{taskSummary.completed}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-b border-gray-200 px-4 py-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between bg-white">
+          <div>
+            <p className="text-sm font-medium text-gray-900">Tasks for {prettySelectedDate}</p>
+            <p className="text-xs text-gray-500">Track progress, update status, and collaborate with comments.</p>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Group:</span>
@@ -377,7 +436,7 @@ export default function TaskBoardPage() {
         </div>
 
         {isAdmin && (
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+          <div className="px-4 py-3 border-b border-gray-200 bg-slate-50">
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-2">
               <input
                 value={title}
@@ -440,16 +499,16 @@ export default function TaskBoardPage() {
           </div>
         )}
 
-        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 bg-gray-50">
           {groupedTasks.length === 0 || groupedTasks.every((group) => group.tasks.length === 0) ? (
             <div className="text-center text-gray-500 py-12">No tasks for this date.</div>
           ) : (
             groupedTasks.map((group) => (
               <div key={group.label} className="space-y-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">{group.label}</h2>
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-600 bg-white border border-gray-200 rounded-lg px-3 py-2">{group.label}</h2>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                   {group.tasks.map((task) => (
-                    <div key={task.id} className={`rounded-xl border-2 p-3 bg-white ${getTaskBorder(task)}`}>
+                    <div key={task.id} className={`rounded-xl border-2 p-3 bg-white shadow-sm ${getTaskBorder(task)}`}>
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <h3 className="font-semibold text-gray-900">{task.title}</h3>
