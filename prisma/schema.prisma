@@ -37,6 +37,7 @@ model Lead {
   notes             String?
   assignedTo        String
   assignedUser      User         @relation(fields: [assignedTo], references: [id], onDelete: Cascade)
+  visibleToAll      Boolean      @default(false)
   createdBy         String
   createdByUser     User         @relation("CreatedLeads", fields: [createdBy], references: [id], onDelete: Cascade)
   stage             String       @default("FIND_LEADS")

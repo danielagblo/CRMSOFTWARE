@@ -325,6 +325,7 @@ export default function LeadForm({ onLeadAdded }: LeadFormProps) {
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
               >
                 <option value="">Select a user (leave empty to assign to yourself)</option>
+                <option value="__ALL_USERS__">All Users</option>
                 {users.map(user => (
                   <option key={user.id} value={user.id}>
                     {user.name} ({user.email}) - {user.role}

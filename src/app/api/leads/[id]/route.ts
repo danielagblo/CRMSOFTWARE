@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+const ASSIGN_ALL_USERS_VALUE = '__ALL_USERS__'
+
 function getUserIdFromRequest(request: NextRequest): string | null {
   const userId = request.headers.get('X-User-Id')
   if (!userId || userId === 'undefined' || userId === 'null') return null
@@ -41,7 +43,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         id,
         OR: [
           { createdBy: userId },
-          { assignedTo: userId }
+          { assignedTo: userId },
+          { visibleToAll: true }
         ]
       },
       include: {
@@ -68,7 +71,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const { id } = await params
     const { stage, ...updateData } = await request.json()
-    if (updateData.assignedTo) {
+    if (updateData.assignedTo && updateData.assignedTo !== ASSIGN_ALL_USERS_VALUE) {
       await ensureUserExists(updateData.assignedTo)
     }
 
@@ -81,7 +84,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         id: id,
         OR: [
           { createdBy: userId },
-          { assignedTo: userId }
+          { assignedTo: userId },
+          { visibleToAll: true }
         ]
       }
     })
@@ -101,6 +105,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     if (processedUpdateData.assignedTo === '') {
       delete processedUpdateData.assignedTo
+    }
+
+    if (processedUpdateData.assignedTo === ASSIGN_ALL_USERS_VALUE) {
+      processedUpdateData.assignedTo = existingLead.assignedTo
+      processedUpdateData.visibleToAll = true
+    } else if (typeof processedUpdateData.assignedTo === 'string') {
+      processedUpdateData.visibleToAll = false
     }
 
     const lead = await prisma.lead.update({
@@ -137,7 +148,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         id: id,
         OR: [
           { createdBy: userId },
-          { assignedTo: userId }
+          { assignedTo: userId },
+          { visibleToAll: true }
         ]
       }
     })

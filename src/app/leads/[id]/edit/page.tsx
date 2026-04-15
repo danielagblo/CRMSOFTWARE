@@ -107,7 +107,7 @@ export default function EditLeadPage() {
           serviceInterested: data.serviceInterested || '',
           dealValue: data.dealValue ? String(data.dealValue) : '',
           notes: data.notes || '',
-          assignedTo: data.assignedTo || ''
+          assignedTo: data.visibleToAll ? '__ALL_USERS__' : (data.assignedTo || '')
         })
       } else {
         alert('Failed to load lead')
@@ -228,6 +228,7 @@ export default function EditLeadPage() {
                   <label className="block text-sm font-medium text-gray-700">Assign To</label>
                   <select {...register('assignedTo')} className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500">
                     <option value="">Maintain current assignee</option>
+                  <option value="__ALL_USERS__">All Users</option>
                     {users.map(u => <option key={u.id} value={u.id}>{u.name} - {u.role}</option>)}
                   </select>
                 </div>

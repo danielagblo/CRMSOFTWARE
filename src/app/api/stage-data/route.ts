@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
         id: leadId,
         OR: [
           { createdBy: userId },
-          { assignedTo: userId }
+          { assignedTo: userId },
+          { visibleToAll: true }
         ]
       }
     })
@@ -191,7 +192,8 @@ export async function GET(request: NextRequest) {
         id: leadId,
         OR: [
           { createdBy: userId },
-          { assignedTo: userId }
+          { assignedTo: userId },
+          { visibleToAll: true }
         ]
       }
     })

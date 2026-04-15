@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
+const ASSIGN_ALL_USERS_VALUE = '__ALL_USERS__'
+
 async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
   const headerUserId = request.headers.get('X-User-Id')
   if (headerUserId && headerUserId !== 'undefined' && headerUserId !== 'null') {
@@ -53,7 +55,8 @@ export async function GET(request: NextRequest) {
       where: user.role === 'ADMIN' ? undefined : {
         OR: [
           { createdBy: userId },
-          { assignedTo: userId }
+          { assignedTo: userId },
+          { visibleToAll: true }
         ]
       },
       include: {
@@ -84,7 +87,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Deal value must be a valid number' }, { status: 400 })
     }
 
-    const assignedUserId = assignedTo || userId
+    const assignToAllUsers = assignedTo === ASSIGN_ALL_USERS_VALUE
+    const assignedUserId = assignToAllUsers ? userId : (assignedTo || userId)
 
     await ensureUserExists(userId)
     await ensureUserExists(assignedUserId)
@@ -102,6 +106,7 @@ export async function POST(request: NextRequest) {
         dealValue: parsedDealValue,
         notes,
         assignedTo: assignedUserId,
+        visibleToAll: assignToAllUsers,
         createdBy: userId,
         stage: 'FIND_LEADS'
       },
