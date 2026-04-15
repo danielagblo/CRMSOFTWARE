@@ -11,15 +11,16 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      String   @default("SALES")
-  leads     Lead[]
-  createdLeads Lead[] @relation("CreatedLeads")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String    @id @default(cuid())
+  name            String
+  email           String    @unique
+  password        String
+  role            String    @default("SALES")
+  leads           Lead[]
+  createdLeads    Lead[]    @relation("CreatedLeads")
+  createdContacts Contact[] @relation("CreatedContacts")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Lead {
@@ -74,4 +75,18 @@ model Commission {
   earned    Float
   status    String   @default("PENDING")
   createdAt DateTime @default(now())
+}
+
+model Contact {
+  id            String   @id @default(cuid())
+  name          String
+  phone         String
+  email         String?
+  location      String?
+  businessType  String?
+  note          String?
+  createdBy     String
+  createdByUser User     @relation("CreatedContacts", fields: [createdBy], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

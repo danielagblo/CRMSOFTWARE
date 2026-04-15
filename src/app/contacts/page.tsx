@@ -7,24 +7,15 @@ interface ContactEntry {
   id: string
   name: string
   phone: string
-  email: string
-  location: string
-  businessType: string
-  note: string
+  email: string | null
+  location: string | null
+  businessType: string | null
+  note: string | null
   createdAt: string
 }
 
 interface LeadApiResponse {
   id: string
-}
-
-const CONTACTS_STORAGE_KEY = 'crm_contacts_book_v1'
-
-const createId = () => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-  return `contact_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 }
 
 export default function ContactsPage() {
@@ -37,24 +28,27 @@ export default function ContactsPage() {
   const [note, setNote] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPushingId, setIsPushingId] = useState<string | null>(null)
+  const [isLoadingContacts, setIsLoadingContacts] = useState(true)
 
   useEffect(() => {
-    const storedContacts = localStorage.getItem(CONTACTS_STORAGE_KEY)
-    if (!storedContacts) return
-    try {
-      const parsed = JSON.parse(storedContacts) as ContactEntry[]
-      if (Array.isArray(parsed)) {
-        setContacts(parsed)
+    const loadContacts = async () => {
+      try {
+        const response = await fetchWithAuth('/api/contacts')
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null)
+          throw new Error(payload?.error || 'Failed to load contacts.')
+        }
+        const data = (await response.json()) as ContactEntry[]
+        setContacts(Array.isArray(data) ? data : [])
+      } catch {
+        setContacts([])
+      } finally {
+        setIsLoadingContacts(false)
       }
-    } catch {
-      setContacts([])
     }
-  }, [])
 
-  const persistContacts = (nextContacts: ContactEntry[]) => {
-    setContacts(nextContacts)
-    localStorage.setItem(CONTACTS_STORAGE_KEY, JSON.stringify(nextContacts))
-  }
+    loadContacts()
+  }, [])
 
   const resetForm = () => {
     setName('')
@@ -72,29 +66,53 @@ export default function ContactsPage() {
     }
 
     setIsSubmitting(true)
-    const now = new Date().toISOString()
-    const newContact: ContactEntry = {
-      id: createId(),
-      name: name.trim(),
-      phone: phone.trim(),
-      email: email.trim(),
-      location: location.trim(),
-      businessType: businessType.trim(),
-      note: note.trim(),
-      createdAt: now
-    }
-
-    const nextContacts = [newContact, ...contacts]
-    persistContacts(nextContacts)
-    resetForm()
-    setIsSubmitting(false)
+    fetchWithAuth('/api/contacts', {
+      method: 'POST',
+      body: JSON.stringify({
+        name,
+        phone,
+        email,
+        location,
+        businessType,
+        note
+      })
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null)
+          throw new Error(payload?.error || 'Failed to add contact.')
+        }
+        const created = (await response.json()) as ContactEntry
+        setContacts((prev) => [created, ...prev])
+        resetForm()
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : 'Failed to add contact.'
+        alert(message)
+      })
+      .finally(() => {
+        setIsSubmitting(false)
+      })
   }
 
   const handleDeleteContact = (contactId: string) => {
     const confirmed = window.confirm('Delete this contact entry?')
     if (!confirmed) return
-    const nextContacts = contacts.filter((contact) => contact.id !== contactId)
-    persistContacts(nextContacts)
+    fetchWithAuth('/api/contacts', {
+      method: 'DELETE',
+      body: JSON.stringify({ id: contactId })
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null)
+          throw new Error(payload?.error || 'Failed to delete contact.')
+        }
+        setContacts((prev) => prev.filter((contact) => contact.id !== contactId))
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : 'Failed to delete contact.'
+        alert(message)
+      })
   }
 
   const handlePushToLeads = async (contact: ContactEntry) => {
@@ -126,8 +144,16 @@ export default function ContactsPage() {
         throw new Error(message)
       }
 
-      const nextContacts = contacts.filter((item) => item.id !== contact.id)
-      persistContacts(nextContacts)
+      const deleteResponse = await fetchWithAuth('/api/contacts', {
+        method: 'DELETE',
+        body: JSON.stringify({ id: contact.id })
+      })
+      if (!deleteResponse.ok) {
+        const payload = await deleteResponse.json().catch(() => null)
+        throw new Error(payload?.error || 'Lead created, but failed to remove contact.')
+      }
+
+      setContacts((prev) => prev.filter((item) => item.id !== contact.id))
       alert('Contact pushed to leads and removed from contacts.')
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to push contact to leads.'
@@ -204,7 +230,11 @@ export default function ContactsPage() {
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto p-4">
-          {sortedContacts.length === 0 ? (
+          {isLoadingContacts ? (
+            <div className="h-full flex items-center justify-center text-sm text-gray-500">
+              Loading contacts...
+            </div>
+          ) : sortedContacts.length === 0 ? (
             <div className="h-full flex items-center justify-center text-sm text-gray-500">
               No contacts yet. Add your first business contact above.
             </div>

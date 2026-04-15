@@ -4,17 +4,35 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
-export async function GET() {
-  try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+async function getAdminFromRequest(request?: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (session?.user?.role === 'ADMIN') {
+    return session.user
+  }
 
-    // Only admins can fetch users
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!request) return null
+  const headerUserId = request.headers.get('X-User-Id')
+  if (!headerUserId || headerUserId === 'undefined' || headerUserId === 'null') {
+    return null
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: headerUserId },
+    select: { id: true, role: true }
+  })
+
+  if (!user || user.role !== 'ADMIN') {
+    return null
+  }
+
+  return user
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const adminUser = await getAdminFromRequest(request)
+    if (!adminUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const users = await prisma.user.findMany({
