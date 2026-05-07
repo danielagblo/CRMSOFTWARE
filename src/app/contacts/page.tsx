@@ -36,12 +36,10 @@ interface LeadApiResponse {
 
 const getPushReadiness = (contact: ContactEntry) => {
   const hasName = Boolean(contact.name?.trim())
-  const hasBusinessName = Boolean(contact.businessType?.trim())
   const hasContactChannel = Boolean(contact.phone?.trim() || contact.email?.trim())
 
   const missing: string[] = []
   if (!hasName) missing.push('Name')
-  if (!hasBusinessName) missing.push('Business name')
   if (!hasContactChannel) missing.push('Contact (email or number)')
 
   return {
