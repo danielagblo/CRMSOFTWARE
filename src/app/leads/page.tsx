@@ -5,12 +5,26 @@ import { useRouter } from 'next/navigation'
 import LeadForm from '@/components/LeadForm'
 import LeadList from '@/components/LeadList'
 import PageHeader from '@/components/PageHeader'
+import SearchBar from '@/components/SearchBar'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
+
+interface Lead {
+  id: string
+  clientName: string
+  companyName: string | null
+  phone: string
+  email: string
+  stage: string
+  dealValue: number | null
+  notes: string | null
+  assignedUser: { name: string }
+}
 
 export default function LeadsPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
-  const [leads, setLeads] = useState<any[]>([])
+  const [leads, setLeads] = useState<Lead[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
@@ -47,6 +61,19 @@ export default function LeadsPage() {
     fetchLeads()
   }
 
+  const filteredLeads = leads.filter(lead => {
+    if (!searchQuery.trim()) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      lead.clientName.toLowerCase().includes(query) ||
+      lead.phone.toLowerCase().includes(query) ||
+      lead.email.toLowerCase().includes(query) ||
+      (lead.companyName && lead.companyName.toLowerCase().includes(query)) ||
+      (lead.notes && lead.notes.toLowerCase().includes(query)) ||
+      lead.stage.toLowerCase().includes(query)
+    )
+  })
+
   if (!user) {
     return null
   }
@@ -59,6 +86,13 @@ export default function LeadsPage() {
             eyebrow="Lead Management"
             title="Leads"
             description={`${leads.length} total leads`}
+            leftAction={
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search leads..."
+              />
+            }
             action={(
               <button
                 onClick={() => setShowForm(!showForm)}
@@ -75,7 +109,7 @@ export default function LeadsPage() {
             </div>
           )}
 
-          <LeadList leads={leads} onLeadUpdated={fetchLeads} />
+          <LeadList leads={filteredLeads} onLeadUpdated={fetchLeads} />
         </div>
       </div>
     </div>

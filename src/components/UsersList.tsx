@@ -10,7 +10,7 @@ interface User {
   createdAt: Date
 }
 
-export default function UsersList({ initialUsers }: { initialUsers: any[] }) {
+export default function UsersList({ initialUsers, searchQuery = '' }: { initialUsers: any[], searchQuery?: string }) {
   const [users, setUsers] = useState<User[]>(initialUsers)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
@@ -95,6 +95,16 @@ export default function UsersList({ initialUsers }: { initialUsers: any[] }) {
     }
   }
 
+  const filteredUsers = users.filter(user => {
+    if (!searchQuery.trim()) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      user.name.toLowerCase().includes(query) ||
+      user.email.toLowerCase().includes(query) ||
+      user.role.toLowerCase().includes(query)
+    )
+  })
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
@@ -109,7 +119,7 @@ export default function UsersList({ initialUsers }: { initialUsers: any[] }) {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">

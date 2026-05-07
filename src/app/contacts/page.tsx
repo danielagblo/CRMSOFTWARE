@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
 import FormModal from '@/lib/formModal'
 import PageHeader from '@/components/PageHeader'
+import SearchBar from '@/components/SearchBar'
 import { 
   validateContactForm, 
   showFeedback, 
@@ -33,8 +34,26 @@ interface LeadApiResponse {
   id: string
 }
 
+const getPushReadiness = (contact: ContactEntry) => {
+  const hasName = Boolean(contact.name?.trim())
+  const hasBusinessName = Boolean(contact.businessType?.trim())
+  const hasContactChannel = Boolean(contact.phone?.trim() || contact.email?.trim())
+
+  const missing: string[] = []
+  if (!hasName) missing.push('Name')
+  if (!hasBusinessName) missing.push('Business name')
+  if (!hasContactChannel) missing.push('Contact (email or number)')
+
+  return {
+    isReady: missing.length === 0,
+    missing
+  }
+}
+
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<ContactEntry[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [editingContactId, setEditingContactId] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -64,7 +83,7 @@ export default function ContactsPage() {
     }
 
     loadContacts()
-  }, [])
+}, [])
 
   const resetForm = () => {
     setName('')
@@ -73,6 +92,18 @@ export default function ContactsPage() {
     setLocation('')
     setBusinessType('')
     setNote('')
+    setEditingContactId(null)
+  }
+
+  const openEditModal = (contact: ContactEntry) => {
+    setEditingContactId(contact.id)
+    setName(contact.name)
+    setPhone(contact.phone)
+    setEmail(contact.email || '')
+    setLocation(contact.location || '')
+    setBusinessType(contact.businessType || '')
+    setNote(contact.note || '')
+    setIsFormModalOpen(true)
   }
 
   const handleCreateContact = () => {
@@ -85,43 +116,62 @@ export default function ContactsPage() {
     }
 
     setIsSubmitting(true)
-    fetchWithAuth('/api/contacts', {
-      method: 'POST',
-      body: JSON.stringify({
-        name,
-        phone,
-        email,
-        location,
-        businessType,
-        note
-      })
+
+    const endpoint = editingContactId ? `/api/contacts` : '/api/contacts'
+    const method = editingContactId ? 'PATCH' : 'POST'
+    const body = {
+      ...(editingContactId && { id: editingContactId }),
+      name,
+      phone,
+      email,
+      location,
+      businessType,
+      note
+    }
+
+    fetchWithAuth(endpoint, {
+      method,
+      body: JSON.stringify(body)
     })
       .then(async (response) => {
         if (!response.ok) {
           const payload = await response.json().catch(() => null)
-          throw new Error(payload?.error || 'Failed to add contact.')
+          throw new Error(payload?.error || (editingContactId ? 'Failed to update contact.' : 'Failed to add contact.'))
         }
-        const created = (await response.json()) as ContactEntry
-        setContacts((prev) => [created, ...prev])
+        const data = (await response.json()) as ContactEntry
+        
+        if (editingContactId) {
+          setContacts((prev) =>
+            prev.map((contact) => (contact.id === editingContactId ? data : contact))
+          )
+          showFeedback({
+            type: 'success',
+            title: 'Contact Updated',
+            description: `${data.name} has been updated.`
+          })
+        } else {
+          setContacts((prev) => [data, ...prev])
+          showFeedback({
+            type: 'success',
+            title: 'Contact Added',
+            description: `${data.name} has been added to your contacts.`
+          })
+        }
         resetForm()
         setIsFormModalOpen(false)
-        showFeedback({
-          type: 'success',
-          title: 'Contact Added',
-          description: `${created.name} has been added to your contacts.`
-        })
       })
       .catch((error) => {
-        const message = error instanceof Error ? error.message : 'Failed to add contact.'
+        const message = error instanceof Error ? error.message : (editingContactId ? 'Failed to update contact.' : 'Failed to add contact.')
         showFeedback({
           type: 'error',
-          title: 'Failed to Add Contact',
+          title: editingContactId ? 'Failed to Update Contact' : 'Failed to Add Contact',
           description: message
         })
       })
       .finally(() => {
         setIsSubmitting(false)
       })
+
   }
 
   const handleDeleteContact = (contactId: string) => {
@@ -154,6 +204,16 @@ export default function ContactsPage() {
   }
 
   const handlePushToLeads = async (contact: ContactEntry) => {
+    const readiness = getPushReadiness(contact)
+    if (!readiness.isReady) {
+      showFeedback({
+        type: 'error',
+        title: 'Contact not ready to push',
+        description: `Missing: ${readiness.missing.join(', ')}.`
+      })
+      return
+    }
+
     if (isPushingId) return
     setIsPushingId(contact.id)
 
@@ -209,13 +269,25 @@ export default function ContactsPage() {
     }
   }
 
-  const sortedContacts = useMemo(
-    () =>
-      [...contacts].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      ),
-    [contacts]
-  )
+  const sortedAndFilteredContacts = useMemo(() => {
+    let filtered = [...contacts].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(contact =>
+        contact.name.toLowerCase().includes(query) ||
+        contact.phone.toLowerCase().includes(query) ||
+        (contact.email && contact.email.toLowerCase().includes(query)) ||
+        (contact.location && contact.location.toLowerCase().includes(query)) ||
+        (contact.businessType && contact.businessType.toLowerCase().includes(query)) ||
+        (contact.note && contact.note.toLowerCase().includes(query))
+      )
+    }
+    
+    return filtered
+  }, [contacts, searchQuery])
 
   const contactFormContent = (
     <div className="border-b border-gray-200 bg-white px-4 py-3">
@@ -276,13 +348,13 @@ export default function ContactsPage() {
           className="mt-3 w-full rounded-lg border border-gray-300 pl-12 min-h-25 lg:min-h-40 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
-      <div className="w-full flex justify-end">
+      <div className="w-full flex cursor-pointer justify-end">
         <button
           onClick={handleCreateContact}
           disabled={isSubmitting}
           className="rounded-lg cursor-pointer bg-indigo-600 px-3 py-2 text-white hover:bg-indigo-700 disabled:opacity-60"
         >
-          {isSubmitting ? 'Adding...' : 'Add Contact'}
+          {isSubmitting ? (editingContactId ? 'Updating...' : 'Adding...') : (editingContactId ? 'Update Contact' : 'Add Contact')}
         </button>
       </div>
     </div>
@@ -296,6 +368,13 @@ export default function ContactsPage() {
             eyebrow="Contacts"
             title="Business Contacts Book"
             description="Create contact entries and push them directly to your leads list."
+            leftAction={
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search Contact Book..."
+              />
+            }
             action={(
               <button
                 onClick={() => setIsFormModalOpen(true)}
@@ -308,8 +387,11 @@ export default function ContactsPage() {
 
           <FormModal
             isOpen={isFormModalOpen}
-            onClose={() => setIsFormModalOpen(false)}
-            title="Add Contact"
+            onClose={() => {
+              setIsFormModalOpen(false)
+              resetForm()
+            }}
+            title={editingContactId ? 'Edit Contact' : 'Add Contact'}
           >
             {contactFormContent}
           </FormModal>
@@ -319,51 +401,73 @@ export default function ContactsPage() {
               <div className="h-full flex items-center justify-center text-sm text-gray-500">
                 Loading contacts...
               </div>
-            ) : sortedContacts.length === 0 ? (
+            ) : sortedAndFilteredContacts.length === 0 ? (
               <div className="h-full flex items-center justify-center text-sm text-gray-500">
-                No contacts yet. Add your first business contact above.
+                {searchQuery ? 'No contacts match your search.' : 'No contacts yet. Add your first business contact above.'}
               </div>
             ) : (
-              <div className="flex max-sm:flex flex-row flex-wrap max-lg:grid max-lg:grid-cols-2 max-lg:gap-3 items-center justify-center gap-3">
-                {sortedContacts.map((contact, index) => (
-                  <div key={contact.id} className="rounded-xl max-md:w-full max-lg:w-1/2 max-lg:px-3 max-lg:w-full lg:min-w-[250px] xl:min-w-[275px] border border-gray-200 bg-white p-3 shadow-sm">
-                    <div className="flex items-start justify-between gap-2">
+              <div className="flex max-sm:flex items-stretch flex-row flex-wrap max-lg:grid max-lg:grid-cols-2 max-lg:gap-3 items-center justify-center gap-3">
+                {sortedAndFilteredContacts.map((contact, index) => {
+                  const pushReadiness = getPushReadiness(contact)
+                  const isPushBusy = isPushingId === contact.id
+                  const isPushDisabled = !pushReadiness.isReady || isPushBusy
+                  const missingTitle = pushReadiness.isReady
+                    ? ''
+                    : `Needed to push:\n- ${pushReadiness.missing.join('\n- ')}`
+
+                  return (
+                  <div 
+                    key={contact.id} 
+                    onClick={() => openEditModal(contact)}
+                    className="rounded-xl flex flex-col justify-between max-md:w-full max-lg:w-1/2 max-lg:px-3 max-lg:w-full lg:min-w-[250px] xl:min-w-[275px] border border-gray-200 bg-white p-3 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-300 transition-all"
+                  >
+                    <div className="flex items-start  justify-between gap-2">
                       <div>
                         <p className="text-sm font-semibold text-indigo-600">#{index + 1}</p>
                         <h2 className="text-sm font-semibold text-gray-900">{contact.name}</h2>
                         <p className="text-xs text-gray-500">{contact.businessType || ""}</p>
                       </div>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
-                        Ready to Push
-                      </span>
+                      {pushReadiness.isReady ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded-lg bg-green-200 text-green-800 font-medium">
+                          Ready to Push
+                        </span>
+                      ) : null}
                     </div>
 
                     <div className="mt-2 space-y-1 text-xs text-gray-700">
-                      <p><span className="font-medium">Number:</span> {contact.phone}</p>
+                      <p><span className="font-medium">Number:</span> {contact.phone || '-'}</p>
                       <p><span className="font-medium">Email:</span> {contact.email || '-'}</p>
                       <p><span className="font-medium">Location:</span> {contact.location || '-'}</p>
                       <p className="break-words"><span className="font-medium">Note:</span> {contact.note || '-'}</p>
                     </div>
 
                     <div className="mt-3 flex gap-2">
+                      <div className="flex-1" title={missingTitle}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handlePushToLeads(contact)
+                          }}
+                          disabled={isPushDisabled}
+                          className="w-full rounded-lg cursor-pointer bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-700 disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+                        >
+                          {isPushBusy
+                            ? 'Pushing...'
+                            : 'Push to Leads'}
+                        </button>
+                      </div>
                       <button
-                        onClick={() => handlePushToLeads(contact)}
-                        disabled={isPushingId === contact.id}
-                        className="flex-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-700 disabled:opacity-60"
-                      >
-                        {isPushingId === contact.id
-                          ? 'Pushing...'
-                          : 'Push to Leads'}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteContact(contact.id)}
-                        className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs text-red-700 hover:bg-red-100"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteContact(contact.id)
+                        }}
+                        className="rounded-lg border cursor-pointer border-red-300 bg-red-50 px-3 py-1.5 text-xs text-red-700 hover:bg-red-100"
                       >
                         Delete
                       </button>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             )}
           </div>
