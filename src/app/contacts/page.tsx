@@ -2,6 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
+import { 
+  validateContactForm, 
+  showFeedback, 
+  showValidationErrors,
+  filterPhoneInput,
+  filterEmailInput 
+} from '@/lib/contactValidation'
 
 interface ContactEntry {
   id: string
@@ -60,8 +67,11 @@ export default function ContactsPage() {
   }
 
   const handleCreateContact = () => {
-    if (!name.trim() || !phone.trim()) {
-      alert('Name and number are required.')
+    // Validate inputs
+    const validation = validateContactForm(name, phone, email)
+
+    if (!validation.isValid) {
+      showValidationErrors(validation.errors)
       return
     }
 
@@ -85,10 +95,19 @@ export default function ContactsPage() {
         const created = (await response.json()) as ContactEntry
         setContacts((prev) => [created, ...prev])
         resetForm()
+        showFeedback({
+          type: 'success',
+          title: 'Contact Added',
+          description: `${created.name} has been added to your contacts.`
+        })
       })
       .catch((error) => {
         const message = error instanceof Error ? error.message : 'Failed to add contact.'
-        alert(message)
+        showFeedback({
+          type: 'error',
+          title: 'Failed to Add Contact',
+          description: message
+        })
       })
       .finally(() => {
         setIsSubmitting(false)
@@ -108,10 +127,19 @@ export default function ContactsPage() {
           throw new Error(payload?.error || 'Failed to delete contact.')
         }
         setContacts((prev) => prev.filter((contact) => contact.id !== contactId))
+        showFeedback({
+          type: 'success',
+          title: 'Contact Deleted',
+          description: 'The contact has been removed from your list.'
+        })
       })
       .catch((error) => {
         const message = error instanceof Error ? error.message : 'Failed to delete contact.'
-        alert(message)
+        showFeedback({
+          type: 'error',
+          title: 'Failed to Delete Contact',
+          description: message
+        })
       })
   }
 
@@ -154,10 +182,18 @@ export default function ContactsPage() {
       }
 
       setContacts((prev) => prev.filter((item) => item.id !== contact.id))
-      alert('Contact pushed to leads and removed from contacts.')
+      showFeedback({
+        type: 'success',
+        title: 'Contact Pushed to Leads',
+        description: `${contact.name} has been moved to your leads list.`
+      })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to push contact to leads.'
-      alert(message)
+      showFeedback({
+        type: 'error',
+        title: 'Failed to Push to Leads',
+        description: message
+      })
     } finally {
       setIsPushingId(null)
     }
@@ -190,13 +226,13 @@ export default function ContactsPage() {
             />
             <input
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(filterPhoneInput(e.target.value))}
               placeholder="Number *"
               className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <input
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(filterEmailInput(e.target.value))}
               placeholder="Email"
               className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
