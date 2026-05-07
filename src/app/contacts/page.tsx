@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
 import FormModal from '@/lib/formModal'
+import PageHeader from '@/components/PageHeader'
 import { 
   validateContactForm, 
   showFeedback, 
@@ -288,83 +289,84 @@ export default function ContactsPage() {
   )
 
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-3 sm:p-4">
-      <div className="h-full rounded-2xl border border-indigo-100 bg-white shadow-sm flex flex-col min-h-0">
-        <div className="border-b border-indigo-100 bg-gradient-to-r from-indigo-600 to-sky-600 px-4 py-4 text-white">
-          <p className="text-xs uppercase tracking-[0.2em] text-indigo-100 font-semibold">Contacts</p>
-          <h1 className="text-xl font-semibold">Business Contacts Book</h1>
-          <p className="text-sm text-indigo-100 mt-1">Create contact entries and push them directly to your leads list.</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="mx-auto max-w-full py-6 sm:px-6 lg:px-8 2xl:px-12">
+        <div className="px-4 sm:px-0">
+          <PageHeader
+            eyebrow="Contacts"
+            title="Business Contacts Book"
+            description="Create contact entries and push them directly to your leads list."
+            action={(
+              <button
+                onClick={() => setIsFormModalOpen(true)}
+                className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+              >
+                Add Contact
+              </button>
+            )}
+          />
 
-        <div className="border-b border-gray-200 bg-white px-4 py-3">
-          <button
-            onClick={() => setIsFormModalOpen(true)}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          <FormModal
+            isOpen={isFormModalOpen}
+            onClose={() => setIsFormModalOpen(false)}
+            title="Add Contact"
           >
-            Add Contact
-          </button>
-        </div>
+            {contactFormContent}
+          </FormModal>
 
-        <FormModal
-          isOpen={isFormModalOpen}
-          onClose={() => setIsFormModalOpen(false)}
-          title="Add Contact"
-        >
-          {contactFormContent}
-        </FormModal>
-
-        <div className="flex-1 min-h-0 overflow-y-auto p-4">
-          {isLoadingContacts ? (
-            <div className="h-full flex items-center justify-center text-sm text-gray-500">
-              Loading contacts...
-            </div>
-          ) : sortedContacts.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-sm text-gray-500">
-              No contacts yet. Add your first business contact above.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-              {sortedContacts.map((contact, index) => (
-                <div key={contact.id} className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-[11px] font-semibold text-indigo-600">Contact #{index + 1}</p>
-                      <h2 className="text-sm font-semibold text-gray-900">{contact.name}</h2>
-                      <p className="text-xs text-gray-500">{contact.businessType || 'Business type not set'}</p>
+          <div className="overflow-y-auto">
+            {isLoadingContacts ? (
+              <div className="h-full flex items-center justify-center text-sm text-gray-500">
+                Loading contacts...
+              </div>
+            ) : sortedContacts.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-gray-500">
+                No contacts yet. Add your first business contact above.
+              </div>
+            ) : (
+              <div className="flex max-sm:flex flex-row flex-wrap max-lg:grid max-lg:grid-cols-2 max-lg:gap-3 items-center justify-center gap-3">
+                {sortedContacts.map((contact, index) => (
+                  <div key={contact.id} className="rounded-xl max-md:w-full max-lg:w-1/2 max-lg:px-3 max-lg:w-full lg:min-w-[250px] xl:min-w-[275px] border border-gray-200 bg-white p-3 shadow-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-indigo-600">#{index + 1}</p>
+                        <h2 className="text-sm font-semibold text-gray-900">{contact.name}</h2>
+                        <p className="text-xs text-gray-500">{contact.businessType || ""}</p>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+                        Ready to Push
+                      </span>
                     </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
-                      Ready to Push
-                    </span>
-                  </div>
 
-                  <div className="mt-2 space-y-1 text-xs text-gray-700">
-                    <p><span className="font-medium">Number:</span> {contact.phone}</p>
-                    <p><span className="font-medium">Email:</span> {contact.email || '-'}</p>
-                    <p><span className="font-medium">Location:</span> {contact.location || '-'}</p>
-                    <p className="break-words"><span className="font-medium">Note:</span> {contact.note || '-'}</p>
-                  </div>
+                    <div className="mt-2 space-y-1 text-xs text-gray-700">
+                      <p><span className="font-medium">Number:</span> {contact.phone}</p>
+                      <p><span className="font-medium">Email:</span> {contact.email || '-'}</p>
+                      <p><span className="font-medium">Location:</span> {contact.location || '-'}</p>
+                      <p className="break-words"><span className="font-medium">Note:</span> {contact.note || '-'}</p>
+                    </div>
 
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      onClick={() => handlePushToLeads(contact)}
-                      disabled={isPushingId === contact.id}
-                      className="flex-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-700 disabled:opacity-60"
-                    >
-                      {isPushingId === contact.id
-                        ? 'Pushing...'
-                        : 'Push to Leads'}
-                    </button>
-                    <button
-                      onClick={() => handleDeleteContact(contact.id)}
-                      className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs text-red-700 hover:bg-red-100"
-                    >
-                      Delete
-                    </button>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        onClick={() => handlePushToLeads(contact)}
+                        disabled={isPushingId === contact.id}
+                        className="flex-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-700 disabled:opacity-60"
+                      >
+                        {isPushingId === contact.id
+                          ? 'Pushing...'
+                          : 'Push to Leads'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteContact(contact.id)}
+                        className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs text-red-700 hover:bg-red-100"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
