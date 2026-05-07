@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
+import FormModal from '@/lib/formModal'
 import { 
   validateContactForm, 
   showFeedback, 
@@ -9,6 +10,12 @@ import {
   filterPhoneInput,
   filterEmailInput 
 } from '@/lib/contactValidation'
+import userIcon from '@/assets/user.svg'
+import phoneIcon from '@/assets/hash.svg'
+import emailIcon from '@/assets/at-sign.svg'
+import locationIcon from '@/assets/location.svg'
+import businessIcon from '@/assets/business.svg'
+import noteIcon from '@/assets/note.svg'
 
 interface ContactEntry {
   id: string
@@ -34,6 +41,7 @@ export default function ContactsPage() {
   const [businessType, setBusinessType] = useState('')
   const [note, setNote] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [isPushingId, setIsPushingId] = useState<string | null>(null)
   const [isLoadingContacts, setIsLoadingContacts] = useState(true)
 
@@ -95,6 +103,7 @@ export default function ContactsPage() {
         const created = (await response.json()) as ContactEntry
         setContacts((prev) => [created, ...prev])
         resetForm()
+        setIsFormModalOpen(false)
         showFeedback({
           type: 'success',
           title: 'Contact Added',
@@ -207,6 +216,77 @@ export default function ContactsPage() {
     [contacts]
   )
 
+  const contactFormContent = (
+    <div className="border-b border-gray-200 bg-white px-4 py-3">
+      <div className='relative'>
+        <img className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={userIcon.src} alt="user" />
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Contact name *"
+          className="rounded-lg border pl-12 min-h-12 mb-2 w-full border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2 ">
+        <div className='relative'>
+          <img className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={phoneIcon.src} alt="phone" />
+          <input
+            value={phone}
+            onChange={(e) => setPhone(filterPhoneInput(e.target.value))}
+            placeholder="Number *"
+            className="rounded-lg border w-full pl-12 min-h-12 border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+        <div className='relative'>
+          <img className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={emailIcon.src} alt="email" />
+          <input
+            value={email}
+            onChange={(e) => setEmail(filterEmailInput(e.target.value))}
+            placeholder="Email"
+            className="rounded-lg border w-full pl-12 min-h-12 border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+        <div className='relative'>
+          <img className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={locationIcon.src} alt="location" />
+          <input
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="Location"
+            className="rounded-lg border w-full pl-12 min-h-12 border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+        <div className='relative'>
+          <img className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={businessIcon.src} alt="business" />
+          <input
+            value={businessType}
+            onChange={(e) => setBusinessType(e.target.value)}
+            placeholder="Business type"
+            className="rounded-lg border w-full pl-12 min-h-12 border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+      </div>
+      <div className='relative'>
+        <img className='absolute left-3 top-5 h-5 w-5' src={noteIcon.src} alt="note" />
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Note"
+          rows={2}
+          className="mt-3 w-full rounded-lg border border-gray-300 pl-12 min-h-25 lg:min-h-40 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
+      <div className="w-full flex justify-end">
+        <button
+          onClick={handleCreateContact}
+          disabled={isSubmitting}
+          className="rounded-lg cursor-pointer bg-indigo-600 px-3 py-2 text-white hover:bg-indigo-700 disabled:opacity-60"
+        >
+          {isSubmitting ? 'Adding...' : 'Add Contact'}
+        </button>
+      </div>
+    </div>
+  )
+
   return (
     <div className="h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-3 sm:p-4">
       <div className="h-full rounded-2xl border border-indigo-100 bg-white shadow-sm flex flex-col min-h-0">
@@ -217,53 +297,21 @@ export default function ContactsPage() {
         </div>
 
         <div className="border-b border-gray-200 bg-white px-4 py-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-2">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Contact name *"
-              className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <input
-              value={phone}
-              onChange={(e) => setPhone(filterPhoneInput(e.target.value))}
-              placeholder="Number *"
-              className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <input
-              value={email}
-              onChange={(e) => setEmail(filterEmailInput(e.target.value))}
-              placeholder="Email"
-              className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Location"
-              className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <input
-              value={businessType}
-              onChange={(e) => setBusinessType(e.target.value)}
-              placeholder="Business type"
-              className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <button
-              onClick={handleCreateContact}
-              disabled={isSubmitting}
-              className="px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
-            >
-              Add Contact
-            </button>
-          </div>
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Note"
-            rows={2}
-            className="mt-2 w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <button
+            onClick={() => setIsFormModalOpen(true)}
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            Add Contact
+          </button>
         </div>
+
+        <FormModal
+          isOpen={isFormModalOpen}
+          onClose={() => setIsFormModalOpen(false)}
+          title="Add Contact"
+        >
+          {contactFormContent}
+        </FormModal>
 
         <div className="flex-1 min-h-0 overflow-y-auto p-4">
           {isLoadingContacts ? (
