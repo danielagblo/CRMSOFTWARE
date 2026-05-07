@@ -406,8 +406,8 @@ export default function ContactsPage() {
                 {searchQuery ? 'No contacts match your search.' : 'No contacts yet. Add your first business contact above.'}
               </div>
             ) : (
-              <div className="flex max-sm:flex items-stretch flex-row flex-wrap max-lg:grid max-lg:grid-cols-2 max-lg:gap-3 items-center justify-center gap-3">
-                {sortedAndFilteredContacts.map((contact, index) => {
+              <div className="max-sm:flex md:grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 items-stretch flex-row flex-wrap max-lg:gap-3 items-center gap-3">
+                {sortedAndFilteredContacts.map((contact) => {
                   const pushReadiness = getPushReadiness(contact)
                   const isPushBusy = isPushingId === contact.id
                   const isPushDisabled = !pushReadiness.isReady || isPushBusy
@@ -419,22 +419,21 @@ export default function ContactsPage() {
                   <div 
                     key={contact.id} 
                     onClick={() => openEditModal(contact)}
-                    className="rounded-xl flex flex-col justify-between max-md:w-full max-lg:w-1/2 max-lg:px-3 max-lg:w-full lg:min-w-[250px] xl:min-w-[275px] border border-gray-200 bg-white p-3 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-300 transition-all"
+                    className="w-full rounded-xl flex flex-col justify-between max-lg:px-3 border border-gray-200 bg-white p-3 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-300 transition-all"
                   >
                     <div className="flex items-start  justify-between gap-2">
                       <div>
-                        <p className="text-sm font-semibold text-indigo-600">#{index + 1}</p>
-                        <h2 className="text-sm font-semibold text-gray-900">{contact.name}</h2>
-                        <p className="text-xs text-gray-500">{contact.businessType || ""}</p>
+                        <h2 className="text-base font-semibold text-gray-900">{contact.name}</h2>
+                        <p className="text-sm text-gray-500">{contact.businessType || ""}</p>
                       </div>
                       {pushReadiness.isReady ? (
-                        <span className="text-[10px] px-2 py-0.5 rounded-lg bg-green-200 text-green-800 font-medium">
-                          Ready to Push
+                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-green-200 text-green-800 border border-green-800 font-medium">
+                          &#x2605; <span className='pl-1'>Ready to Push</span>
                         </span>
                       ) : null}
                     </div>
 
-                    <div className="mt-2 space-y-1 text-xs text-gray-700">
+                    <div className="mt-2 space-y-1 text-base text-gray-700">
                       <p><span className="font-medium">Number:</span> {contact.phone || '-'}</p>
                       <p><span className="font-medium">Email:</span> {contact.email || '-'}</p>
                       <p><span className="font-medium">Location:</span> {contact.location || '-'}</p>
@@ -449,7 +448,7 @@ export default function ContactsPage() {
                             handlePushToLeads(contact)
                           }}
                           disabled={isPushDisabled}
-                          className="w-full rounded-lg cursor-pointer bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-700 disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+                          className="w-full rounded-md cursor-pointer bg-indigo-600 px-3 py-2 text-sm text-white hover:bg-indigo-700 disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
                         >
                           {isPushBusy
                             ? 'Pushing...'
@@ -461,7 +460,7 @@ export default function ContactsPage() {
                           e.stopPropagation()
                           handleDeleteContact(contact.id)
                         }}
-                        className="rounded-lg border cursor-pointer border-red-300 bg-red-50 px-3 py-1.5 text-xs text-red-700 hover:bg-red-100"
+                        className="rounded-md border cursor-pointer border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 hover:bg-red-100"
                       >
                         Delete
                       </button>
