@@ -110,6 +110,56 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  try {
+    const userId = await getUserIdFromRequest(request)
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    await ensureUserExists(userId)
+    const { id, name, phone, email, location, businessType, note } = await request.json()
+
+    if (!id) {
+      return NextResponse.json({ error: 'Contact ID is required.' }, { status: 400 })
+    }
+
+    if (!name?.trim() || !phone?.trim()) {
+      return NextResponse.json({ error: 'Name and number are required.' }, { status: 400 })
+    }
+
+    const db = prisma as any
+    
+    // Verify the contact belongs to the current user (prevent horizontal privilege escalation)
+    const existingContact = await db.contact.findFirst({
+      where: { id, createdBy: userId }
+    })
+    
+    if (!existingContact) {
+      return NextResponse.json({ error: 'Contact not found or access denied.' }, { status: 404 })
+    }
+
+    const updatedContact = await db.contact.update({
+      where: { id },
+      data: {
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email?.trim() || null,
+        location: location?.trim() || null,
+        businessType: businessType?.trim() || null,
+        note: note?.trim() || null
+      }
+    })
+
+    return NextResponse.json({
+      ...updatedContact,
+      createdAt: updatedContact.createdAt.toISOString()
+    })
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update contact.' }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequest(request)
@@ -124,6 +174,16 @@ export async function DELETE(request: NextRequest) {
     }
 
     const db = prisma as any
+    
+    // Verify the contact belongs to the current user (prevent horizontal privilege escalation)
+    const existingContact = await db.contact.findFirst({
+      where: { id, createdBy: userId }
+    })
+    
+    if (!existingContact) {
+      return NextResponse.json({ error: 'Contact not found or access denied.' }, { status: 404 })
+    }
+
     await db.contact.delete({
       where: { id }
     })

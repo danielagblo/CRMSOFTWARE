@@ -2,15 +2,29 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import LeadForm from '@/components/LeadForm'
 import LeadList from '@/components/LeadList'
+import PageHeader from '@/components/PageHeader'
+import SearchBar from '@/components/SearchBar'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
+
+interface Lead {
+  id: string
+  clientName: string
+  companyName: string | null
+  phone: string
+  email: string
+  stage: string
+  dealValue: number | null
+  notes: string | null
+  assignedUser: { name: string }
+}
 
 export default function LeadsPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
-  const [leads, setLeads] = useState<any[]>([])
+  const [leads, setLeads] = useState<Lead[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
@@ -47,6 +61,19 @@ export default function LeadsPage() {
     fetchLeads()
   }
 
+  const filteredLeads = leads.filter(lead => {
+    if (!searchQuery.trim()) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      lead.clientName.toLowerCase().includes(query) ||
+      lead.phone.toLowerCase().includes(query) ||
+      lead.email.toLowerCase().includes(query) ||
+      (lead.companyName && lead.companyName.toLowerCase().includes(query)) ||
+      (lead.notes && lead.notes.toLowerCase().includes(query)) ||
+      lead.stage.toLowerCase().includes(query)
+    )
+  })
+
   if (!user) {
     return null
   }
@@ -54,20 +81,27 @@ export default function LeadsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-full mx-auto py-6 sm:px-6 lg:px-8 2xl:px-12">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-            <div>
-              <p className="text-sm font-medium text-indigo-600">Lead Management</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Leads</h1>
-              <p className="text-sm text-gray-500 mt-1">{leads.length} total leads</p>
-            </div>
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-sm"
-            >
-              {showForm ? 'Cancel' : 'Add Lead'}
-            </button>
-          </div>
+        <div className="px-4 sm:px-0">
+          <PageHeader
+            eyebrow="Lead Management"
+            title="Leads"
+            description={`${leads.length} total leads`}
+            leftAction={
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search leads..."
+              />
+            }
+            action={(
+              <button
+                onClick={() => setShowForm(!showForm)}
+                className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+              >
+                {showForm ? 'Cancel' : 'Add Lead'}
+              </button>
+            )}
+          />
 
           {showForm && (
             <div className="bg-white shadow-sm border border-gray-100 rounded-xl p-6 mb-6">
@@ -75,7 +109,7 @@ export default function LeadsPage() {
             </div>
           )}
 
-          <LeadList leads={leads} onLeadUpdated={fetchLeads} />
+          <LeadList leads={filteredLeads} onLeadUpdated={fetchLeads} />
         </div>
       </div>
     </div>

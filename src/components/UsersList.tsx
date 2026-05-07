@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 interface User {
   id: string
@@ -10,12 +10,18 @@ interface User {
   createdAt: Date
 }
 
-export default function UsersList({ initialUsers }: { initialUsers: any[] }) {
+export default function UsersList({ initialUsers, searchQuery = '' }: { initialUsers: any[], searchQuery?: string }) {
   const [users, setUsers] = useState<User[]>(initialUsers)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'SALES' })
+
+  useEffect(() => {
+    const openCreateModal = () => setIsModalOpen(true)
+    window.addEventListener('users:add', openCreateModal)
+    return () => window.removeEventListener('users:add', openCreateModal)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -89,21 +95,18 @@ export default function UsersList({ initialUsers }: { initialUsers: any[] }) {
     }
   }
 
+  const filteredUsers = users.filter(user => {
+    if (!searchQuery.trim()) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      user.name.toLowerCase().includes(query) ||
+      user.email.toLowerCase().includes(query) ||
+      user.role.toLowerCase().includes(query)
+    )
+  })
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(true)}
-          className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          <span>Add New User</span>
-        </button>
-      </div>
-
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -116,7 +119,7 @@ export default function UsersList({ initialUsers }: { initialUsers: any[] }) {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
