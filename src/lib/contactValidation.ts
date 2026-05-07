@@ -46,12 +46,14 @@ export function filterPhoneInput(value: string): string {
 }
 
 /**
- * Filters email input to allow only valid email characters
- * - Allows: letters, numbers, @, ., -, _
+ * Filters email input to allow RFC 5321/5322 valid characters in local-part
+ * - Allows: letters, numbers, and special chars: ! # $ % & ' * + - / = ? ^ _ ` { | } ~ .
+ * - Also allows @ for domain separator
+ * Note: The + character is valid in email local-parts (e.g., user+tag@domain.com)
  */
 export function filterEmailInput(value: string): string {
-  // Allow letters, numbers, @, dot, hyphen, underscore
-  return value.replace(/[^\w@.\-]/g, '')
+  // Allow RFC 5321/5322 valid characters: alphanumeric, @, and special chars: ! # $ % & ' * + - / = ? ^ _ ` { | } ~ .
+  return value.replace(/[^\w@.!#$%&'*+/=?^`{|}~\-]/g, '')
 }
 
 /**

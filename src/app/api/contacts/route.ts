@@ -129,6 +129,16 @@ export async function PATCH(request: NextRequest) {
     }
 
     const db = prisma as any
+    
+    // Verify the contact belongs to the current user (prevent horizontal privilege escalation)
+    const existingContact = await db.contact.findFirst({
+      where: { id, createdBy: userId }
+    })
+    
+    if (!existingContact) {
+      return NextResponse.json({ error: 'Contact not found or access denied.' }, { status: 404 })
+    }
+
     const updatedContact = await db.contact.update({
       where: { id },
       data: {
@@ -164,6 +174,16 @@ export async function DELETE(request: NextRequest) {
     }
 
     const db = prisma as any
+    
+    // Verify the contact belongs to the current user (prevent horizontal privilege escalation)
+    const existingContact = await db.contact.findFirst({
+      where: { id, createdBy: userId }
+    })
+    
+    if (!existingContact) {
+      return NextResponse.json({ error: 'Contact not found or access denied.' }, { status: 404 })
+    }
+
     await db.contact.delete({
       where: { id }
     })

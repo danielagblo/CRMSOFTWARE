@@ -35,6 +35,7 @@ export default function SearchBar({
       {onFilterClick && (
         <button
           onClick={onFilterClick}
+          type='button'
           className="rounded-lg border border-gray-300 bg-white p-2 hover:bg-gray-50 transition-colors"
           title="Open filters"
         >
