@@ -25,7 +25,7 @@ function pgPoolConfigFromDatabaseUrl(databaseUrl: string) {
     keepAlive: true,
     connectionTimeoutMillis: 20_000,
     query_timeout: 20_000,
-    ssl: { servername: hostname },
+    ssl: { servername: hostname, rejectUnauthorized: false },
     lookup: (
       host: string,
       _opts: unknown,
