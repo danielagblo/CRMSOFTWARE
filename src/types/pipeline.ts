@@ -20,14 +20,14 @@ interface PaymentSnapshot {
 interface StageDataEntry {
   id: string;
   stage: string;
-  data: Record<string, never>;
+  data: Record<string, any>;
 }
 
 interface StageEditContext {
   lead: Lead;
   stage: string;
   stageDataId?: string;
-  initialData?: Record<string, never>;
+  initialData?: Record<string, any>;
 }
 
 export type { Lead, PaymentSnapshot, StageDataEntry, StageEditContext };
