@@ -47,6 +47,6 @@ input::placeholder, textarea::placeholder {
   }
 }
 
-button {
+button:not(:disabled) {
   cursor: pointer;
 }
