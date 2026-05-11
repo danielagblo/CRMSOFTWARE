@@ -17,6 +17,8 @@ interface Lead {
   dealValue: number | null
   notes: string | null
   stage: string
+  assignedTo: string
+  visibleToAll?: boolean
   assignedUser: { name: string }
 }
 
@@ -24,6 +26,7 @@ interface LeadListProps {
   leads: Lead[]
   onLeadUpdated: () => void
   viewMode: 'list' | 'card'
+  onEditLead: (lead: Lead) => void
 }
 
 const parsePhoneNumbers = (phone: string) => (
@@ -33,7 +36,7 @@ const parsePhoneNumbers = (phone: string) => (
     .filter(Boolean)
 )
 
-export default function LeadList({ leads, onLeadUpdated, viewMode }: LeadListProps) {
+export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead }: LeadListProps) {
   const [hoveredLead, setHoveredLead] = useState<Lead | null>(null)
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 })
 
@@ -91,12 +94,13 @@ export default function LeadList({ leads, onLeadUpdated, viewMode }: LeadListPro
       >
         View
       </Link>
-      <Link
-        href={`/leads/${lead.id}/edit`}
+      <button
+        type="button"
+        onClick={() => onEditLead(lead)}
         className="text-green-600 hover:text-green-900 text-sm font-semibold"
       >
         Edit
-      </Link>
+      </button>
       <button
         onClick={() => handleDelete(lead.id)}
         className="text-red-600 hover:text-red-900 text-sm font-semibold"
@@ -114,7 +118,7 @@ export default function LeadList({ leads, onLeadUpdated, viewMode }: LeadListPro
 
     return (
       <div
-        className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm ${
+        className={`rounded-xl min-w-[27vw] border border-gray-200 bg-white p-4 shadow-sm ${
           variant === 'grid' ? 'hover:shadow-md hover:border-indigo-300 transition-all' : 'shadow-lg'
         }`}
       >
