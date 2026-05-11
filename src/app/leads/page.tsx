@@ -97,10 +97,10 @@ export default function LeadsPage() {
             </div>
           ) : (
             <>
-               <PageHeader
-                 eyebrow="Lead Management"
-                 title="Leads"
-                 description={`Found ${filteredLeads.length} lead${filteredLeads.length !== 1 ? 's' : ''}`}
+              <PageHeader
+                eyebrow="Lead Management"
+                title="Leads"
+                description={`Found ${filteredLeads.length} lead${filteredLeads.length !== 1 ? 's' : ''}`}
                 leftAction={
                   <SearchBar
                     value={searchQuery}
@@ -115,8 +115,8 @@ export default function LeadsPage() {
                   >
                     {showForm ? 'Cancel' : 'Add Lead'}
                   </button>
-                 )}
-               />
+                )}
+              />
                <div className="flex justify-end mb-2 -mt-6">
                  <div className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
                    <button
