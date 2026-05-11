@@ -186,6 +186,7 @@ export default function LeadsPage() {
                 viewMode={leadView}
                 onEditLead={handleEditLead}
                 onViewLead={handleViewLead}
+                onCreateLead={openCreateForm}
                 selectedLeadId={selectedLead?.id ?? null}
               />
             </div>

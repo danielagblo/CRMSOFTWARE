@@ -27,6 +27,7 @@ interface LeadListProps {
   viewMode: 'list' | 'card'
   onEditLead: (lead: Lead) => void
   onViewLead: (lead: Lead) => void
+  onCreateLead: () => void
   selectedLeadId?: string | null
 }
 
@@ -37,7 +38,7 @@ const parsePhoneNumbers = (phone: string) => (
     .filter(Boolean)
 )
 
-export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, onViewLead, selectedLeadId = null }: LeadListProps) {
+export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, onViewLead, onCreateLead, selectedLeadId = null }: LeadListProps) {
   const [hoveredLead, setHoveredLead] = useState<Lead | null>(null)
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 })
   const [hoverPreviewRef, setHoverPreviewRef] = useState<HTMLDivElement | null>(null)
@@ -224,11 +225,17 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
       {leads.length === 0 ? (
         <div className="p-10 text-center">
           <p className="text-sm font-medium text-gray-700">No leads yet</p>
-          <p onClick={() => {/**add lead */}} className="text-sm transition hover:underline hover:text-gray-400 cursor-pointer text-gray-500 mt-1">Create your first lead to start tracking your pipeline.</p>
+          <button
+            type="button"
+            onClick={onCreateLead}
+            className="mt-1 text-sm text-gray-500 transition hover:underline hover:text-indigo-600"
+          >
+            Create your first lead to start tracking your pipeline.
+          </button>
         </div>
       ) : viewMode === 'card' ? (
         <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {leads.map((lead) => (
               <div key={lead.id}>
                 {renderLeadCard(lead, 'grid')}
