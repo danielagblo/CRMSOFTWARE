@@ -1,8 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { MouseEvent } from 'react'
-import Link from 'next/link'
 
 interface Lead {
   id: string
@@ -27,6 +26,8 @@ interface LeadListProps {
   onLeadUpdated: () => void
   viewMode: 'list' | 'card'
   onEditLead: (lead: Lead) => void
+  onViewLead: (lead: Lead) => void
+  selectedLeadId?: string | null
 }
 
 const parsePhoneNumbers = (phone: string) => (
@@ -36,9 +37,27 @@ const parsePhoneNumbers = (phone: string) => (
     .filter(Boolean)
 )
 
-export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead }: LeadListProps) {
+export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, onViewLead, selectedLeadId = null }: LeadListProps) {
   const [hoveredLead, setHoveredLead] = useState<Lead | null>(null)
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 })
+  const [hoverPreviewRef, setHoverPreviewRef] = useState<HTMLDivElement | null>(null)
+
+  const clampToViewport = (x: number, y: number) => {
+    const cardWidth = hoverPreviewRef?.offsetWidth || 320
+    const cardHeight = hoverPreviewRef?.offsetHeight || 420
+    const maxX = window.innerWidth - cardWidth - 12
+    const maxY = window.innerHeight - cardHeight - 12
+
+    return {
+      x: Math.min(Math.max(x, 12), Math.max(12, maxX)),
+      y: Math.min(Math.max(y, 12), Math.max(12, maxY))
+    }
+  }
+
+  useEffect(() => {
+    if (!hoverPreviewRef || typeof window === 'undefined') return
+    setHoverPosition((prev) => clampToViewport(prev.x, prev.y))
+  }, [hoverPreviewRef])
 
   const handleDelete = async (leadId: string) => {
     if (!confirm('Are you sure you want to delete this lead?')) return;
@@ -71,38 +90,50 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead }:
 
   const updateHoverPosition = (event: MouseEvent) => {
     const offset = 16
-    const cardWidth = 320
-    const cardHeight = 420
     let x = event.clientX + offset
     let y = event.clientY + offset
 
     if (typeof window !== 'undefined') {
-      const maxX = window.innerWidth - cardWidth - 12
-      const maxY = window.innerHeight - cardHeight - 12
-      x = Math.min(Math.max(x, 12), Math.max(12, maxX))
-      y = Math.min(Math.max(y, 12), Math.max(12, maxY))
+      const clamped = clampToViewport(x, y)
+      x = clamped.x
+      y = clamped.y
     }
 
     setHoverPosition({ x, y })
   }
 
   const renderLeadActions = (lead: Lead) => (
-    <div className="flex items-center gap-4">
-      <Link
-        href={`/leads/${lead.id}`}
+    <div
+      data-actions="true"
+      className="flex items-center gap-4"
+      onMouseEnter={() => setHoveredLead(null)}
+      onMouseLeave={() => setHoveredLead(null)}
+    >
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation()
+          onViewLead(lead)
+        }}
         className="text-indigo-600 hover:text-indigo-900 text-sm font-semibold"
       >
         View
-      </Link>
+      </button>
       <button
         type="button"
-        onClick={() => onEditLead(lead)}
+        onClick={(event) => {
+          event.stopPropagation()
+          onEditLead(lead)
+        }}
         className="text-green-600 hover:text-green-900 text-sm font-semibold"
       >
         Edit
       </button>
       <button
-        onClick={() => handleDelete(lead.id)}
+        onClick={(event) => {
+          event.stopPropagation()
+          handleDelete(lead.id)
+        }}
         className="text-red-600 hover:text-red-900 text-sm font-semibold"
       >
         Delete
@@ -112,14 +143,22 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead }:
 
   const renderLeadCard = (lead: Lead, variant: 'grid' | 'hover') => {
     const phoneNumbers = parsePhoneNumbers(lead.phone)
+    const isSelected = selectedLeadId === lead.id
     const dealValue = lead.dealValue === null || lead.dealValue === undefined
       ? '-'
       : `GHS ${Number(lead.dealValue).toLocaleString()}`
 
     return (
       <div
-        className={`rounded-xl min-w-[27vw] border border-gray-200 bg-white p-4 shadow-sm ${
-          variant === 'grid' ? 'hover:shadow-md hover:border-indigo-300 transition-all' : 'shadow-lg'
+        onClick={() => {
+          if (variant === 'grid') {
+            onViewLead(lead)
+          }
+        }}
+        className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm ${
+          variant === 'grid'
+            ? `w-full hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer ${isSelected ? 'xl:border-indigo-500 xl:ring-1 xl:ring-indigo-200' : ''}`
+            : 'w-[min(90vw,24rem)] shadow-lg'
         }`}
       >
         <div className="flex items-start justify-between gap-3">
@@ -172,7 +211,7 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead }:
             </div>
           </div>
         ) : (
-          <div className="absolute italic text-sm text-violet-600 bottom-1 right-2">
+          <div className="mt-2 text-right italic text-sm text-violet-600">
             Click to view details
           </div>
         )}
@@ -189,7 +228,7 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead }:
         </div>
       ) : viewMode === 'card' ? (
         <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {leads.map((lead) => (
               <div key={lead.id}>
                 {renderLeadCard(lead, 'grid')}
@@ -202,17 +241,37 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead }:
           <ul className="divide-y divide-gray-100">
             {leads.map((lead) => {
               const phoneNumbers = parsePhoneNumbers(lead.phone)
+              const isSelected = selectedLeadId === lead.id
               return (
                 <li
                   key={lead.id}
+                  onClick={() => onViewLead(lead)}
+                  className="cursor-pointer"
                   onMouseEnter={(event) => {
+                    const target = event.target as HTMLElement
+                    if (target.closest('[data-actions]')) {
+                      setHoveredLead(null)
+                      return
+                    }
                     setHoveredLead(lead)
                     updateHoverPosition(event)
                   }}
-                  onMouseMove={updateHoverPosition}
+                  onMouseMove={(event) => {
+                    const target = event.target as HTMLElement
+                    if (target.closest('[data-actions]')) {
+                      setHoveredLead(null)
+                      return
+                    }
+                    setHoveredLead(lead)
+                    updateHoverPosition(event)
+                  }}
                   onMouseLeave={() => setHoveredLead(null)}
                 >
-                  <div className="px-4 py-5 sm:px-6 hover:bg-gray-50 transition-colors">
+                  <div className={`px-4 py-5 sm:px-6 transition-colors ${
+                    isSelected
+                      ? 'hover:bg-indigo-50/60 xl:border xl:border-indigo-500 xl:bg-indigo-50/40'
+                      : 'hover:bg-gray-50 xl:border xl:border-transparent'
+                  }`}>
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                       <div className="flex items-center min-w-0">
                         <div className="flex-shrink-0 h-10 w-10">
@@ -251,10 +310,13 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead }:
           </ul>
           {hoveredLead && (
             <div
-              className="pointer-events-none fixed z-50 w-80"
+              ref={setHoverPreviewRef}
+              className="pointer-events-none fixed z-50"
               style={{ left: hoverPosition.x, top: hoverPosition.y }}
             >
-              {renderLeadCard(hoveredLead, 'hover')}
+              <div className="max-h-[calc(100vh-24px)] overflow-auto">
+                {renderLeadCard(hoveredLead, 'hover')}
+              </div>
             </div>
           )}
         </div>

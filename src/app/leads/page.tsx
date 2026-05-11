@@ -7,6 +7,7 @@ import type { LeadFormLead } from '@/components/LeadForm'
 import LeadList from '@/components/LeadList'
 import PageHeader from '@/components/PageHeader'
 import SearchBar from '@/components/SearchBar'
+import FormModal from '@/lib/formModal'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
 import listIcon from '@/assets/list.svg'
 import gridIcon from '@/assets/grid.svg'
@@ -24,7 +25,7 @@ export default function LeadsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [leadView, setLeadView] = useState<'list' | 'card'>('list')
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
+  const [formMode, setFormMode] = useState<'create' | 'edit' | 'view'>('create')
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [pendingEditId, setPendingEditId] = useState<string | null>(null)
 
@@ -100,6 +101,12 @@ export default function LeadsPage() {
     setIsFormOpen(true)
   }
 
+  const handleViewLead = (lead: Lead) => {
+    setSelectedLead(lead)
+    setFormMode('view')
+    setIsFormOpen(true)
+  }
+
   const closeForm = () => {
     setSelectedLead(null)
     setFormMode('create')
@@ -172,37 +179,57 @@ export default function LeadsPage() {
           </div>
 
           <div className="xl:grid xl:grid-cols-12 xl:gap-6">
-            <div className={isFormOpen ? 'xl:col-span-8' : 'xl:col-span-12'}>
-              <div className="xl:hidden mb-4">
-                {isFormOpen ? (
-                  <LeadForm
-                    onLeadAdded={handleLeadSaved}
-                    mode={formMode}
-                    lead={selectedLead}
-                    onCancel={closeForm}
-                  />
-                ) : null}
-              </div>
+            <div className={`${isFormOpen ? 'xl:col-span-8' : 'xl:col-span-12'} 2xl:col-span-8`}>
               <LeadList
                 leads={filteredLeads}
                 onLeadUpdated={fetchLeads}
                 viewMode={leadView}
                 onEditLead={handleEditLead}
+                onViewLead={handleViewLead}
+                selectedLeadId={selectedLead?.id ?? null}
               />
             </div>
 
+            <FormModal
+              isOpen={isFormOpen}
+              onClose={closeForm}
+              title={""}
+              wrapperClassName="xl:hidden"
+            >
+              <LeadForm
+                onLeadAdded={handleLeadSaved}
+                mode={formMode}
+                lead={selectedLead}
+                onCancel={closeForm}
+                onEditRequest={() => setFormMode('edit')}
+              />
+            </FormModal>
+
             {isFormOpen ? (
-              <aside className="hidden xl:block xl:col-span-4">
+              <aside className="hidden xl:block 2xl:hidden xl:col-span-4">
                 <div className="sticky top-6">
                   <LeadForm
                     onLeadAdded={handleLeadSaved}
                     mode={formMode}
                     lead={selectedLead}
                     onCancel={closeForm}
+                    onEditRequest={() => setFormMode('edit')}
                   />
                 </div>
               </aside>
             ) : null}
+
+            <aside className="hidden 2xl:block 2xl:col-span-4">
+              <div className="sticky top-6">
+                <LeadForm
+                  onLeadAdded={handleLeadSaved}
+                  mode={formMode}
+                  lead={selectedLead}
+                  onCancel={closeForm}
+                  onEditRequest={() => setFormMode('edit')}
+                />
+              </div>
+            </aside>
           </div>
         </div>
       </div>

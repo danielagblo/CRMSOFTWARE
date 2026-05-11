@@ -5,6 +5,13 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
+import userIcon from '@/assets/user.svg'
+import businessIcon from '@/assets/business.svg'
+import phoneIcon from '@/assets/hash.svg'
+import emailIcon from '@/assets/at-sign.svg'
+import noteIcon from '@/assets/note.svg'
+import filterIcon from '@/assets/filter.svg'
+import DollarIcon from '@/assets/dollar.svg'
 
 const leadSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
@@ -236,11 +243,14 @@ export default function LeadForm({
                 <span className="text-red-500 mr-1">*</span>
                 Client Name
               </label>
-              <input
-                {...register('clientName')}
-                disabled={isReadOnly}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
-              />
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={userIcon.src} alt="Client name" />
+                <input
+                  {...register('clientName')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                />
+              </div>
               {errors.clientName && (
                 <p className="text-red-600 text-sm">{errors.clientName.message}</p>
               )}
@@ -248,11 +258,14 @@ export default function LeadForm({
 
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Company Name</label>
-              <input
-                {...register('companyName')}
-                disabled={isReadOnly}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
-              />
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={businessIcon.src} alt="Company name" />
+                <input
+                  {...register('companyName')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                />
+              </div>
             </div>
 
             <div className="space-y-1">
@@ -260,11 +273,14 @@ export default function LeadForm({
                 <span className="text-red-500 mr-1">*</span>
                 Phone
               </label>
-              <input
-                {...register('phone')}
-                disabled={isReadOnly}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
-              />
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={phoneIcon.src} alt="Phone number" />
+                <input
+                  {...register('phone')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                />
+              </div>
               {errors.phone && (
                 <p className="text-red-600 text-sm">{errors.phone.message}</p>
               )}
@@ -272,12 +288,15 @@ export default function LeadForm({
 
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Email (Optional)</label>
-              <input
-                {...register('email')}
-                type="email"
-                disabled={isReadOnly}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
-              />
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={emailIcon.src} alt="Email" />
+                <input
+                  {...register('email')}
+                  type="email"
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                />
+              </div>
               {errors.email && (
                 <p className="text-red-600 text-sm">{errors.email.message}</p>
               )}
@@ -289,64 +308,79 @@ export default function LeadForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Service Type</label>
-              <select
-                {...register('serviceType')}
-                disabled={isReadOnly}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
-              >
-                <option value="">Select service type</option>
-                {serviceTypeOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={businessIcon.src} alt="Service type" />
+                <select
+                  {...register('serviceType')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                >
+                  <option value="">Select service type</option>
+                  {serviceTypeOptions.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Service Category</label>
-              <select
-                {...register('serviceCategory')}
-                disabled={isReadOnly}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
-              >
-                <option value="">Select category</option>
-                {serviceCategoryOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={filterIcon.src} alt="Service category" />
+                <select
+                  {...register('serviceCategory')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                >
+                  <option value="">Select category</option>
+                  {serviceCategoryOptions.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Lead Source</label>
-              <select
-                {...register('leadSource')}
-                disabled={isReadOnly}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
-              >
-                <option value="">Select lead source</option>
-                {leadSourceOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={filterIcon.src} alt="Lead source" />
+                <select
+                  {...register('leadSource')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                >
+                  <option value="">Select lead source</option>
+                  {leadSourceOptions.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Deal Value (GHS)</label>
-              <input
-                {...register('dealValue')}
-                type="number"
-                step="0.01"
-                disabled={isReadOnly}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
-              />
+                <div className='relative'>
+                  <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={DollarIcon.src} alt="Deal value" />
+                  <input
+                    {...register('dealValue')}
+                    type="number"
+                    step="0.01"
+                    disabled={isReadOnly}
+                    className="block w-full pl-12 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
+                  />
+                  </div>
             </div>
 
             <div className="space-y-1 md:col-span-2">
               <label className="block text-sm font-medium text-gray-700">Service Notes (Optional)</label>
-              <input
-                {...register('serviceInterested')}
-                disabled={isReadOnly}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
-              />
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={noteIcon.src} alt="Service notes" />
+                <input
+                  {...register('serviceInterested')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -372,16 +406,19 @@ export default function LeadForm({
 
         <div className="space-y-1">
           <label className="block text-sm font-medium text-gray-700">Additional Notes</label>
-          <textarea
-            {...register('notes')}
-            rows={4}
-            disabled={isReadOnly}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white resize-none disabled:bg-gray-100 disabled:text-gray-600"
-          />
+          <div className="relative">
+            <img className="absolute left-3 top-3 h-5 w-5" src={noteIcon.src} alt="Additional notes" />
+            <textarea
+              {...register('notes')}
+              rows={4}
+              disabled={isReadOnly}
+              className="block w-full resize-none rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+            />
+          </div>
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
-          {onCancel ? (
+          {onCancel && mode !== 'view' ? (
             <button
               type="button"
               onClick={onCancel}
@@ -394,7 +431,7 @@ export default function LeadForm({
             <button
               type="button"
               onClick={onEditRequest}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+              className="rounded-lg cursor-pointer bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
             >
               Edit
             </button>
@@ -402,7 +439,7 @@ export default function LeadForm({
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2 text-sm font-medium text-white hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
+              className="rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2 text-sm cursor-pointer font-medium text-white hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
             >
               {loading ? (mode === 'edit' ? 'Saving...' : 'Creating...') : (mode === 'edit' ? 'Save Changes' : 'Create Lead')}
             </button>
