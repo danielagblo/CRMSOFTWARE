@@ -33,3 +33,21 @@ input, textarea, select {
 input::placeholder, textarea::placeholder {
   color: #6b7280 !important; /* text-gray-500 */
 }
+
+
+@layer utilities {
+  /* Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
