@@ -58,8 +58,27 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
       setShowConfirmPassword(false)
       setIsFormOpen(true)
     }
+
+    const toggleCreateModal = () => {
+      setIsFormOpen((prev) => {
+        const nextIsOpen = !prev
+        setSelectedUser(null)
+        setFormMode('create')
+        setFormData({ name: '', email: '', password: '', confirmPassword: '', role: 'SALES' })
+        setValidationErrors({})
+        setShowPassword(false)
+        setShowConfirmPassword(false)
+        return nextIsOpen
+      })
+    }
+
     window.addEventListener('users:add', openCreateModal)
-    return () => window.removeEventListener('users:add', openCreateModal)
+    window.addEventListener('users:toggle-create', toggleCreateModal)
+
+    return () => {
+      window.removeEventListener('users:add', openCreateModal)
+      window.removeEventListener('users:toggle-create', toggleCreateModal)
+    }
   }, [])
 
   useEffect(() => {
@@ -83,6 +102,10 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('users:form-state', { detail: { isOpen: isFormOpen } }))
+  }, [isFormOpen])
 
   const validateForm = (): boolean => {
     const errors: ValidationErrors = {}
@@ -415,6 +438,7 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
                   {filteredUsers.map((user) => (
                     <tr 
                       key={user.id}
+                      onClick={() => openViewForm(user)}
                       className={`hover:bg-gray-50/50 transition-colors cursor-pointer ${
                         selectedUser?.id === user.id 
                           ? 'xl:border-indigo-500 xl:ring-1 xl:ring-indigo-200 xl:bg-indigo-50/40' 
@@ -446,7 +470,10 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
                       {user.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-right"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <div className="flex items-center justify-end gap-2">
                       <div className="hidden sm:flex items-center gap-4">
                         <button

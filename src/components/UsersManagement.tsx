@@ -1,12 +1,23 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import PageHeader from '@/components/PageHeader'
 import SearchBar from '@/components/SearchBar'
 import UsersList from '@/components/UsersList'
 
 export default function UsersManagement({ initialUsers }: { initialUsers: any[] }) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [isFormOpen, setIsFormOpen] = useState(false)
+
+  useEffect(() => {
+    const handleFormState = (event: Event) => {
+      const customEvent = event as CustomEvent<{ isOpen: boolean }>
+      setIsFormOpen(Boolean(customEvent.detail?.isOpen))
+    }
+
+    window.addEventListener('users:form-state', handleFormState)
+    return () => window.removeEventListener('users:form-state', handleFormState)
+  }, [])
 
   const filteredCount = useMemo(() => {
     if (!searchQuery.trim()) return initialUsers.length
@@ -34,10 +45,10 @@ export default function UsersManagement({ initialUsers }: { initialUsers: any[] 
         action={(
           <button
             type="button"
-            onClick={() => window.dispatchEvent(new Event('users:add'))}
+            onClick={() => window.dispatchEvent(new Event('users:toggle-create'))}
             className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
           >
-            Add New User
+            {isFormOpen ? 'Close Form' : 'Add New User'}
           </button>
         )}
       />
