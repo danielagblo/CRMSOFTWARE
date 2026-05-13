@@ -26,9 +26,6 @@ export default function FormModal({
   useEffect(() => {
     if (!isOpen) return
 
-    // Focus the dialog on open
-    dialogRef.current?.focus()
-
     // Handle Escape key to close modal
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -53,7 +50,6 @@ export default function FormModal({
           role="dialog"
           aria-modal="true"
           aria-label={title}
-          tabIndex={-1}
           onClick={(e) => e.stopPropagation()}
           className={`relative w-full no-scrollbar bg-white shadow-2xl max-h-[92vh] overflow-y-auto rounded-t-2xl border border-slate-200 md:max-w-3xl md:rounded-2xl ${panelClassName}`}
         >
