@@ -288,7 +288,14 @@ export default function ContactsPage() {
   }, [contacts, searchQuery])
 
   const contactFormContent = (
-    <div className="border-b border-gray-200 bg-white px-4 py-3">
+    <div className="bg-white px-4 py-3">
+      <div className="mb-4 border-b border-gray-200 pb-2">
+        <PageHeader
+          eyebrow={editingContactId ? 'Edit Contact' : '+ Add a New Contact'}
+          title="Contacts"
+          description={editingContactId ? 'Update contact information' : 'Enter contact information to create a new contact'}
+        />
+      </div>
       <div className='relative'>
         <img className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={userIcon.src} alt="user" />
         <input
@@ -389,7 +396,7 @@ export default function ContactsPage() {
               setIsFormModalOpen(false)
               resetForm()
             }}
-            title={editingContactId ? 'Edit Contact' : 'Add Contact'}
+            title=""
           >
             {contactFormContent}
           </FormModal>
