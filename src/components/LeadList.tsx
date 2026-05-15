@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { MouseEvent } from 'react'
 
 interface Lead {
@@ -43,7 +44,7 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 })
   const [hoverPreviewRef, setHoverPreviewRef] = useState<HTMLDivElement | null>(null)
 
-  const clampToViewport = (x: number, y: number) => {
+  const clampToViewport = useCallback((x: number, y: number) => {
     const cardWidth = hoverPreviewRef?.offsetWidth || 320
     const cardHeight = hoverPreviewRef?.offsetHeight || 420
     const maxX = window.innerWidth - cardWidth - 12
@@ -53,12 +54,13 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
       x: Math.min(Math.max(x, 12), Math.max(12, maxX)),
       y: Math.min(Math.max(y, 12), Math.max(12, maxY))
     }
-  }
+  }, [hoverPreviewRef])
 
   useEffect(() => {
     if (!hoverPreviewRef || typeof window === 'undefined') return
+    // The hover preview position needs to resync after the tooltip mounts.
     setHoverPosition((prev) => clampToViewport(prev.x, prev.y))
-  }, [hoverPreviewRef])
+  }, [hoverPreviewRef, clampToViewport])
 
   const handleDelete = async (leadId: string) => {
     if (!confirm('Are you sure you want to delete this lead?')) return;
@@ -74,7 +76,7 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
       } else {
         alert('Failed to delete lead');
       }
-    } catch (e) {
+    } catch {
       alert('Error deleting lead');
     }
   };
@@ -106,7 +108,7 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
   const renderLeadActions = (lead: Lead) => (
     <div
       data-actions="true"
-      className="flex items-center gap-4"
+      className="flex flex-wrap items-center gap-3"
       onMouseEnter={() => setHoveredLead(null)}
       onMouseLeave={() => setHoveredLead(null)}
     >
@@ -131,6 +133,7 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
         Edit
       </button>
       <button
+        type="button"
         onClick={(event) => {
           event.stopPropagation()
           handleDelete(lead.id)
@@ -158,14 +161,14 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
         }}
         className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm ${
           variant === 'grid'
-            ? `w-full hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer ${isSelected ? 'xl:border-indigo-500 xl:ring-1 xl:ring-indigo-200' : ''}`
+            ? `w-full transition-all cursor-pointer hover:-translate-y-0.5 hover:shadow-md hover:border-indigo-300 ${isSelected ? 'xl:border-indigo-500 xl:ring-1 xl:ring-indigo-200' : ''}`
             : 'w-[min(90vw,24rem)] shadow-lg'
         }`}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-sm bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-semibold text-white">
                 {lead.clientName.charAt(0).toUpperCase()}
               </span>
             </div>
@@ -283,7 +286,7 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
                       <div className="flex items-center min-w-0">
                         <div className="flex-shrink-0 h-10 w-10">
                           <div className="h-10 w-10 rounded-sm bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="text-sm font-semibold text-white">
                               {lead.clientName.charAt(0).toUpperCase()}
                             </span>
                           </div>

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -49,6 +49,23 @@ const normalizeLeadStage = (stage: string) => {
   return legacyStageMap[stage] || "FIND_LEADS";
 };
 
+const cloneLeadBoard = (board: Lead[]) =>
+  board.map((lead) => ({
+    ...lead,
+    assignedUser: { ...lead.assignedUser },
+  }));
+
+const boardSnapshotsEqual = (left: Lead[], right: Lead[]) =>
+  left.length === right.length &&
+  left.every((lead, index) => {
+    const counterpart = right[index];
+    return (
+      counterpart &&
+      lead.id === counterpart.id &&
+      lead.stage === counterpart.stage
+    );
+  });
+
 function StageDropZone({
   stageId,
   children,
@@ -62,7 +79,7 @@ function StageDropZone({
     <div
       ref={setNodeRef}
       id={stageId}
-      className={`h-full min-h-0 overflow-y-auto space-y-3 pr-1 rounded-md transition-colors ${
+      className={`max-h-[calc(100vh-14rem)] min-h-0 overflow-y-auto space-y-3 pr-1 rounded-md transition-colors ${
         isOver ? "bg-white/70 ring-2 ring-indigo-300" : ""
       }`}
     >
@@ -76,8 +93,7 @@ export default function PipelinePage() {
   const [user, setUser] = useState<any>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [activeStage, setActiveStage] = useState<string | null>(null);
+  const [, setActiveId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [stageEditContext, setStageEditContext] =
     useState<StageEditContext | null>(null);
@@ -94,6 +110,11 @@ export default function PipelinePage() {
   const [paymentSnapshots, setPaymentSnapshots] = useState<
     Record<string, PaymentSnapshot>
   >({});
+  const leadsRef = useRef<Lead[]>([]);
+  const dragStartSnapshotRef = useRef<Lead[] | null>(null);
+  const undoStackRef = useRef<Array<[Lead[], Lead[]]>>([]);
+  const redoStackRef = useRef<Array<[Lead[], Lead[]]>>([]);
+  const applyingHistoryRef = useRef(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -116,6 +137,10 @@ export default function PipelinePage() {
     }
   }, [router]);
 
+  useEffect(() => {
+    leadsRef.current = leads;
+  }, [leads]);
+
   const fetchLeads = async () => {
     try {
       const res = await fetchWithAuth("/api/leads");
@@ -134,7 +159,8 @@ export default function PipelinePage() {
       }));
       setLeads(normalizedLeads);
 
-      // Fetch stage data for all leads to determine which ones have data
+      // Sequential baseline kept here for comparison while we benchmark Promise.all.
+      /*
       const leadsWithStageData = new Set<string>();
       const nextPaymentSnapshots: Record<string, PaymentSnapshot> = {};
       for (const lead of normalizedLeads) {
@@ -198,6 +224,98 @@ export default function PipelinePage() {
       }
       setLeadsWithData(leadsWithStageData);
       setPaymentSnapshots(nextPaymentSnapshots);
+      */
+
+      const stageDataResults = await Promise.all(
+        normalizedLeads.map(async (lead) => {
+          try {
+            const stageDataRes = await fetchWithAuth(
+              `/api/stage-data?leadId=${lead.id}`,
+            );
+            if (!stageDataRes.ok) {
+              return {
+                leadId: lead.id,
+                hasStageData: false,
+                paymentSnapshot: null,
+              };
+            }
+
+            const stageData = await stageDataRes.json();
+            const hasStageData = Array.isArray(stageData) && stageData.length > 0;
+            const paymentEntries = Array.isArray(stageData)
+              ? stageData.filter((entry: StageDataEntry) => entry.stage === "PAYMENT")
+              : [];
+
+            const totalPaid = paymentEntries.reduce(
+              (sum: number, entry: StageDataEntry) => {
+                const amount = Number(
+                  entry?.data?.amountReceived ??
+                    entry?.data?.paymentAmount ??
+                    0,
+                );
+                return Number.isFinite(amount) ? sum + amount : sum;
+              },
+              0,
+            );
+            const agreedAmount = Number(lead.dealValue || 0);
+            const remainingBalance = Math.max(agreedAmount - totalPaid, 0);
+            const latestPaymentEntry = paymentEntries[0];
+            const nextDuePaymentDate =
+              remainingBalance > 0
+                ? latestPaymentEntry?.data?.nextPaymentDate ||
+                  latestPaymentEntry?.data?.paymentDueDate ||
+                  null
+                : null;
+            const maxInstallmentNumber = paymentEntries.reduce(
+              (max: number, entry: StageDataEntry) => {
+                const installment = Number(entry?.data?.installmentNumber);
+                return Number.isInteger(installment)
+                  ? Math.max(max, installment)
+                  : max;
+              },
+              0,
+            );
+
+            return {
+              leadId: lead.id,
+              hasStageData,
+              paymentSnapshot: {
+                agreedAmount,
+                totalPaid,
+                remainingBalance,
+                nextDuePaymentDate,
+                nextInstallmentNumber:
+                  remainingBalance > 0 ? maxInstallmentNumber + 1 : null,
+              } as PaymentSnapshot,
+            };
+          } catch (error) {
+            console.error(
+              `Error fetching stage data for lead ${lead.id}:`,
+              error,
+            );
+            return {
+              leadId: lead.id,
+              hasStageData: false,
+              paymentSnapshot: null,
+            };
+          }
+        }),
+      );
+
+      const leadsWithStageData = new Set<string>();
+      const nextPaymentSnapshots: Record<string, PaymentSnapshot> = {};
+
+      for (const result of stageDataResults) {
+        if (result.hasStageData) {
+          leadsWithStageData.add(result.leadId);
+        }
+        if (result.paymentSnapshot) {
+          nextPaymentSnapshots[result.leadId] = result.paymentSnapshot;
+        }
+      }
+
+      setLeadsWithData(leadsWithStageData);
+      setPaymentSnapshots(nextPaymentSnapshots);
     } catch (error) {
       console.error("Error in fetchLeads:", error);
       setLeads([]);
@@ -207,10 +325,91 @@ export default function PipelinePage() {
   };
 
   const handleDragStart = (event: DragStartEvent) => {
+    if (applyingHistoryRef.current) return;
+    dragStartSnapshotRef.current = cloneLeadBoard(leadsRef.current);
     setActiveId(event.active.id as string);
-    const lead = leads.find((l) => l.id === (event.active.id as string));
-    if (lead) setActiveStage(lead.stage);
   };
+
+  const syncBoardStageChanges = useCallback(async (beforeBoard: Lead[], afterBoard: Lead[]) => {
+    const changedLeads = afterBoard.filter((nextLead) => {
+      const previousLead = beforeBoard.find((lead) => lead.id === nextLead.id);
+      return previousLead && previousLead.stage !== nextLead.stage;
+    });
+
+    if (changedLeads.length === 0) return;
+
+    await Promise.all(
+      changedLeads.map((lead) =>
+        fetchWithAuth(`/api/leads/${lead.id}`, {
+          method: "PUT",
+          body: JSON.stringify({ stage: lead.stage }),
+        }),
+      ),
+    );
+  }, []);
+
+  const restoreBoardFromHistory = useCallback(async (
+    snapshot: [Lead[], Lead[]],
+    direction: "undo" | "redo",
+  ) => {
+    const source = snapshot[direction === "undo" ? 1 : 0];
+    const target = snapshot[direction === "undo" ? 0 : 1];
+
+    applyingHistoryRef.current = true;
+    setLeads(cloneLeadBoard(target));
+
+    try {
+      await syncBoardStageChanges(source, target);
+    } finally {
+      applyingHistoryRef.current = false;
+    }
+  }, [syncBoardStageChanges]);
+
+  const undoLastMove = useCallback(async () => {
+    const entry = undoStackRef.current.pop();
+    if (!entry) return;
+
+    await restoreBoardFromHistory(entry, "undo");
+    redoStackRef.current.push(entry);
+  }, [restoreBoardFromHistory]);
+
+  const redoLastMove = useCallback(async () => {
+    const entry = redoStackRef.current.pop();
+    if (!entry) return;
+
+    await restoreBoardFromHistory(entry, "redo");
+    undoStackRef.current.push(entry);
+  }, [restoreBoardFromHistory]);
+
+  const handleUndoRedoKeyDown = useCallback((event: KeyboardEvent) => {
+    const target = event.target as HTMLElement | null;
+    const isEditableTarget =
+      target?.tagName === "INPUT" ||
+      target?.tagName === "TEXTAREA" ||
+      target?.isContentEditable;
+
+    if (isEditableTarget) return;
+
+    const key = event.key.toLowerCase();
+    const isUndo = (event.ctrlKey || event.metaKey) && key === "z" && !event.shiftKey;
+    const isRedo =
+      (event.ctrlKey || event.metaKey) &&
+      (key === "y" || (key === "z" && event.shiftKey));
+
+    if (!isUndo && !isRedo) return;
+
+    event.preventDefault();
+    if (isUndo) {
+      void undoLastMove();
+    } else {
+      void redoLastMove();
+    }
+  }, [redoLastMove, undoLastMove]);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleUndoRedoKeyDown);
+    return () => window.removeEventListener("keydown", handleUndoRedoKeyDown);
+  }, [handleUndoRedoKeyDown]);
 
   const canMoveToStage = (currentStage: string, newStage: string) => {
     const isAdmin = user?.role === "ADMIN";
@@ -283,40 +482,62 @@ export default function PipelinePage() {
     const { active, over } = event;
     setActiveId(null);
 
-    if (!over) return;
+    if (!over) {
+      dragStartSnapshotRef.current = null;
+      return;
+    }
 
     const activeId = active.id as string;
-    const overId = over.id as string;
 
     const activeLead = leads.find((lead) => lead.id === activeId);
     if (!activeLead) return;
 
-    let newStage = activeLead.stage;
+    const beforeBoard = dragStartSnapshotRef.current;
+    const afterBoard = cloneLeadBoard(leadsRef.current);
+    const boardChanged = beforeBoard && !boardSnapshotsEqual(beforeBoard, afterBoard);
+    const originalLead = beforeBoard?.find((lead) => lead.id === activeId);
+    const finalLead = afterBoard.find((lead) => lead.id === activeId);
 
-    // If dropped on a stage column
-    if (stages.includes(overId)) {
-      newStage = overId;
-    } else {
-      // If dropped on another lead, use that lead's stage
-      const overLead = leads.find((lead) => lead.id === overId);
-      if (overLead) {
-        newStage = overLead.stage;
+    if (beforeBoard && boardChanged) {
+      const stageChanged = originalLead?.stage !== finalLead?.stage;
+      let serverUpdateSucceeded = true;
+
+      if (stageChanged) {
+        if (
+          !originalLead ||
+          !finalLead ||
+          !canMoveToStage(originalLead.stage, finalLead.stage)
+        ) {
+          setLeads(cloneLeadBoard(beforeBoard));
+          dragStartSnapshotRef.current = null;
+          return;
+        }
+
+        try {
+          const response = await fetchWithAuth(`/api/leads/${activeId}`, {
+            method: "PUT",
+            body: JSON.stringify({ stage: finalLead.stage }),
+          });
+
+          if (!response.ok) {
+            serverUpdateSucceeded = false;
+          }
+        } catch {
+          serverUpdateSucceeded = false;
+        }
       }
+
+      if (!serverUpdateSucceeded) {
+        setLeads(cloneLeadBoard(beforeBoard));
+        dragStartSnapshotRef.current = null;
+        return;
+      }
+
+      undoStackRef.current.push([beforeBoard, afterBoard]);
+      redoStackRef.current = [];
     }
 
-    // Only commit if the move is allowed and the stage actually changed
-    if (
-      activeStage &&
-      newStage !== activeStage &&
-      canMoveToStage(activeStage, newStage)
-    ) {
-      // Update on server
-      await fetchWithAuth(`/api/leads/${activeId}`, {
-        method: "PUT",
-        body: JSON.stringify({ stage: newStage }),
-      });
-    }
-    setActiveStage(null);
+    dragStartSnapshotRef.current = null;
   };
 
   const moveToNextStage = async (leadId: string) => {
@@ -517,8 +738,8 @@ export default function PipelinePage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-gray-50">
-      <div className="max-w-[1800px] mx-auto h-full py-4 px-4 sm:px-6 lg:px-8 flex flex-col gap-4">
+    <div className="min-h-screen overflow-y-auto bg-gray-50">
+      <div className="max-w-[1800px] mx-auto min-h-screen py-4 px-4 sm:px-6 lg:px-8 flex flex-col gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
             Search Pipeline
@@ -530,9 +751,12 @@ export default function PipelinePage() {
             placeholder="Search leads by name, phone, email, company, or assignee..."
             className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
+          <p className="mt-2 text-xs text-gray-500">
+            Tip: use Ctrl+Z to undo the last board move and Ctrl+Shift+Z or Ctrl+Y to redo it.
+          </p>
         </div>
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 pb-4">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -540,9 +764,9 @@ export default function PipelinePage() {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
-            <div className="h-full min-h-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <div className="h-full min-h-0 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 md:overflow-visible items-start">
               {stages.map((stage) => (
-                <div key={stage} className="h-full min-h-0 flex flex-col">
+                <div key={stage} className="h-full min-h-0 flex w-[85vw] max-w-[24rem] flex-none snap-start flex-col md:w-auto md:max-w-none md:flex-1">
                   <div className="flex items-center justify-between mb-3 px-3 py-2 rounded-lg bg-white border border-gray-200 shadow-sm">
                     <h2 className="text-base font-semibold text-gray-900">
                       {stageLabels[stage as keyof typeof stageLabels]}

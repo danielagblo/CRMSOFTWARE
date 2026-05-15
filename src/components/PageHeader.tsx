@@ -12,14 +12,14 @@ interface PageHeaderProps {
 
 export default function PageHeader({ eyebrow, title, description, action, leftAction }: PageHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center *:gap-4 mb-6">
-      <div>
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
         <p className="text-sm uppercase font-semibold text-indigo-600">{eyebrow}</p>
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{title}</h1>
         {description ? <p className="text-sm text-gray-500 mt-1">{description}</p> : null}
       </div>
       {(action || leftAction) && (
-        <div className="flex items-center gap-4 justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
           {leftAction ? <div>{leftAction}</div> : <div />}
           {action ? <div>{action}</div> : null}
         </div>
