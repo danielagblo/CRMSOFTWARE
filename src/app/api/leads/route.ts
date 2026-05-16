@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { stages } from '@/lib/const'
 
 const ASSIGN_ALL_USERS_VALUE = '__ALL_USERS__'
 
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json(leads)
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { clientName, companyName, leadSource, phone, email, serviceType, serviceCategory, serviceInterested, dealValue, notes, assignedTo } = await request.json()
+    const { clientName, companyName, leadSource, phone, email, serviceType, serviceCategory, serviceInterested, dealValue, notes, assignedTo, stage } = await request.json()
     if (!clientName?.trim() || !phone?.trim()) {
       return NextResponse.json({ error: 'Client name and phone are required' }, { status: 400 })
     }
@@ -89,6 +90,7 @@ export async function POST(request: NextRequest) {
 
     const assignToAllUsers = assignedTo === ASSIGN_ALL_USERS_VALUE
     const assignedUserId = assignToAllUsers ? userId : (assignedTo || userId)
+    const normalizedStage = typeof stage === 'string' && stages.includes(stage) ? stage : 'FIND_LEADS'
 
     await ensureUserExists(userId)
     await ensureUserExists(assignedUserId)
@@ -108,7 +110,7 @@ export async function POST(request: NextRequest) {
         assignedTo: assignedUserId,
         visibleToAll: assignToAllUsers,
         createdBy: userId,
-        stage: 'FIND_LEADS'
+        stage: normalizedStage
       },
       include: {
         assignedUser: true
@@ -116,7 +118,7 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(lead)
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

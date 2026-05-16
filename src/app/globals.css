@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -14,15 +14,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0f172a;
+    --foreground: #e2e8f0;
   }
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), "Segoe UI", Arial, Helvetica, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  text-rendering: optimizeLegibility;
 }
 
 /* Fix for invisible input text in themed environments */
@@ -34,6 +40,10 @@ input::placeholder, textarea::placeholder {
   color: #6b7280 !important; /* text-gray-500 */
 }
 
+::selection {
+  background: rgba(79, 70, 229, 0.18);
+  color: #0f172a;
+}
 
 @layer utilities {
   /* Chrome, Safari and Opera */
@@ -46,8 +56,32 @@ input::placeholder, textarea::placeholder {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
+
+  .app-surface {
+    @apply rounded-2xl border border-white/60 bg-white/90 shadow-sm backdrop-blur;
+  }
 }
 
 button:not(:disabled) {
   cursor: pointer;
+}
+
+* {
+  scrollbar-color: rgba(99, 102, 241, 0.35) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.35);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
 }

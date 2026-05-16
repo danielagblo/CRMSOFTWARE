@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import LeadForm from '@/components/LeadForm'
 import type { LeadFormLead } from '@/components/LeadForm'
@@ -11,16 +12,183 @@ import FormModal from '@/lib/formModal'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
 import listIcon from '@/assets/list.svg'
 import gridIcon from '@/assets/grid.svg'
+import { stages } from '@/lib/const'
 
 interface Lead extends LeadFormLead {
   stage: string
   assignedUser: { name: string }
 }
 
+interface SavedLeadView {
+  id: string
+  name: string
+  query: string
+  viewMode: 'list' | 'card'
+  createdAt: number
+}
+
+interface StoredUser {
+  name?: string
+  email?: string
+  role?: string
+}
+
+interface CsvLeadRow {
+  clientName: string
+  companyName?: string
+  leadSource?: string
+  phone: string
+  email?: string
+  serviceType?: string
+  serviceCategory?: string
+  serviceInterested?: string
+  dealValue?: string
+  notes?: string
+  assignedTo?: string
+  stage?: string
+}
+
+const SAVED_VIEWS_STORAGE_KEY = 'crm.leads.savedViews.v1'
+
+const createViewId = () => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID()
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+}
+
+const CSV_HEADERS = [
+  'clientName',
+  'companyName',
+  'leadSource',
+  'phone',
+  'email',
+  'serviceType',
+  'serviceCategory',
+  'serviceInterested',
+  'dealValue',
+  'notes',
+  'assignedTo',
+  'stage',
+]
+
+const normalizeCsvHeader = (header: string) =>
+  header.trim().replace(/\s+/g, '').replace(/[^a-zA-Z0-9_]/g, '').toLowerCase()
+
+const csvHeaderMap: Record<string, keyof CsvLeadRow> = {
+  clientname: 'clientName',
+  companyname: 'companyName',
+  leadsource: 'leadSource',
+  phone: 'phone',
+  email: 'email',
+  servicetype: 'serviceType',
+  servicecategory: 'serviceCategory',
+  serviceinterested: 'serviceInterested',
+  dealvalue: 'dealValue',
+  notes: 'notes',
+  assignedto: 'assignedTo',
+  stage: 'stage',
+}
+
+const escapeCsvValue = (value: unknown) => {
+  const text = value === null || value === undefined ? '' : String(value)
+  if (/[",\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`
+  }
+  return text
+}
+
+const parseCsvText = (csvText: string): CsvLeadRow[] => {
+  const rows: string[][] = []
+  let currentField = ''
+  let currentRow: string[] = []
+  let inQuotes = false
+
+  for (let i = 0; i < csvText.length; i += 1) {
+    const char = csvText[i]
+    const nextChar = csvText[i + 1]
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        currentField += '"'
+        i += 1
+      } else {
+        inQuotes = !inQuotes
+      }
+      continue
+    }
+
+    if (char === ',' && !inQuotes) {
+      currentRow.push(currentField)
+      currentField = ''
+      continue
+    }
+
+    if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && nextChar === '\n') {
+        i += 1
+      }
+      currentRow.push(currentField)
+      if (currentRow.some((cell) => cell.trim() !== '')) {
+        rows.push(currentRow)
+      }
+      currentRow = []
+      currentField = ''
+      continue
+    }
+
+    currentField += char
+  }
+
+  if (currentField.length > 0 || currentRow.length > 0) {
+    currentRow.push(currentField)
+    if (currentRow.some((cell) => cell.trim() !== '')) {
+      rows.push(currentRow)
+    }
+  }
+
+  if (rows.length === 0) return []
+
+  const headers = rows.shift()!.map(normalizeCsvHeader)
+  return rows.map((row) => {
+    const lead = {} as CsvLeadRow
+    headers.forEach((header, index) => {
+      const key = csvHeaderMap[header]
+      if (!key) return
+      const value = row[index]?.trim() ?? ''
+      if (value !== '') {
+        lead[key] = value
+      }
+    })
+    return lead
+  }).filter((lead) => lead.clientName && lead.phone)
+}
+
+const buildLeadsCsv = (leads: Lead[]) => {
+  const headerRow = CSV_HEADERS.join(',')
+  const dataRows = leads.map((lead) => [
+    lead.clientName,
+    lead.companyName ?? '',
+    lead.leadSource ?? '',
+    lead.phone,
+    lead.email ?? '',
+    lead.serviceType ?? '',
+    lead.serviceCategory ?? '',
+    lead.serviceInterested ?? '',
+    lead.dealValue ?? '',
+    lead.notes ?? '',
+    lead.assignedTo ?? '',
+    lead.stage ?? '',
+  ].map(escapeCsvValue).join(','))
+
+  return [headerRow, ...dataRows].join('\n')
+}
+
 export default function LeadsClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<StoredUser | null>(null)
   const [leads, setLeads] = useState<Lead[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [leadView, setLeadView] = useState<'list' | 'card'>('list')
@@ -28,11 +196,28 @@ export default function LeadsClient() {
   const [formMode, setFormMode] = useState<'create' | 'edit' | 'view'>('create')
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [pendingEditId, setPendingEditId] = useState<string | null>(null)
+  const [savedViews, setSavedViews] = useState<SavedLeadView[]>([])
+  const [savedViewsReady, setSavedViewsReady] = useState(false)
+  const importInputRef = useRef<HTMLInputElement | null>(null)
+
+  async function fetchLeads() {
+    try {
+      const res = await fetchWithAuth('/api/leads')
+      const data = await res.json()
+      if (res.ok && Array.isArray(data)) {
+        setLeads(data)
+      } else {
+        setLeads([])
+      }
+    } catch {
+      setLeads([])
+    }
+  }
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user')
     if (storedUser) {
-      const parsedUser = JSON.parse(storedUser)
+      const parsedUser = JSON.parse(storedUser) as StoredUser
       if (parsedUser.role !== 'ADMIN') {
         router.replace('/pipeline')
         return
@@ -53,26 +238,40 @@ export default function LeadsClient() {
   }, [searchParams])
 
   useEffect(() => {
+    try {
+      const rawViews = localStorage.getItem(SAVED_VIEWS_STORAGE_KEY)
+      if (rawViews) {
+        const parsedViews = JSON.parse(rawViews)
+        if (Array.isArray(parsedViews)) {
+          const normalizedViews = parsedViews.filter((view): view is SavedLeadView => (
+            view &&
+            typeof view.id === 'string' &&
+            typeof view.name === 'string' &&
+            typeof view.query === 'string' &&
+            (view.viewMode === 'list' || view.viewMode === 'card')
+          ))
+          setSavedViews(normalizedViews.slice(0, 8))
+        }
+      }
+    } catch {
+      setSavedViews([])
+    } finally {
+      setSavedViewsReady(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!savedViewsReady) return
+    localStorage.setItem(SAVED_VIEWS_STORAGE_KEY, JSON.stringify(savedViews))
+  }, [savedViews, savedViewsReady])
+
+  useEffect(() => {
     if (!pendingEditId) return
     const found = leads.find((lead) => lead.id === pendingEditId)
     if (!found) return
     setSelectedLead(found)
     setPendingEditId(null)
   }, [leads, pendingEditId])
-
-  const fetchLeads = async () => {
-    try {
-      const res = await fetchWithAuth('/api/leads')
-      const data = await res.json()
-      if (res.ok && Array.isArray(data)) {
-        setLeads(data)
-      } else {
-        setLeads([])
-      }
-    } catch {
-      setLeads([])
-    }
-  }
 
   const filteredLeads = useMemo(() => (
     leads.filter((lead) => {
@@ -93,6 +292,126 @@ export default function LeadsClient() {
     setFormMode('create')
     setSelectedLead(null)
     setIsFormOpen(true)
+  }
+
+  const saveCurrentView = () => {
+    const defaultName = searchQuery.trim()
+      ? `Search: ${searchQuery.trim().slice(0, 24)}`
+      : `Leads ${leadView === 'list' ? 'list' : 'cards'}`
+    const name = window.prompt('Name this lead view', defaultName)?.trim()
+
+    if (!name) return
+
+    const nextView: SavedLeadView = {
+      id: createViewId(),
+      name,
+      query: searchQuery,
+      viewMode: leadView,
+      createdAt: Date.now(),
+    }
+
+    setSavedViews((current) => [
+      nextView,
+      ...current.filter((view) => view.name.toLowerCase() !== name.toLowerCase()),
+    ].slice(0, 8))
+  }
+
+  const applySavedView = (view: SavedLeadView) => {
+    setSearchQuery(view.query)
+    setLeadView(view.viewMode)
+  }
+
+  const removeSavedView = (viewId: string) => {
+    setSavedViews((current) => current.filter((view) => view.id !== viewId))
+  }
+
+  const handleExportLeads = () => {
+    if (filteredLeads.length === 0) {
+      window.alert('No leads to export.')
+      return
+    }
+
+    const csv = buildLeadsCsv(filteredLeads)
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    const dateLabel = new Date().toISOString().slice(0, 10)
+
+    link.href = url
+    link.download = `leads-export-${dateLabel}.csv`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  }
+
+  const handleImportClick = () => {
+    importInputRef.current?.click()
+  }
+
+  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    const csvText = await file.text()
+    const rows = parseCsvText(csvText)
+
+    if (rows.length === 0) {
+      window.alert('No valid lead rows were found in the CSV.')
+      return
+    }
+
+    const proceed = window.confirm(`Import ${rows.length} lead${rows.length === 1 ? '' : 's'} from this CSV?`)
+    if (!proceed) return
+
+    let importedCount = 0
+    const errors: string[] = []
+
+    for (const [index, row] of rows.entries()) {
+      try {
+        const response = await fetchWithAuth('/api/leads', {
+          method: 'POST',
+          body: JSON.stringify({
+            clientName: row.clientName,
+            companyName: row.companyName || '',
+            leadSource: row.leadSource || '',
+            phone: row.phone,
+            email: row.email || '',
+            serviceType: row.serviceType || '',
+            serviceCategory: row.serviceCategory || '',
+            serviceInterested: row.serviceInterested || '',
+            dealValue: row.dealValue || '',
+            notes: row.notes || '',
+            assignedTo: row.assignedTo || '',
+            stage: row.stage && stages.includes(row.stage) ? row.stage : 'FIND_LEADS',
+          }),
+        })
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null)
+          throw new Error(payload?.error || 'Import failed')
+        }
+
+        importedCount += 1
+      } catch (error) {
+        const label = row.clientName || `Row ${index + 2}`
+        errors.push(`${label}: ${error instanceof Error ? error.message : 'Import failed'}`)
+      }
+    }
+
+    await fetchLeads()
+
+    const summary = [
+      `Imported ${importedCount} lead${importedCount === 1 ? '' : 's'}.`,
+      errors.length > 0 ? `Skipped ${errors.length} row${errors.length === 1 ? '' : 's'}.` : null,
+    ].filter(Boolean).join(' ')
+
+    if (errors.length > 0) {
+      window.alert(`${summary}\n\n${errors.slice(0, 5).join('\n')}`)
+    } else {
+      window.alert(summary)
+    }
   }
 
   const handleEditLead = (lead: Lead) => {
@@ -144,37 +463,111 @@ export default function LeadsClient() {
               />
             )}
             action={(
-              <button
-                onClick={() => (isFormOpen ? closeForm() : openCreateForm())}
-                className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
-              >
-                {isFormOpen ? 'Close Form' : 'Add Lead'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleImportClick}
+                  className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+                >
+                  Import CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportLeads}
+                  className="rounded-lg border border-emerald-200 bg-white px-4 py-2.5 text-sm font-medium text-emerald-700 shadow-sm transition-colors hover:bg-emerald-50"
+                >
+                  Export CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={saveCurrentView}
+                  className="rounded-lg border border-indigo-200 bg-white px-4 py-2.5 text-sm font-medium text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
+                >
+                  Save view
+                </button>
+                <button
+                  type="button"
+                  onClick={() => (isFormOpen ? closeForm() : openCreateForm())}
+                  className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+                >
+                  {isFormOpen ? 'Close Form' : 'Add Lead'}
+                </button>
+              </div>
             )}
           />
 
-          <div className="flex justify-end mb-3">
-            <div className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setLeadView('list')}
-                aria-pressed={leadView === 'list'}
-                className={`rounded-md p-2 transition-colors cursor-pointer ${
-                  leadView === 'list' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:text-indigo-600'
-                }`}
-              >
-                <img src={listIcon.src} alt="List view" className="h-6 w-6" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setLeadView('card')}
-                aria-pressed={leadView === 'card'}
-                className={`rounded-md p-2 transition-colors cursor-pointer ${
-                  leadView === 'card' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:text-indigo-600'
-                }`}
-              >
-                <img src={gridIcon.src} alt="Card view" className="h-6 w-6 cursor-pointer" />
-              </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={handleImportFile}
+          />
+
+          <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white/85 p-3 shadow-sm backdrop-blur">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                    searchQuery ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-indigo-600 text-white'
+                  }`}
+                >
+                  All leads
+                </button>
+                {savedViews.map((view) => (
+                  <div key={view.id} className="inline-flex items-center overflow-hidden rounded-full border border-slate-200 bg-white">
+                    <button
+                      type="button"
+                      onClick={() => applySavedView(view)}
+                      className="px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+                      title={view.query ? `Search: ${view.query}` : 'Saved lead view'}
+                    >
+                      {view.name}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeSavedView(view.id)}
+                      className="border-l border-slate-200 px-2 py-1.5 text-xs font-semibold text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                      aria-label={`Remove saved view ${view.name}`}
+                    >
+                      x
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>{savedViews.length} saved</span>
+                <span>•</span>
+                <span>Stored in this browser</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <div className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setLeadView('list')}
+                  aria-pressed={leadView === 'list'}
+                  className={`rounded-md p-2 transition-colors cursor-pointer ${
+                    leadView === 'list' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:text-indigo-600'
+                  }`}
+                >
+                  <img src={listIcon.src} alt="List view" className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLeadView('card')}
+                  aria-pressed={leadView === 'card'}
+                  className={`rounded-md p-2 transition-colors cursor-pointer ${
+                    leadView === 'card' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:text-indigo-600'
+                  }`}
+                >
+                  <img src={gridIcon.src} alt="Card view" className="h-6 w-6 cursor-pointer" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -194,7 +587,7 @@ export default function LeadsClient() {
             <FormModal
               isOpen={isFormOpen}
               onClose={closeForm}
-              title={""}
+              title={''}
               wrapperClassName="xl:hidden"
             >
               <LeadForm

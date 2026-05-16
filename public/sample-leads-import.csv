@@ -1,0 +1,7 @@
+clientName,companyName,leadSource,phone,email,serviceType,serviceCategory,serviceInterested,dealValue,notes,assignedTo,stage
+Ama Mensah,Northstar Foods,Referral,024 111 2233,ama.mensah@example.com,Website,Hospitality,"Landing page + booking flow",8500,Needs a proposal for a new business website,,FIND_LEADS
+Kwame Boateng,Boateng Logistics,Website,020 555 7788,kwame.boateng@example.com,CRM / ERP Solution,Enterprise,"Dispatch dashboard and reporting",15200,Interested in a demo next week,,CONTACT_CLIENT
+Linda Owusu,GreenLeaf Clinic,Social Media,050 100 2000,linda.owusu@example.com,Web Application,Healthcare,"Patient portal and appointment scheduling",18900,Waiting on budget approval,,CLOSE_DEAL
+Esi Nkrumah,Prime Tutors,Walk-in,054 222 3344,esi.nkrumah@example.com,Mobile App,Education,"Student learning app",12600,Asked for monthly payment option,,PAYMENT
+Yaw Agyeman,Agyeman Realty,Referral,026 444 5566,yaw.agyeman@example.com,E-commerce Store,Real Estate,"Property listing platform",22400,Need follow-up after client meeting,,CLIENT_RETENTION
+Nana Adjei,BlueWave Consulting,Cold Call,027 777 8899,nana.adjei@example.com,Consulting,Small Business,"Automation strategy and CRM setup",6700,Requested a callback on Friday,,FIND_LEADS
