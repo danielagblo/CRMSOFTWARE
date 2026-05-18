@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import LeadForm from '@/components/LeadForm'
 import type { LeadFormLead } from '@/components/LeadForm'
@@ -17,6 +17,43 @@ interface Lead extends LeadFormLead {
   assignedUser: { name: string }
 }
 
+const parseCsvLine = (line: string) => {
+  const values: string[] = []
+  let current = ''
+  let inQuotes = false
+
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index]
+
+    if (char === '"') {
+      if (inQuotes && line[index + 1] === '"') {
+        current += '"'
+        index += 1
+      } else {
+        inQuotes = !inQuotes
+      }
+      continue
+    }
+
+    if (char === ',' && !inQuotes) {
+      values.push(current.trim())
+      current = ''
+      continue
+    }
+
+    current += char
+  }
+
+  values.push(current.trim())
+  return values
+}
+
+const escapeCsvValue = (value: string | number | null | undefined) => {
+  if (value === null || value === undefined) return ''
+  const normalized = String(value).replace(/"/g, '""')
+  return /[",\n]/.test(normalized) ? `"${normalized}"` : normalized
+}
+
 export default function LeadsClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -28,6 +65,7 @@ export default function LeadsClient() {
   const [formMode, setFormMode] = useState<'create' | 'edit' | 'view'>('create')
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [pendingEditId, setPendingEditId] = useState<string | null>(null)
+  const importInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user')
@@ -113,6 +151,154 @@ export default function LeadsClient() {
     setIsFormOpen(false)
   }
 
+  const handleImportClick = () => {
+    importInputRef.current?.click()
+  }
+
+  const handleExportLeads = () => {
+    if (filteredLeads.length === 0) {
+      alert('There are no leads to export.')
+      return
+    }
+
+    const headers = [
+      'clientName',
+      'companyName',
+      'phone',
+      'email',
+      'leadSource',
+      'serviceType',
+      'serviceCategory',
+      'serviceInterested',
+      'dealValue',
+      'notes',
+      'stage',
+      'assignedUser'
+    ]
+
+    const csvRows = [
+      headers.join(','),
+      ...filteredLeads.map((lead) => (
+        [
+          lead.clientName,
+          lead.companyName,
+          lead.phone,
+          lead.email,
+          lead.leadSource,
+          lead.serviceType,
+          lead.serviceCategory,
+          lead.serviceInterested,
+          lead.dealValue,
+          lead.notes,
+          lead.stage,
+          lead.assignedUser?.name || ''
+        ].map(escapeCsvValue).join(',')
+      ))
+    ]
+
+    const csv = csvRows.join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    const date = new Date().toISOString().slice(0, 10)
+    link.href = url
+    link.download = `leads-${date}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  }
+
+  const handleImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const content = await file.text()
+      const lines = content
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+
+      if (lines.length < 2) {
+        alert('CSV must include a header row and at least one lead row.')
+        return
+      }
+
+      const headers = parseCsvLine(lines[0]).map((header) => header.trim().toLowerCase())
+      const indexOf = (names: string[]) => headers.findIndex((header) => names.includes(header))
+
+      const fieldIndexes = {
+        clientName: indexOf(['clientname', 'client_name', 'client name']),
+        companyName: indexOf(['companyname', 'company_name', 'company name']),
+        phone: indexOf(['phone', 'phone_number', 'phonenumber']),
+        email: indexOf(['email', 'emailaddress', 'email_address']),
+        leadSource: indexOf(['leadsource', 'lead_source', 'lead source']),
+        serviceType: indexOf(['servicetype', 'service_type', 'service type']),
+        serviceCategory: indexOf(['servicecategory', 'service_category', 'service category']),
+        serviceInterested: indexOf(['serviceinterested', 'service_interested', 'service interested']),
+        dealValue: indexOf(['dealvalue', 'deal_value', 'deal value']),
+        notes: indexOf(['notes', 'note'])
+      }
+
+      if (fieldIndexes.clientName < 0 || fieldIndexes.phone < 0) {
+        alert('CSV is missing required columns: clientName and phone.')
+        return
+      }
+
+      let importedCount = 0
+      let failedCount = 0
+
+      for (const line of lines.slice(1)) {
+        const values = parseCsvLine(line)
+        const getValue = (key: keyof typeof fieldIndexes) => {
+          const idx = fieldIndexes[key]
+          return idx >= 0 ? (values[idx] || '').trim() : ''
+        }
+
+        const clientName = getValue('clientName')
+        const phone = getValue('phone')
+
+        if (!clientName || !phone) {
+          failedCount += 1
+          continue
+        }
+
+        const payload = {
+          clientName,
+          companyName: getValue('companyName'),
+          phone,
+          email: getValue('email'),
+          leadSource: getValue('leadSource'),
+          serviceType: getValue('serviceType'),
+          serviceCategory: getValue('serviceCategory'),
+          serviceInterested: getValue('serviceInterested'),
+          dealValue: getValue('dealValue'),
+          notes: getValue('notes')
+        }
+
+        const response = await fetchWithAuth('/api/leads', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        })
+
+        if (response.ok) {
+          importedCount += 1
+        } else {
+          failedCount += 1
+        }
+      }
+
+      await fetchLeads()
+      alert(`CSV import complete. Imported ${importedCount} lead(s), failed ${failedCount}.`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to import CSV file.'
+      alert(message)
+    } finally {
+      event.target.value = ''
+    }
+  }
+
   const handleLeadSaved = () => {
     fetchLeads()
     if (formMode === 'edit') {
@@ -153,7 +339,29 @@ export default function LeadsClient() {
             )}
           />
 
-          <div className="flex justify-end mb-3">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={handleImportFile}
+          />
+
+          <div className="mb-3 -mt-8 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleImportClick}
+              className="rounded-lg border border-(--dark-blue) bg-white px-4 py-2.5 text-sm font-medium text-(--dark-blue) shadow-sm transition-colors hover:bg-gray-50"
+            >
+              Import CSV
+            </button>
+            <button
+              type="button"
+              onClick={handleExportLeads}
+              className="rounded-lg border border-(--dark-blue) bg-white px-4 py-2.5 text-sm font-medium text-(--dark-blue) shadow-sm transition-colors hover:bg-gray-50"
+            >
+              Export CSV
+            </button>
             <div className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
               <button
                 type="button"
