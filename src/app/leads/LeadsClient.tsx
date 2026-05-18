@@ -146,7 +146,7 @@ export default function LeadsClient() {
             action={(
               <button
                 onClick={() => (isFormOpen ? closeForm() : openCreateForm())}
-                className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+                className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-(--dark-blue)/85"
               >
                 {isFormOpen ? 'Close Form' : 'Add Lead'}
               </button>
@@ -160,7 +160,7 @@ export default function LeadsClient() {
                 onClick={() => setLeadView('list')}
                 aria-pressed={leadView === 'list'}
                 className={`rounded-md p-2 transition-colors cursor-pointer ${
-                  leadView === 'list' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:text-indigo-600'
+                  leadView === 'list' ? 'bg-(--light-blue) text-indigo-600' : 'text-gray-500 hover:bg-(--light-blue)/45 hover:text-indigo-600'
                 }`}
               >
                 <img src={listIcon.src} alt="List view" className="h-6 w-6" />
@@ -170,7 +170,7 @@ export default function LeadsClient() {
                 onClick={() => setLeadView('card')}
                 aria-pressed={leadView === 'card'}
                 className={`rounded-md p-2 transition-colors cursor-pointer ${
-                  leadView === 'card' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:text-indigo-600'
+                  leadView === 'card' ? 'bg-(--light-blue) text-indigo-600' : 'text-gray-500 hover:bg-(--light-blue)/45 hover:text-indigo-600'
                 }`}
               >
                 <img src={gridIcon.src} alt="Card view" className="h-6 w-6 cursor-pointer" />

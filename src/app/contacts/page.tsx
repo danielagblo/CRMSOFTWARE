@@ -383,7 +383,7 @@ export default function ContactsPage() {
             action={(
               <button
                 onClick={() => setIsFormModalOpen(true)}
-                className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+                className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
               >
                 Add Contact
               </button>

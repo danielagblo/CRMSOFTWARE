@@ -251,11 +251,13 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
   const renderForm = () => (
     <>
       <div className="border-b border-gray-100 px-5 py-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+        <p className="text-xs font-semibold uppercase tracking-wide text-(--dark-brown)">
           {formMode === 'view' ? 'User Details' : formMode === 'edit' ? 'Edit User' : '+ Add a New User'}
         </p>
-        <h3 className="text-lg font-semibold text-gray-900">{selectedUser?.name || 'User'}</h3>
-        <p className="text-sm text-gray-500">
+        <h3 className="text-lg font-semibold text-(--dark-blue)">
+          {selectedUser?.name || 'New User'}
+        </h3>
+        <p className="text-sm text-gray-600">
           {formMode === 'view' ? 'Read-only view' : formMode === 'edit' ? 'Update user details' : 'Enter user information to create a new user'}
         </p>
       </div>
@@ -382,14 +384,14 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
             <button
               type="button"
               onClick={closeForm}
-              className="flex-1 px-4 py-3 border border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 border border-(--dark-blue)/50 text-(--dark-blue) rounded-xl font-semibold hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] disabled:opacity-70"
+              className="flex-1 bg-(--dark-blue) text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] disabled:opacity-70"
             >
               {loading ? 'Processing...' : (selectedUser ? 'Update User' : 'Create User')}
             </button>

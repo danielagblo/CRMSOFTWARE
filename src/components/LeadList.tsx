@@ -158,39 +158,39 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
         }}
         className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm ${
           variant === 'grid'
-            ? `w-full hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer ${isSelected ? 'xl:border-indigo-500 xl:ring-1 xl:ring-indigo-200' : ''}`
+            ? `w-full hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer ${isSelected ? 'xl:border-(--dark-blue) xl:ring-1 xl:ring-(--light-blue)' : ''}`
             : 'w-[min(90vw,24rem)] shadow-lg'
         }`}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-sm bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <span className="text-sm font-medium text-gray-700">
+            <div className="h-10 w-10 rounded-sm bg-(--light-blue) flex items-center justify-center">
+              <span className="text-sm font-bold text-(--dark-blue)">
                 {lead.clientName.charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
               <div className="text-base font-semibold text-gray-900">{lead.clientName}</div>
-              <div className="text-sm text-gray-500">{lead.companyName || '-'}</div>
+              <div className="text-sm text-(--dark-brown)">{lead.companyName || '-'}</div>
             </div>
           </div>
-          <span className="text-xs px-2.5 py-1 whitespace-nowrap rounded-sm bg-indigo-100 text-indigo-700">
+          <span className="text-xs px-2.5 py-1 whitespace-nowrap rounded-sm bg-(--light-blue) text-(--dark-blue) font-medium">
             {stageLabels[lead.stage as keyof typeof stageLabels] || lead.stage}
           </span>
         </div>
 
-        <div className="mt-3 space-y-2 text-sm mb-2 text-gray-700">
+        <div className="mt-3 space-y-2 text-sm mb-2 text-(--dark-blue)">
           <div>
             <span className="font-bold inline">Phone:</span>
             <div className="mt-1 space-y-1 inline">
               {phoneNumbers.length > 0 ? (
                 phoneNumbers.map((number, index) => (
-                  <div key={`${lead.id}-phone-${index}`} className="text-gray-700 inline ml-1">
+                  <div key={`${lead.id}-phone-${index}`} className="text-(--dark-blue) inline ml-1">
                     {number}
                   </div>
                 ))
               ) : (
-                <div className="text-gray-700">-</div>
+                <div className="text-(--dark-blue)">-</div>
               )}
             </div>
           </div>
@@ -212,7 +212,7 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
             </div>
           </div>
         ) : (
-          <div className="mt-2 text-right italic text-sm text-violet-600">
+          <div className="mt-2 text-right italic text-sm text-(--dark-brown)">
             Click to view details
           </div>
         )}
@@ -224,7 +224,7 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
     <div>
       {leads.length === 0 ? (
         <div className="p-10 text-center">
-          <p className="text-sm font-medium text-gray-700">No leads yet</p>
+          <p className="text-sm font-medium text-(--dark-blue)">No leads yet</p>
           <button
             type="button"
             onClick={onCreateLead}
@@ -276,35 +276,35 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
                 >
                   <div className={`px-4 py-5 sm:px-6 transition-colors ${
                     isSelected
-                      ? 'hover:bg-indigo-50/60 xl:border xl:border-indigo-500 xl:bg-indigo-50/40'
+                      ? 'hover:bg-indigo-50/60 xl:border xl:border-(--dark-blue) rounded-xl xl:bg-(--light-blue)/45'
                       : 'hover:bg-gray-50 xl:border xl:border-transparent'
                   }`}>
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                       <div className="flex items-center min-w-0">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-sm bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                            <span className="text-sm font-medium text-gray-700">
+                          <div className="h-10 w-10 rounded-sm bg-(--light-blue) flex items-center justify-center">
+                            <span className="text-sm font-bold text-(--dark-blue)">
                               {lead.clientName.charAt(0).toUpperCase()}
                             </span>
                           </div>
                         </div>
                         <div className="ml-4 min-w-0">
-                          <div className="text-sm font-semibold text-gray-900 truncate">{lead.clientName}</div>
-                          {lead.email && <div className="text-sm text-gray-500">{lead.email}</div>}
+                          <div className="text-sm font-semibold text-(--dark-blue) truncate">{lead.clientName}</div>
+                          {lead.email && <div className="text-sm text-(--dark-brown)">{lead.email}</div>}
                         </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                         {phoneNumbers.length > 0 ? (
                           phoneNumbers.map((number, index) => (
-                            <span key={`${lead.id}-list-phone-${index}`} className="text-sm font-medium px-2.5 py-1 rounded-sm bg-gray-200 text-gray-900">
+                            <span key={`${lead.id}-list-phone-${index}`} className="text-sm font-medium px-2.5 py-1 rounded-sm bg-(--light-blue) text-(--dark-blue)">
                               {number}
                             </span>
                           ))
                         ) : (
-                          <span className="text-sm font-medium px-2.5 py-1 rounded-sm bg-gray-200 text-gray-900">-</span>
+                          <span className="text-sm font-medium px-2.5 py-1 rounded-sm bg-(--light-blue) text-(--dark-blue)">-</span>
                         )}
-                        <span className="text-sm font-medium px-2.5 py-1 rounded-sm bg-indigo-100 text-indigo-700">
+                        <span className="text-sm font-medium px-2.5 py-1 rounded-sm bg-(--light-blue) text-(--dark-blue)">
                           {stageLabels[lead.stage as keyof typeof stageLabels] || lead.stage}
                         </span>
                         {renderLeadActions(lead)}

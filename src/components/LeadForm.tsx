@@ -230,8 +230,8 @@ export default function LeadForm({
   return (
     <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
       <div className="border-b border-gray-100 px-5 py-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">{heading.eyebrow}</p>
-        <h3 className="text-lg font-semibold text-gray-900">{heading.title}</h3>
+        <p className="text-xs font-semibold uppercase tracking-wide text-(--dark-brown)">{heading.eyebrow}</p>
+        <h3 className="text-lg font-semibold text-(--dark-blue)">{heading.title}</h3>
         <p className="text-sm text-gray-500">{heading.description}</p>
       </div>
 
@@ -422,7 +422,7 @@ export default function LeadForm({
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-lg border w-1/2 border-(--dark-blue)/50 px-4 py-3 text-sm font-medium text-(--dark-blue) hover:bg-gray-50"
             >
               Cancel
             </button>
@@ -431,7 +431,7 @@ export default function LeadForm({
             <button
               type="button"
               onClick={onEditRequest}
-              className="rounded-lg cursor-pointer bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+              className="rounded-lg w-1/2 cursor-pointer bg-(--dark-blue) px-4 py-3 text-sm font-medium text-white hover:bg-indigo-700"
             >
               Edit
             </button>
@@ -439,7 +439,7 @@ export default function LeadForm({
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2 text-sm cursor-pointer font-medium text-white hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
+              className="rounded-lg w-1/2 bg-(--dark-blue) px-5 py-3 text-sm cursor-pointer font-medium text-white hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
             >
               {loading ? (mode === 'edit' ? 'Saving...' : 'Creating...') : (mode === 'edit' ? 'Save Changes' : 'Create Lead')}
             </button>

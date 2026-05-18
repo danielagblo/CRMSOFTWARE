@@ -153,7 +153,7 @@ export default function Navigation() {
                 <img src={skytechLogo.src} alt='Logo' className='min-w-22 w-full h-full' />
               </div>
               <div className='hidden sm:block'>
-                <h1 className="text-xl font-bold text-(--dark-brown)">
+                <h1 className="text-xl font-bold text-(--dark-blue)">
                   CRM Pro
                 </h1>
                 <p className="text-xs whitespace-nowrap text-gray-500 -mt-1">Sales Management</p>
