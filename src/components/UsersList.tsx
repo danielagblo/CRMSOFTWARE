@@ -450,7 +450,7 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 flex-shrink-0">
-                        <div className="h-10 w-10 rounded-full bg-(--dark-blue) text-(--light-blue) flex items-center justify-center font-bold text-sm shadow-sm">
+                        <div className="h-10 w-10 rounded-full bg-(--dark-blue) text-white flex items-center justify-center font-bold text-sm shadow-sm">
                           {user.name.charAt(0).toUpperCase()}
                         </div>
                       </div>
@@ -466,7 +466,7 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
                   <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-sm ${
                       user.role === 'ADMIN' 
-                        ? 'bg-(--dark-blue) text-(--light-blue)' 
+                        ? 'bg-(--dark-blue) text-white' 
                         : 'bg-(--light-blue) text-(--dark-blue)'
                     }`}>
                       {user.role}

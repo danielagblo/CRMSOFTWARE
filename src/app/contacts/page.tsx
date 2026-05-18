@@ -366,7 +366,7 @@ export default function ContactsPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-(--light-blue)/45">
       <div className="mx-auto max-w-full py-6 sm:px-6 lg:px-8 2xl:px-12">
         <div className="px-4 sm:px-0">
           <PageHeader
