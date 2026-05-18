@@ -19,7 +19,7 @@ export default function PageHeader({ eyebrow, title, description, action, leftAc
         {description ? <p className="text-sm text-gray-600 mt-1">{description}</p> : null}
       </div>
       {(action || leftAction) && (
-        <div className="flex items-center gap-4 justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
           {leftAction ? <div>{leftAction}</div> : <div />}
           {action ? <div>{action}</div> : null}
         </div>
