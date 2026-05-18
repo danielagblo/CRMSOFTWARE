@@ -383,7 +383,7 @@ export default function ContactsPage() {
             action={(
               <button
                 onClick={() => setIsFormModalOpen(true)}
-                className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+                className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-(--dark-blue)/85"
               >
                 Add Contact
               </button>
@@ -428,7 +428,7 @@ export default function ContactsPage() {
                   >
                     <div className="flex items-start  justify-between gap-2">
                       <div>
-                        <h2 className="text-base font-semibold text-gray-900">{contact.name}</h2>
+                        <h2 className="text-base font-semibold text-(--dark-blue)">{contact.name}</h2>
                         <p className="text-sm text-gray-500">{contact.businessType || ""}</p>
                       </div>
                       {pushReadiness.isReady ? (
@@ -453,7 +453,7 @@ export default function ContactsPage() {
                             handlePushToLeads(contact)
                           }}
                           disabled={isPushDisabled}
-                          className="w-full rounded-md cursor-pointer bg-indigo-600 px-3 py-2 text-sm text-white hover:bg-indigo-700 disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+                          className="w-full rounded-md cursor-pointer bg-(--dark-blue) px-3 py-2 text-sm text-white hover:bg-(--dark-blue)/85 disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
                         >
                           {isPushBusy
                             ? 'Pushing...'
