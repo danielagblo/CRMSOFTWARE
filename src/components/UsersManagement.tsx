@@ -46,7 +46,7 @@ export default function UsersManagement({ initialUsers }: { initialUsers: any[] 
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event('users:toggle-create'))}
-            className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+            className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-(--dark-blue)/85"
           >
             {isFormOpen ? 'Close Form' : 'Add New User'}
           </button>

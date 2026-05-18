@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import LeadForm from '@/components/LeadForm'
 import type { LeadFormLead } from '@/components/LeadForm'
@@ -349,7 +349,7 @@ export default function LeadsClient() {
     importInputRef.current?.click()
   }
 
-  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file) return
@@ -448,7 +448,7 @@ export default function LeadsClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-(--light-blue)/45">
       <div className="max-w-full mx-auto py-6 sm:px-6 lg:px-8 2xl:px-12">
         <div className="px-4 sm:px-0">
           <PageHeader
@@ -463,36 +463,12 @@ export default function LeadsClient() {
               />
             )}
             action={(
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleImportClick}
-                  className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
-                >
-                  Import CSV
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExportLeads}
-                  className="rounded-lg border border-emerald-200 bg-white px-4 py-2.5 text-sm font-medium text-emerald-700 shadow-sm transition-colors hover:bg-emerald-50"
-                >
-                  Export CSV
-                </button>
-                <button
-                  type="button"
-                  onClick={saveCurrentView}
-                  className="rounded-lg border border-indigo-200 bg-white px-4 py-2.5 text-sm font-medium text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
-                >
-                  Save view
-                </button>
-                <button
-                  type="button"
-                  onClick={() => (isFormOpen ? closeForm() : openCreateForm())}
-                  className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
-                >
-                  {isFormOpen ? 'Close Form' : 'Add Lead'}
-                </button>
-              </div>
+              <button
+                onClick={() => (isFormOpen ? closeForm() : openCreateForm())}
+                className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-(--dark-blue)/85"
+              >
+                {isFormOpen ? 'Close Form' : 'Add Lead'}
+              </button>
             )}
           />
 
@@ -504,70 +480,42 @@ export default function LeadsClient() {
             onChange={handleImportFile}
           />
 
-          <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white/85 p-3 shadow-sm backdrop-blur">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-                    searchQuery ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-indigo-600 text-white'
-                  }`}
-                >
-                  All leads
-                </button>
-                {savedViews.map((view) => (
-                  <div key={view.id} className="inline-flex items-center overflow-hidden rounded-full border border-slate-200 bg-white">
-                    <button
-                      type="button"
-                      onClick={() => applySavedView(view)}
-                      className="px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
-                      title={view.query ? `Search: ${view.query}` : 'Saved lead view'}
-                    >
-                      {view.name}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeSavedView(view.id)}
-                      className="border-l border-slate-200 px-2 py-1.5 text-xs font-semibold text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
-                      aria-label={`Remove saved view ${view.name}`}
-                    >
-                      x
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span>{savedViews.length} saved</span>
-                <span>•</span>
-                <span>Stored in this browser</span>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <div className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
-                <button
-                  type="button"
-                  onClick={() => setLeadView('list')}
-                  aria-pressed={leadView === 'list'}
-                  className={`rounded-md p-2 transition-colors cursor-pointer ${
-                    leadView === 'list' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:text-indigo-600'
-                  }`}
-                >
-                  <img src={listIcon.src} alt="List view" className="h-6 w-6" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLeadView('card')}
-                  aria-pressed={leadView === 'card'}
-                  className={`rounded-md p-2 transition-colors cursor-pointer ${
-                    leadView === 'card' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:text-indigo-600'
-                  }`}
-                >
-                  <img src={gridIcon.src} alt="Card view" className="h-6 w-6 cursor-pointer" />
-                </button>
-              </div>
+          <div className="mb-3 -mt-8 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleImportClick}
+              className="rounded-lg border border-(--dark-blue) bg-white px-4 py-2.5 text-sm font-medium text-(--dark-blue) shadow-sm transition-colors hover:bg-gray-50"
+            >
+              Import CSV
+            </button>
+            <button
+              type="button"
+              onClick={handleExportLeads}
+              className="rounded-lg border border-(--dark-blue) bg-white px-4 py-2.5 text-sm font-medium text-(--dark-blue) shadow-sm transition-colors hover:bg-gray-50"
+            >
+              Export CSV
+            </button>
+            <div className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setLeadView('list')}
+                aria-pressed={leadView === 'list'}
+                className={`rounded-md p-2 transition-colors cursor-pointer ${
+                  leadView === 'list' ? 'bg-(--light-blue) text-indigo-600' : 'text-gray-500 hover:bg-(--light-blue)/45 hover:text-indigo-600'
+                }`}
+              >
+                <img src={listIcon.src} alt="List view" className="h-6 w-6" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setLeadView('card')}
+                aria-pressed={leadView === 'card'}
+                className={`rounded-md p-2 transition-colors cursor-pointer ${
+                  leadView === 'card' ? 'bg-(--light-blue) text-indigo-600' : 'text-gray-500 hover:bg-(--light-blue)/45 hover:text-indigo-600'
+                }`}
+              >
+                <img src={gridIcon.src} alt="Card view" className="h-6 w-6 cursor-pointer" />
+              </button>
             </div>
           </div>
 

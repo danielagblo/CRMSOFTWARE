@@ -251,11 +251,13 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
   const renderForm = () => (
     <>
       <div className="border-b border-gray-100 px-5 py-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+        <p className="text-xs font-semibold uppercase tracking-wide text-(--dark-brown)">
           {formMode === 'view' ? 'User Details' : formMode === 'edit' ? 'Edit User' : '+ Add a New User'}
         </p>
-        <h3 className="text-lg font-semibold text-gray-900">{selectedUser?.name || 'User'}</h3>
-        <p className="text-sm text-gray-500">
+        <h3 className="text-lg font-semibold text-(--dark-blue)">
+          {selectedUser?.name || 'New User'}
+        </h3>
+        <p className="text-sm text-gray-600">
           {formMode === 'view' ? 'Read-only view' : formMode === 'edit' ? 'Update user details' : 'Enter user information to create a new user'}
         </p>
       </div>
@@ -382,14 +384,14 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
             <button
               type="button"
               onClick={closeForm}
-              className="flex-1 px-4 py-3 border border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 border border-(--dark-blue)/50 text-(--dark-blue) rounded-xl font-semibold hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] disabled:opacity-70"
+              className="flex-1 bg-(--dark-blue) text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] disabled:opacity-70"
             >
               {loading ? 'Processing...' : (selectedUser ? 'Update User' : 'Create User')}
             </button>
@@ -448,12 +450,12 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 flex-shrink-0">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                        <div className="h-10 w-10 rounded-full bg-(--dark-blue) text-white flex items-center justify-center font-bold text-sm shadow-sm">
                           {user.name.charAt(0).toUpperCase()}
                         </div>
                       </div>
                       <div>
-                        <div className="text-sm font-semibold text-gray-900">{user.name}</div>
+                        <div className="text-sm font-semibold text-(--dark-blue)">{user.name}</div>
                         <div className="text-xs text-gray-500 sm:hidden">{user.role}</div>
                       </div>
                     </div>
@@ -464,8 +466,8 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
                   <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-sm ${
                       user.role === 'ADMIN' 
-                        ? 'bg-red-100 text-red-800' 
-                        : 'bg-blue-100 text-blue-800'
+                        ? 'bg-(--dark-blue) text-white' 
+                        : 'bg-(--light-blue) text-(--dark-blue)'
                     }`}>
                       {user.role}
                     </span>
