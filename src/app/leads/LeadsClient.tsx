@@ -198,6 +198,8 @@ export default function LeadsClient() {
   const [pendingEditId, setPendingEditId] = useState<string | null>(null)
   const [savedViews, setSavedViews] = useState<SavedLeadView[]>([])
   const [savedViewsReady, setSavedViewsReady] = useState(false)
+  const [isSaveViewModalOpen, setIsSaveViewModalOpen] = useState(false)
+  const [saveViewName, setSaveViewName] = useState('')
   const importInputRef = useRef<HTMLInputElement | null>(null)
 
   async function fetchLeads() {
@@ -298,8 +300,12 @@ export default function LeadsClient() {
     const defaultName = searchQuery.trim()
       ? `Search: ${searchQuery.trim().slice(0, 24)}`
       : `Leads ${leadView === 'list' ? 'list' : 'cards'}`
-    const name = window.prompt('Name this lead view', defaultName)?.trim()
+    setSaveViewName(defaultName)
+    setIsSaveViewModalOpen(true)
+  }
 
+  const handleSaveViewConfirm = () => {
+    const name = saveViewName.trim()
     if (!name) return
 
     const nextView: SavedLeadView = {
@@ -314,6 +320,8 @@ export default function LeadsClient() {
       nextView,
       ...current.filter((view) => view.name.toLowerCase() !== name.toLowerCase()),
     ].slice(0, 8))
+
+    setIsSaveViewModalOpen(false)
   }
 
   const applySavedView = (view: SavedLeadView) => {
@@ -321,9 +329,13 @@ export default function LeadsClient() {
     setLeadView(view.viewMode)
   }
 
-  const removeSavedView = (viewId: string) => {
-    setSavedViews((current) => current.filter((view) => view.id !== viewId))
+  const resetToAllLeads = () => {
+    setSearchQuery('')
   }
+
+  const activeSavedView = useMemo(() => (
+    savedViews.find((view) => view.query === searchQuery && view.viewMode === leadView) ?? null
+  ), [savedViews, searchQuery, leadView])
 
   const handleExportLeads = () => {
     if (filteredLeads.length === 0) {
@@ -480,44 +492,124 @@ export default function LeadsClient() {
             onChange={handleImportFile}
           />
 
-          <div className="mb-3 -mt-8 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={handleImportClick}
-              className="rounded-lg border border-(--dark-blue) bg-white px-4 py-2.5 text-sm font-medium text-(--dark-blue) shadow-sm transition-colors hover:bg-gray-50"
-            >
-              Import CSV
-            </button>
-            <button
-              type="button"
-              onClick={handleExportLeads}
-              className="rounded-lg border border-(--dark-blue) bg-white px-4 py-2.5 text-sm font-medium text-(--dark-blue) shadow-sm transition-colors hover:bg-gray-50"
-            >
-              Export CSV
-            </button>
-            <div className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
-              <button
+          <div className="mb-3 -mt-8 flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-3 justify-between">
+              <div className='mt-5 flex justify-center items-start gap-4 max-w-[70vw]'>
+                <button
+                  type="button"
+                  onClick={saveCurrentView}
+                  className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-(--dark-blue)/85"
+                >
+                  Save View
+                </button>
+                {savedViews.length > 0 ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={resetToAllLeads}
+                      className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                        !activeSavedView
+                          ? 'border-(--dark-blue) bg-(--light-blue)/60 text-(--dark-blue)'
+                          : 'border-gray-200 bg-white text-gray-600 hover:border-(--dark-blue)/40 hover:text-(--dark-blue)'
+                      }`}
+                    >
+                      All Leads
+                    </button>
+                    <p className='text-(--dark-blue)'>| &nbsp; Saved Views: </p>
+                    {savedViews.map((view) => (
+                      <button
+                        key={view.id}
+                        type="button"
+                        onClick={() => applySavedView(view)}
+                        className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                          activeSavedView?.id === view.id
+                            ? 'border-(--dark-blue) bg-(--dark-blue) text-white'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-(--dark-blue)/40 hover:text-(--dark-blue)'
+                        }`}
+                      >
+                        {view.name}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <div className='flex gap-2 items-end justify-center'>
+                <button
                 type="button"
-                onClick={() => setLeadView('list')}
-                aria-pressed={leadView === 'list'}
-                className={`rounded-md p-2 transition-colors cursor-pointer ${
-                  leadView === 'list' ? 'bg-(--light-blue) text-indigo-600' : 'text-gray-500 hover:bg-(--light-blue)/45 hover:text-indigo-600'
-                }`}
+                onClick={handleImportClick}
+                className="rounded-lg border border-(--dark-blue) bg-white px-4 py-2.5 text-sm font-medium text-(--dark-blue) shadow-sm transition-colors hover:bg-gray-50"
               >
-                <img src={listIcon.src} alt="List view" className="h-6 w-6" />
+                Import CSV
               </button>
               <button
                 type="button"
-                onClick={() => setLeadView('card')}
-                aria-pressed={leadView === 'card'}
-                className={`rounded-md p-2 transition-colors cursor-pointer ${
-                  leadView === 'card' ? 'bg-(--light-blue) text-indigo-600' : 'text-gray-500 hover:bg-(--light-blue)/45 hover:text-indigo-600'
-                }`}
+                onClick={handleExportLeads}
+                className="rounded-lg border border-(--dark-blue) bg-white px-4 py-2.5 text-sm font-medium text-(--dark-blue) shadow-sm transition-colors hover:bg-gray-50"
               >
-                <img src={gridIcon.src} alt="Card view" className="h-6 w-6 cursor-pointer" />
+                Export CSV
               </button>
+              <div className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setLeadView('list')}
+                  aria-pressed={leadView === 'list'}
+                  className={`rounded-md p-2 transition-colors cursor-pointer ${
+                    leadView === 'list' ? 'bg-(--light-blue) text-indigo-600' : 'text-gray-500 hover:bg-(--light-blue)/45 hover:text-indigo-600'
+                  }`}
+                >
+                  <img src={listIcon.src} alt="List view" className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLeadView('card')}
+                  aria-pressed={leadView === 'card'}
+                  className={`rounded-md p-2 transition-colors cursor-pointer ${
+                    leadView === 'card' ? 'bg-(--light-blue) text-indigo-600' : 'text-gray-500 hover:bg-(--light-blue)/45 hover:text-indigo-600'
+                  }`}
+                >
+                  <img src={gridIcon.src} alt="Card view" className="h-6 w-6 cursor-pointer" />
+                </button>
+              </div>
+              </div>
             </div>
           </div>
+
+          <FormModal
+            isOpen={isSaveViewModalOpen}
+            onClose={() => setIsSaveViewModalOpen(false)}
+            title="Save View"
+            panelClassName="md:max-w-lg border border-(--light-blue)/40"
+          >
+            <div className="px-4 pb-5 md:px-6">
+              <label className="block text-sm font-medium text-(--dark-blue)" htmlFor="save-view-name">
+                View name
+              </label>
+              <input
+                id="save-view-name"
+                value={saveViewName}
+                onChange={(event) => setSaveViewName(event.target.value)}
+                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-(--dark-blue) focus:ring-2 focus:ring-(--light-blue)"
+                placeholder="Name this view"
+                autoFocus
+              />
+              <div className="mt-5 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsSaveViewModalOpen(false)}
+                  className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveViewConfirm}
+                  className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-(--dark-blue)/85"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </FormModal>
 
           <div className="xl:grid xl:grid-cols-12 xl:gap-6">
             <div className={`${isFormOpen ? 'xl:col-span-8' : 'xl:col-span-12'} 2xl:col-span-8`}>

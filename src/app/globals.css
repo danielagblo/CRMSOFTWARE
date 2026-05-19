@@ -74,7 +74,7 @@ button:not(:disabled) {
 }
 
 * {
-  scrollbar-color: rgba(99, 102, 241, 0.35) transparent;
+  scrollbar-color: transparent;
 }
 
 *::-webkit-scrollbar {
@@ -83,7 +83,7 @@ button:not(:disabled) {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.35);
+  background: var(--dark-blue);
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: padding-box;
