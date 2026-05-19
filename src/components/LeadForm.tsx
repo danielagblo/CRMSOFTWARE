@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, type FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import { toast } from 'react-hot-toast'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
 import userIcon from '@/assets/user.svg'
 import businessIcon from '@/assets/business.svg'
@@ -193,16 +194,23 @@ export default function LeadForm({
           reset()
         }
         onLeadAdded()
+        toast.success(isEdit ? 'Lead updated successfully.' : 'Lead added successfully.')
       } else {
         const payload = await res.json().catch(() => null)
-        alert(payload?.error || `Error ${isEdit ? 'updating' : 'adding'} lead`)
+        toast.error(payload?.error || `Error ${isEdit ? 'updating' : 'adding'} lead`)
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : `Error ${mode === 'edit' ? 'updating' : 'adding'} lead`
-      alert(message)
+      toast.error(message)
     }
 
     setLoading(false)
+  }
+
+  const onInvalid = (formErrors: FieldErrors<LeadFormData>) => {
+    const firstError = Object.values(formErrors)[0]
+    const message = firstError?.message ? String(firstError.message) : 'Please fix the highlighted fields.'
+    toast.error(message)
   }
 
   const heading = useMemo(() => {
@@ -235,7 +243,7 @@ export default function LeadForm({
         <p className="text-sm text-gray-500">{heading.description}</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="p-5 space-y-5">
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="p-5 space-y-5">
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">

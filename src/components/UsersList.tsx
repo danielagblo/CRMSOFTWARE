@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState, useCallback } from 'react'
+import { toast } from 'react-hot-toast'
 import FormModal from '@/lib/formModal'
 import userIcon from '@/assets/user.svg'
 import emailIcon from '@/assets/at-sign.svg'
@@ -107,7 +108,7 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
     window.dispatchEvent(new CustomEvent('users:form-state', { detail: { isOpen: isFormOpen } }))
   }, [isFormOpen])
 
-  const validateForm = (): boolean => {
+  const validateForm = (): ValidationErrors => {
     const errors: ValidationErrors = {}
 
     if (formMode === 'create' && !formData.password) {
@@ -119,13 +120,17 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
     }
 
     setValidationErrors(errors)
-    return Object.keys(errors).length === 0
+    return errors
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!validateForm()) return
+    const nextErrors = validateForm()
+    if (Object.keys(nextErrors).length > 0) {
+      toast.error(Object.values(nextErrors)[0] || 'Please fix the highlighted fields.')
+      return
+    }
 
     setLoading(true)
     try {
@@ -154,12 +159,13 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
           setUsers([updatedUser, ...users])
         }
         closeForm()
+        toast.success(selectedUser ? 'User updated successfully.' : 'User added successfully.')
       } else {
         const err = await res.json()
-        alert(err.error || 'Operation failed')
+        toast.error(err.error || 'Operation failed')
       }
     } catch (err) {
-      alert('An error occurred')
+      toast.error('An error occurred')
     } finally {
       setLoading(false)
     }
@@ -203,15 +209,16 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       })
-      if (res.ok) {
-        setUsers(users.filter((u) => u.id !== id))
-      } else {
-        const err = await res.json()
-        alert(err.error || 'Failed to delete user')
-      }
-    } catch (err) {
-      alert('An error occurred')
+    if (res.ok) {
+      setUsers(users.filter((u) => u.id !== id))
+      toast.success('User deleted successfully.')
+    } else {
+      const err = await res.json()
+      toast.error(err.error || 'Failed to delete user')
     }
+  } catch (err) {
+    toast.error('An error occurred')
+  }
     setActiveActionMenu(null)
   }
 

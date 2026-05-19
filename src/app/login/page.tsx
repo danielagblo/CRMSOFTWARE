@@ -6,6 +6,7 @@ import skyTechLogo from '../../assets/skytechLogo.png'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'react-hot-toast'
 
 import { signIn, getSession } from 'next-auth/react'
 
@@ -32,6 +33,7 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError('Invalid credentials')
+        toast.error('Invalid credentials')
         return
       }
 
@@ -57,6 +59,7 @@ export default function LoginPage() {
       window.location.href = session?.user?.role === 'ADMIN' ? '/dashboard' : '/pipeline'
     } catch (err) {
       setError('An unexpected error occurred')
+      toast.error('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
