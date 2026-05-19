@@ -14,12 +14,12 @@ export default function PageHeader({ eyebrow, title, description, action, leftAc
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center *:gap-4 mb-6">
       <div>
-        <p className="text-sm uppercase font-semibold text-indigo-600">{eyebrow}</p>
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{title}</h1>
-        {description ? <p className="text-sm text-gray-500 mt-1">{description}</p> : null}
+        <p className="text-sm uppercase font-semibold text-(--dark-brown)">{eyebrow}</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-(--dark-blue)">{title}</h1>
+        {description ? <p className="text-sm text-gray-600 mt-1">{description}</p> : null}
       </div>
       {(action || leftAction) && (
-        <div className="flex items-center gap-4 justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
           {leftAction ? <div>{leftAction}</div> : <div />}
           {action ? <div>{action}</div> : null}
         </div>

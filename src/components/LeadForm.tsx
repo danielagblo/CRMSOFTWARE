@@ -1,10 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useEffect, useMemo, useState } from 'react'
+import { useForm, type FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import { toast } from 'react-hot-toast'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
+import userIcon from '@/assets/user.svg'
+import businessIcon from '@/assets/business.svg'
+import phoneIcon from '@/assets/hash.svg'
+import emailIcon from '@/assets/at-sign.svg'
+import noteIcon from '@/assets/note.svg'
+import filterIcon from '@/assets/filter.svg'
+import DollarIcon from '@/assets/dollar.svg'
 
 const leadSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
@@ -21,6 +29,22 @@ const leadSchema = z.object({
 })
 
 type LeadFormData = z.infer<typeof leadSchema>
+
+export interface LeadFormLead {
+  id: string
+  clientName: string
+  companyName: string | null
+  leadSource: string | null
+  phone: string
+  email: string
+  serviceType: string | null
+  serviceCategory: string | null
+  serviceInterested: string | null
+  dealValue: number | null
+  notes: string | null
+  assignedTo: string
+  visibleToAll?: boolean
+}
 
 const serviceTypeOptions = [
   'Website',
@@ -68,14 +92,27 @@ interface User {
   role: string
 }
 
+type LeadFormMode = 'create' | 'edit' | 'view'
+
 interface LeadFormProps {
   onLeadAdded: () => void
+  mode?: LeadFormMode
+  lead?: LeadFormLead | null
+  onCancel?: () => void
+  onEditRequest?: () => void
 }
 
-export default function LeadForm({ onLeadAdded }: LeadFormProps) {
+export default function LeadForm({
+  onLeadAdded,
+  mode = 'create',
+  lead = null,
+  onCancel,
+  onEditRequest
+}: LeadFormProps) {
   const [loading, setLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [users, setUsers] = useState<User[]>([])
+  const isReadOnly = mode === 'view'
   const { register, handleSubmit, formState: { errors }, reset } = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema)
   })
@@ -90,6 +127,39 @@ export default function LeadForm({ onLeadAdded }: LeadFormProps) {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (lead) {
+      reset({
+        clientName: lead.clientName || '',
+        companyName: lead.companyName || '',
+        leadSource: lead.leadSource || '',
+        phone: lead.phone || '',
+        email: lead.email || '',
+        serviceType: lead.serviceType || '',
+        serviceCategory: lead.serviceCategory || '',
+        serviceInterested: lead.serviceInterested || '',
+        dealValue: lead.dealValue !== null && lead.dealValue !== undefined ? String(lead.dealValue) : '',
+        notes: lead.notes || '',
+        assignedTo: lead.visibleToAll ? '__ALL_USERS__' : (lead.assignedTo || '')
+      })
+      return
+    }
+
+    reset({
+      clientName: '',
+      companyName: '',
+      leadSource: '',
+      phone: '',
+      email: '',
+      serviceType: '',
+      serviceCategory: '',
+      serviceInterested: '',
+      dealValue: '',
+      notes: '',
+      assignedTo: ''
+    })
+  }, [lead, reset])
 
   const isAdmin = user?.role === 'ADMIN'
 
@@ -106,279 +176,282 @@ export default function LeadForm({ onLeadAdded }: LeadFormProps) {
   }
 
   const onSubmit = async (data: LeadFormData) => {
+    if (isReadOnly) return
     setLoading(true)
+
     try {
-      const res = await fetchWithAuth('/api/leads', {
-        method: 'POST',
+      const isEdit = mode === 'edit' && lead?.id
+      const endpoint = isEdit ? `/api/leads/${lead.id}` : '/api/leads'
+      const method = isEdit ? 'PUT' : 'POST'
+
+      const res = await fetchWithAuth(endpoint, {
+        method,
         body: JSON.stringify(data)
       })
 
       if (res.ok) {
-        reset()
+        if (!isEdit) {
+          reset()
+        }
         onLeadAdded()
+        toast.success(isEdit ? 'Lead updated successfully.' : 'Lead added successfully.')
       } else {
         const payload = await res.json().catch(() => null)
-        alert(payload?.error || 'Error adding lead')
+        toast.error(payload?.error || `Error ${isEdit ? 'updating' : 'adding'} lead`)
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error adding lead'
-      alert(message)
+      const message = error instanceof Error ? error.message : `Error ${mode === 'edit' ? 'updating' : 'adding'} lead`
+      toast.error(message)
     }
+
     setLoading(false)
   }
 
+  const onInvalid = (formErrors: FieldErrors<LeadFormData>) => {
+    const firstError = Object.values(formErrors)[0]
+    const message = firstError?.message ? String(firstError.message) : 'Please fix the highlighted fields.'
+    toast.error(message)
+  }
+
+  const heading = useMemo(() => {
+    if (mode === 'edit') {
+      return {
+        eyebrow: 'Edit Lead',
+        title: lead?.clientName || 'Lead',
+        description: 'Update lead details'
+      }
+    }
+    if (mode === 'view') {
+      return {
+        eyebrow: 'Lead Details',
+        title: lead?.clientName || 'Lead',
+        description: 'Read-only view'
+      }
+    }
+    return {
+      eyebrow: '+ Add a New Lead',
+      title: 'Leads',
+      description: 'Enter client information to create a new lead'
+    }
+  }, [lead?.clientName, mode])
+
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
-        <h3 className="text-lg font-semibold text-white flex items-center">
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add New Lead
-        </h3>
-        <p className="text-indigo-100 text-sm mt-1">Enter client information to create a new lead</p>
+    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+      <div className="border-b border-gray-100 px-5 py-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-(--dark-brown)">{heading.eyebrow}</p>
+        <h3 className="text-lg font-semibold text-(--dark-blue)">{heading.title}</h3>
+        <p className="text-sm text-gray-500">{heading.description}</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-        {/* Personal Information Section */}
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="p-5 space-y-5">
         <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            <h4 className="text-sm font-medium text-gray-900">Personal Information</h4>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700 flex items-center">
+              <label className="block text-sm font-medium text-gray-700">
                 <span className="text-red-500 mr-1">*</span>
                 Client Name
               </label>
-              <input
-                {...register('clientName')}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
-                placeholder="Enter full name"
-              />
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={userIcon.src} alt="Client name" />
+                <input
+                  {...register('clientName')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                />
+              </div>
               {errors.clientName && (
-                <p className="text-red-600 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  {errors.clientName.message}
-                </p>
+                <p className="text-red-600 text-sm">{errors.clientName.message}</p>
               )}
             </div>
 
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Company Name</label>
-              <input
-                {...register('companyName')}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
-                placeholder="Enter company name"
-              />
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={businessIcon.src} alt="Company name" />
+                <input
+                  {...register('companyName')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                />
+              </div>
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700 flex items-center">
-                <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
+              <label className="block text-sm font-medium text-gray-700">
                 <span className="text-red-500 mr-1">*</span>
                 Phone
               </label>
-              <input
-                {...register('phone')}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
-                placeholder="+233 XX XXX XXXX"
-              />
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={phoneIcon.src} alt="Phone number" />
+                <input
+                  {...register('phone')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                />
+              </div>
               {errors.phone && (
-                <p className="text-red-600 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  {errors.phone.message}
-                </p>
+                <p className="text-red-600 text-sm">{errors.phone.message}</p>
               )}
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700 flex items-center">
-                <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Email (Optional)
-              </label>
-              <input
-                {...register('email')}
-                type="email"
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
-                placeholder="client@example.com"
-              />
+              <label className="block text-sm font-medium text-gray-700">Email (Optional)</label>
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={emailIcon.src} alt="Email" />
+                <input
+                  {...register('email')}
+                  type="email"
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                />
+              </div>
               {errors.email && (
-                <p className="text-red-600 text-sm flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  {errors.email.message}
-                </p>
+                <p className="text-red-600 text-sm">{errors.email.message}</p>
               )}
             </div>
           </div>
         </div>
 
-        {/* Business Information Section */}
         <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-            <h4 className="text-sm font-medium text-gray-900">Business Information</h4>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700 flex items-center">
-                <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Service Type
-              </label>
-              <select
-                {...register('serviceType')}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
-              >
-                <option value="">Select service type</option>
-                {serviceTypeOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
+              <label className="block text-sm font-medium text-gray-700">Service Type</label>
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={businessIcon.src} alt="Service type" />
+                <select
+                  {...register('serviceType')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                >
+                  <option value="">Select service type</option>
+                  {serviceTypeOptions.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Service Category</label>
-              <select
-                {...register('serviceCategory')}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
-              >
-                <option value="">Select category</option>
-                {serviceCategoryOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={filterIcon.src} alt="Service category" />
+                <select
+                  {...register('serviceCategory')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                >
+                  <option value="">Select category</option>
+                  {serviceCategoryOptions.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Lead Source</label>
-              <select
-                {...register('leadSource')}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
-              >
-                <option value="">Select lead source</option>
-                {leadSourceOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={filterIcon.src} alt="Lead source" />
+                <select
+                  {...register('leadSource')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                >
+                  <option value="">Select lead source</option>
+                  {leadSourceOptions.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700 flex items-center">
-                <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-                Deal Value (GHS)
-              </label>
-              <input
-                {...register('dealValue')}
-                type="number"
-                step="0.01"
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
-                placeholder="0.00"
-              />
+              <label className="block text-sm font-medium text-gray-700">Deal Value (GHS)</label>
+                <div className='relative'>
+                  <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={DollarIcon.src} alt="Deal value" />
+                  <input
+                    {...register('dealValue')}
+                    type="number"
+                    step="0.01"
+                    disabled={isReadOnly}
+                    className="block w-full pl-12 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
+                  />
+                  </div>
             </div>
 
             <div className="space-y-1 md:col-span-2">
               <label className="block text-sm font-medium text-gray-700">Service Notes (Optional)</label>
-              <input
-                {...register('serviceInterested')}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
-                placeholder="Specific requirements or requested service details"
-              />
+              <div className="relative">
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={noteIcon.src} alt="Service notes" />
+                <input
+                  {...register('serviceInterested')}
+                  disabled={isReadOnly}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Assignment Section (Admin Only) */}
         {isAdmin && (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <h4 className="text-sm font-medium text-gray-900">Assignment</h4>
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Assign To</label>
-              <select
-                {...register('assignedTo')}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white"
-              >
-                <option value="">Select a user (leave empty to assign to yourself)</option>
-                <option value="__ALL_USERS__">All Users</option>
-                {users.map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.name} ({user.email}) - {user.role}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">Assign To</label>
+            <select
+              {...register('assignedTo')}
+              disabled={isReadOnly}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
+            >
+              <option value="">Select a user (leave empty to assign to yourself)</option>
+              <option value="__ALL_USERS__">All Users</option>
+              {users.map((listedUser) => (
+                <option key={listedUser.id} value={listedUser.id}>
+                  {listedUser.name} ({listedUser.email}) - {listedUser.role}
+                </option>
+              ))}
+            </select>
           </div>
         )}
 
-        {/* Notes Section */}
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            <h4 className="text-sm font-medium text-gray-900">Additional Notes</h4>
-          </div>
-
-          <div className="space-y-1">
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-gray-700">Additional Notes</label>
+          <div className="relative">
+            <img className="absolute left-3 top-3 h-5 w-5" src={noteIcon.src} alt="Additional notes" />
             <textarea
               {...register('notes')}
               rows={4}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-gray-50 focus:bg-white resize-none"
-              placeholder="Add any additional notes about this lead..."
+              disabled={isReadOnly}
+              className="block w-full resize-none rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
             />
           </div>
         </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end pt-4 border-t border-gray-200">
-          <button
-            type="submit"
-            disabled={loading}
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Creating Lead...
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Create Lead
-              </>
-            )}
-          </button>
+        <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
+          {onCancel && mode !== 'view' ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-lg border w-1/2 border-(--dark-blue)/50 px-4 py-3 text-sm font-medium text-(--dark-blue) hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          ) : null}
+          {mode === 'view' ? (
+            <button
+              type="button"
+              onClick={onEditRequest}
+              className="rounded-lg w-1/2 cursor-pointer bg-(--dark-blue) px-4 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+            >
+              Edit
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-lg w-1/2 bg-(--dark-blue) px-5 py-3 text-sm cursor-pointer font-medium text-white hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
+            >
+              {loading ? (mode === 'edit' ? 'Saving...' : 'Creating...') : (mode === 'edit' ? 'Save Changes' : 'Create Lead')}
+            </button>
+          )}
         </div>
       </form>
     </div>

@@ -9,6 +9,7 @@ interface FormModalProps {
   title: string
   children: ReactNode
   panelClassName?: string
+  wrapperClassName?: string
 }
 
 export default function FormModal({
@@ -16,16 +17,14 @@ export default function FormModal({
   onClose,
   title,
   children,
-  panelClassName = ''
+  panelClassName = '',
+  wrapperClassName = ''
 }: FormModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!isOpen) return
-
-    // Focus the dialog on open
-    dialogRef.current?.focus()
 
     // Handle Escape key to close modal
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -42,18 +41,17 @@ export default function FormModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm"
+      className={`fixed no-scrollbar inset-0 z-50 bg-slate-900/30 backdrop-blur-sm ${wrapperClassName}`}
       onClick={onClose}
     >
-      <div className="absolute inset-x-0 bottom-0 md:inset-0 md:flex md:items-center md:justify-center md:p-4">
+      <div className="absolute no-scrollbar inset-x-0 bottom-0 md:inset-0 md:flex md:items-center md:justify-center md:p-4">
         <div
           ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-label={title}
-          tabIndex={-1}
           onClick={(e) => e.stopPropagation()}
-          className={`relative w-full bg-white shadow-2xl max-h-[92vh] overflow-y-auto rounded-t-2xl border border-slate-200 md:max-w-3xl md:rounded-2xl ${panelClassName}`}
+          className={`relative w-full no-scrollbar bg-white shadow-2xl max-h-[92vh] overflow-y-auto rounded-t-2xl border border-slate-200 md:max-w-3xl md:rounded-2xl ${panelClassName}`}
         >
           <button
             ref={closeButtonRef}
@@ -65,11 +63,13 @@ export default function FormModal({
             <X size={38} />
           </button>
 
-          <div className="px-4 pt-12 pb-2 md:px-6 md:pt-12">
-            <h2 className="text-lg lg:text-xl font-semibold text-slate-900">{title}</h2>
-          </div>
+          {title !="" && (
+            <div className="px-4 pt-12 pb-2 md:px-6 md:pt-12">
+              <h2 className="text-lg lg:text-xl font-semibold text-slate-900">{title}</h2>
+            </div>
+          )}
 
-          <div>{children}</div>
+          <div className="no-scrollbar">{children}</div>
         </div>
       </div>
     </div>

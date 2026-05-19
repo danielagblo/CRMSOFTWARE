@@ -1,3 +1,5 @@
+import { toast } from 'react-hot-toast'
+
 export interface ValidationResult {
   isValid: boolean
   errors: Record<string, string>
@@ -152,10 +154,6 @@ export function validateContactForm(
   }
 }
 
-/**
- * Toast notification type for plug-and-play integration
- * TODO: Install a toast library and replace console.log with actual toast calls
- */
 export type ToastType = 'error' | 'success' | 'info' | 'warning'
 
 export interface ToastMessage {
@@ -164,49 +162,26 @@ export interface ToastMessage {
   description?: string
 }
 
-/**
- * Shows feedback to user - currently logs to console
- * Can be easily replaced with a toast library like sonner, react-hot-toast, etc.
- *
- * TODO: Replace console.log with actual toast implementation:
- * import { toast } from 'sonner'
- * or
- * import { useToast } from '@/components/ui/use-toast'
- */
 export function showFeedback(message: ToastMessage): void {
-  const timestamp = new Date().toLocaleTimeString()
+  const content = message.description
+    ? `${message.title} — ${message.description}`
+    : message.title
 
   switch (message.type) {
     case 'error':
-      console.error(`[${timestamp}] ❌ ${message.title}`, message.description || '')
-      // TODO: Uncomment when toast library is added
-      // toast.error(message.title, {
-      //   description: message.description,
-      // })
+      toast.error(content)
       break
 
     case 'success':
-      console.log(`[${timestamp}] ✅ ${message.title}`, message.description || '')
-      // TODO: Uncomment when toast library is added
-      // toast.success(message.title, {
-      //   description: message.description,
-      // })
+      toast.success(content)
       break
 
     case 'info':
-      console.info(`[${timestamp}] ℹ️ ${message.title}`, message.description || '')
-      // TODO: Uncomment when toast library is added
-      // toast.info(message.title, {
-      //   description: message.description,
-      // })
+      toast(content, { icon: 'ℹ️' })
       break
 
     case 'warning':
-      console.warn(`[${timestamp}] ⚠️ ${message.title}`, message.description || '')
-      // TODO: Uncomment when toast library is added
-      // toast.warning(message.title, {
-      //   description: message.description,
-      // })
+      toast(content, { icon: '⚠️' })
       break
   }
 }
@@ -217,7 +192,7 @@ export function showFeedback(message: ToastMessage): void {
 export function showValidationErrors(errors: Record<string, string>): void {
   const errorMessages = Object.entries(errors)
     .map(([field, message]) => `${field}: ${message}`)
-    .join('\n')
+    .join(' • ')
 
   showFeedback({
     type: 'error',
