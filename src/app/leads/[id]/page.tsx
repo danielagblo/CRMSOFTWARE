@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'react-hot-toast'
 import LeadForm from '@/components/LeadForm'
 import type { LeadFormLead } from '@/components/LeadForm'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
@@ -55,11 +56,12 @@ export default function LeadDetailPage() {
 
     const res = await fetchWithAuth(`/api/leads/${lead.id}`, { method: 'DELETE' })
     if (res.ok) {
+      toast.success('Lead deleted successfully.')
       router.push('/leads')
       return
     }
 
-    alert('Failed to delete lead')
+    toast.error('Failed to delete lead.')
   }
 
   if (loading) {

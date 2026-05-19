@@ -23,6 +23,7 @@ import LeadCard from "@/components/LeadCard";
 import StageDataModal from "@/components/StageDataModal";
 import LeadDataViewer from "@/components/LeadDataViewer";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { toast } from "react-hot-toast";
 import {
   Lead,
   PaymentSnapshot,
@@ -509,6 +510,7 @@ export default function PipelinePage() {
           !canMoveToStage(originalLead.stage, finalLead.stage)
         ) {
           setLeads(cloneLeadBoard(beforeBoard));
+          toast.error("You can only move leads to the next stage.");
           dragStartSnapshotRef.current = null;
           return;
         }
@@ -529,6 +531,7 @@ export default function PipelinePage() {
 
       if (!serverUpdateSucceeded) {
         setLeads(cloneLeadBoard(beforeBoard));
+        toast.error("Could not update the lead stage. Changes were reverted.");
         dragStartSnapshotRef.current = null;
         return;
       }
@@ -554,10 +557,21 @@ export default function PipelinePage() {
       );
 
       // Update on server
-      await fetchWithAuth(`/api/leads/${leadId}`, {
-        method: "PUT",
-        body: JSON.stringify({ stage: nextStage }),
-      });
+      try {
+        const response = await fetchWithAuth(`/api/leads/${leadId}`, {
+          method: "PUT",
+          body: JSON.stringify({ stage: nextStage }),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to update lead stage");
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to update lead stage";
+        toast.error(message);
+      }
     }
   };
 
@@ -628,20 +642,22 @@ export default function PipelinePage() {
 
         // Special message for CLOSE_DEAL stage
         if (payload.stage === "CLOSE_DEAL" && payload.data.contractValue) {
-          alert(
-            `Stage data saved successfully! Deal amount updated to GHS ${Number(payload.data.contractValue).toLocaleString()}`,
+          toast.success(
+            `Stage data saved. Deal amount updated to GHS ${Number(
+              payload.data.contractValue,
+            ).toLocaleString()}`,
           );
           // Refresh the leads to show updated dealValue
           fetchLeads();
         } else if (payload.stage === "PAYMENT" && result?.paymentSummary) {
-          alert(
+          toast.success(
             `Payment saved. Paid so far: GHS ${Number(result.paymentSummary.totalPaidToDate).toLocaleString()} / ` +
               `GHS ${Number(result.paymentSummary.agreedAmount).toLocaleString()} ` +
               `(Remaining: GHS ${Number(result.paymentSummary.remainingBalance).toLocaleString()})`,
           );
           fetchLeads();
         } else {
-          alert("Stage data saved successfully!");
+          toast.success("Stage data saved successfully!");
         }
         return true;
       } else {
@@ -653,7 +669,7 @@ export default function PipelinePage() {
         error instanceof Error
           ? error.message
           : "Error saving stage data. Please try again.";
-      alert(message);
+      toast.error(message);
       return false;
     }
   };
@@ -664,13 +680,18 @@ export default function PipelinePage() {
       "Please enter the client's email address:",
       lead?.email || "",
     );
-    if (!emailStr) return;
+    if (emailStr === null) return;
+    const email = emailStr.trim();
+    if (!email) {
+      toast.error("Client email is required to issue an invoice.");
+      return;
+    }
 
     setIssuingInvoiceLeadId(leadId);
     try {
       const response = await fetchWithAuth("/api/invoices/issue", {
         method: "POST",
-        body: JSON.stringify({ leadId, email: emailStr }),
+        body: JSON.stringify({ leadId, email }),
       });
 
       const payload = await response.json();
@@ -678,11 +699,13 @@ export default function PipelinePage() {
         throw new Error(payload?.error || "Failed to issue invoice");
       }
 
-      alert(`Invoice issued successfully and sent to ${payload.clientEmail}.`);
+      toast.success(
+        `Invoice issued successfully and sent to ${payload.clientEmail}.`,
+      );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to issue invoice";
-      alert(message);
+      toast.error(message);
     } finally {
       setIssuingInvoiceLeadId(null);
     }
@@ -713,10 +736,11 @@ export default function PipelinePage() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+      toast.success("Invoice download started.");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to download invoice";
-      alert(message);
+      toast.error(message);
     } finally {
       setDownloadingInvoiceLeadId(null);
     }

@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { toast } from 'react-hot-toast'
 import LeadForm from '@/components/LeadForm'
 import type { LeadFormLead } from '@/components/LeadForm'
 import LeadList from '@/components/LeadList'
@@ -299,14 +300,17 @@ export default function LeadsClient() {
   const saveCurrentView = () => {
     const defaultName = searchQuery.trim()
       ? `Search: ${searchQuery.trim().slice(0, 24)}`
-      : `Leads ${leadView === 'list' ? 'list' : 'cards'}`
+      : ""
     setSaveViewName(defaultName)
     setIsSaveViewModalOpen(true)
   }
 
   const handleSaveViewConfirm = () => {
     const name = saveViewName.trim()
-    if (!name) return
+    if (!name) {
+      toast.error('Please provide a name for this view.')
+      return
+    }
 
     const nextView: SavedLeadView = {
       id: createViewId(),
@@ -322,6 +326,7 @@ export default function LeadsClient() {
     ].slice(0, 8))
 
     setIsSaveViewModalOpen(false)
+    toast.success(`View Saved as "${name}".`)
   }
 
   const applySavedView = (view: SavedLeadView) => {
@@ -339,7 +344,7 @@ export default function LeadsClient() {
 
   const handleExportLeads = () => {
     if (filteredLeads.length === 0) {
-      window.alert('No leads to export.')
+      toast.error('No leads to export.')
       return
     }
 
@@ -355,6 +360,7 @@ export default function LeadsClient() {
     link.click()
     link.remove()
     window.URL.revokeObjectURL(url)
+    toast.success('Leads export started.')
   }
 
   const handleImportClick = () => {
@@ -370,7 +376,7 @@ export default function LeadsClient() {
     const rows = parseCsvText(csvText)
 
     if (rows.length === 0) {
-      window.alert('No valid lead rows were found in the CSV.')
+      toast.error('No valid lead rows were found in the CSV.')
       return
     }
 
@@ -420,9 +426,9 @@ export default function LeadsClient() {
     ].filter(Boolean).join(' ')
 
     if (errors.length > 0) {
-      window.alert(`${summary}\n\n${errors.slice(0, 5).join('\n')}`)
+      toast.error(`${summary} ${errors.slice(0, 3).join(' • ')}`.trim())
     } else {
-      window.alert(summary)
+      toast.success(summary)
     }
   }
 

@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import type { MouseEvent } from 'react'
+import { toast } from 'react-hot-toast'
 
 interface Lead {
   id: string
@@ -73,11 +74,12 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
       });
       if (res.ok) {
         onLeadUpdated();
+        toast.success('Lead deleted successfully.')
       } else {
-        alert('Failed to delete lead');
+        toast.error('Failed to delete lead.');
       }
     } catch {
-      alert('Error deleting lead');
+      toast.error('Error deleting lead.');
     }
   };
 

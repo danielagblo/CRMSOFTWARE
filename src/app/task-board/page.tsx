@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import {
   BoardUser,
@@ -295,7 +296,7 @@ export default function TaskBoardPage() {
       !deadline ||
       !timeline.trim()
     ) {
-      alert(
+      toast.error(
         "Please complete task title, assigned user, timeline, start time, and deadline.",
       );
       return;
@@ -303,7 +304,7 @@ export default function TaskBoardPage() {
 
     const parsedStartTime = new Date(startTime);
     if (Number.isNaN(parsedStartTime.getTime())) {
-      alert("Please enter a valid start time.");
+      toast.error("Please enter a valid start time.");
       return;
     }
 
@@ -315,7 +316,7 @@ export default function TaskBoardPage() {
       parsedStartTime.getTime() < nowTs &&
       (!editingTaskId || originalStartTimeValue !== parsedStartTime.getTime())
     ) {
-      alert("You cannot set a task start time in the past.");
+      toast.error("You cannot set a task start time in the past.");
       return;
     }
 
@@ -323,6 +324,7 @@ export default function TaskBoardPage() {
     const assignedUser = users.find((user) => user.id === assignedTo);
     const nowIso = new Date().toISOString();
 
+    const isEditing = Boolean(editingTaskId);
     setTasksByDate((prev) => {
       if (editingTaskId) {
         const originalDate = editingTaskOriginalDate || taskDateKey;
@@ -382,6 +384,7 @@ export default function TaskBoardPage() {
       return next;
     });
 
+    toast.success(isEditing ? "Task updated successfully." : "Task added successfully.");
     resetForm();
   };
 
@@ -404,6 +407,7 @@ export default function TaskBoardPage() {
     const confirmed = window.confirm("Delete this task permanently?");
     if (!confirmed) return;
 
+    let didDelete = false;
     setTasksByDate((prev) => {
       const dailyTasks = prev[dateKey] || [];
       const nextDailyTasks = dailyTasks.filter((task) => task.id !== taskId);
@@ -411,11 +415,15 @@ export default function TaskBoardPage() {
 
       const next = { ...prev, [dateKey]: nextDailyTasks };
       saveTasks(next);
+      didDelete = true;
       return next;
     });
 
     if (editingTaskId === taskId) {
       resetForm();
+    }
+    if (didDelete) {
+      toast.success("Task deleted successfully.");
     }
   };
 
@@ -444,6 +452,7 @@ export default function TaskBoardPage() {
     dateKey = selectedDate,
   ) => {
     if (!currentUser) return;
+    let didUpdate = false;
     setTasksByDate((prev) => {
       const dailyTasks = [...(prev[dateKey] || [])];
       const index = dailyTasks.findIndex((task) => task.id === taskId);
@@ -456,7 +465,7 @@ export default function TaskBoardPage() {
 
       // Enforce irreversible status progression (forward only).
       if (nextRank < currentRank) {
-        alert(
+        toast.error(
           "Status updates are irreversible. You can only move a task forward.",
         );
         return prev;
@@ -477,8 +486,12 @@ export default function TaskBoardPage() {
       dailyTasks[index] = updatedTask;
       const next = { ...prev, [dateKey]: dailyTasks };
       saveTasks(next);
+      didUpdate = true;
       return next;
     });
+    if (didUpdate) {
+      toast.success(`Task marked ${statusMeta[status].label}.`);
+    }
   };
 
   const addComment = (
@@ -488,8 +501,12 @@ export default function TaskBoardPage() {
   ) => {
     if (!currentUser) return;
     const nextMessage = message.trim();
-    if (!nextMessage) return;
+    if (!nextMessage) {
+      toast.error("Comment cannot be empty.");
+      return;
+    }
 
+    let didAdd = false;
     setTasksByDate((prev) => {
       const dailyTasks = [...(prev[dateKey] || [])];
       const index = dailyTasks.findIndex((task) => task.id === taskId);
@@ -500,8 +517,12 @@ export default function TaskBoardPage() {
 
       const next = { ...prev, [dateKey]: dailyTasks };
       saveTasks(next);
+      didAdd = true;
       return next;
     });
+    if (didAdd) {
+      toast.success("Comment added.");
+    }
   };
 
   const getTaskBorder = (task: BoardTask) => {
