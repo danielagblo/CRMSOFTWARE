@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getRequestAuditContext, recordAuditLogForUser } from '@/lib/audit'
 
 function getUserIdFromRequest(request: NextRequest): string | null {
   return request.headers.get('X-User-Id')
@@ -143,6 +144,27 @@ export async function GET(request: NextRequest) {
     `
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const filenamePrefix = selectedLeadIds.length > 0 ? 'selected-leads-report' : 'pipeline-export-report'
+
+    const auditContext = getRequestAuditContext(request)
+    await recordAuditLogForUser(
+      prisma,
+      userId,
+      {
+        action: 'EXPORT',
+        entityType: 'PipelineExport',
+        entityId: selectedLeadIds.length > 0 ? selectedLeadIds.join(',') : null,
+        description: selectedLeadIds.length > 0
+          ? `Exported selected pipeline leads (${selectedLeadIds.length})`
+          : 'Exported full pipeline report',
+        metadata: {
+          leadCount: leads.length,
+          selectedLeadIds,
+          filenamePrefix
+        },
+        ...auditContext
+      },
+      'Failed to write pipeline export audit log:',
+    )
 
     return new NextResponse(docHtml, {
       status: 200,

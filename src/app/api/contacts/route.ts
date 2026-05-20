@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getRequestAuditContext, recordAuditLogForUser } from '@/lib/audit'
 
 type ContactRecord = {
   id: string
@@ -101,6 +102,20 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    const auditContext = getRequestAuditContext(request)
+    await recordAuditLogForUser(
+      prisma,
+      userId,
+      {
+        action: 'CREATE',
+        entityType: 'Contact',
+        entityId: createdContact.id,
+        description: `Created contact ${createdContact.name}`,
+        ...auditContext
+      },
+      'Failed to write contact audit log:'
+    )
+
     return NextResponse.json({
       ...createdContact,
       createdAt: createdContact.createdAt.toISOString()
@@ -151,6 +166,20 @@ export async function PATCH(request: NextRequest) {
       }
     })
 
+    const auditContext = getRequestAuditContext(request)
+    await recordAuditLogForUser(
+      prisma,
+      userId,
+      {
+        action: 'UPDATE',
+        entityType: 'Contact',
+        entityId: updatedContact.id,
+        description: `Updated contact ${updatedContact.name}`,
+        ...auditContext
+      },
+      'Failed to write contact audit log:'
+    )
+
     return NextResponse.json({
       ...updatedContact,
       createdAt: updatedContact.createdAt.toISOString()
@@ -187,6 +216,20 @@ export async function DELETE(request: NextRequest) {
     await db.contact.delete({
       where: { id }
     })
+
+    const auditContext = getRequestAuditContext(request)
+    await recordAuditLogForUser(
+      prisma,
+      userId,
+      {
+        action: 'DELETE',
+        entityType: 'Contact',
+        entityId: id,
+        description: `Deleted contact ${id}`,
+        ...auditContext
+      },
+      'Failed to write contact audit log:'
+    )
 
     return NextResponse.json({ success: true })
   } catch {

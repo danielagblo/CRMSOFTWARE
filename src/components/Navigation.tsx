@@ -9,6 +9,7 @@ import dashboardIcon from '../assets/dashboard.svg'
 import pipelineIcon from '../assets/pipeline.svg'
 import tasksIcon from '../assets/taskboard.svg'
 import contactsIcon from '../assets/contactbook.svg'
+import auditIcon from '../assets/note.svg'
 import leadsIcon from '../assets/leads.svg'
 import usersIcon from '../assets/users.svg'
 
@@ -48,6 +49,13 @@ const navigation = [
       <img src={leadsIcon.src} alt="" className="w-4 h-4" />
     ),
   },
+  {
+    name: 'Audit Logs',
+    href: '/audit-logs',
+    icon: (
+      <img src={auditIcon.src} alt="" className="w-4 h-4" />
+    ),
+  },
 ]
 
 export default function Navigation() {
@@ -65,6 +73,7 @@ export default function Navigation() {
     pathname === '/contacts' ||
     pathname === '/leads' ||
     pathname.startsWith('/leads/') ||
+    pathname === '/audit-logs' ||
     pathname === '/users'
 
   // Load user from localStorage on mount

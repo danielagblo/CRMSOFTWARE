@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { getRequestAuditContext, recordAuditLogForUser } from '@/lib/audit'
 
 async function getAdminFromRequest(request?: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -85,6 +86,23 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    const auditContext = getRequestAuditContext(request)
+    await recordAuditLogForUser(
+      prisma,
+      session.user.id,
+      {
+        action: 'CREATE',
+        entityType: 'User',
+        entityId: user.id,
+        description: `Created user ${user.email}`,
+        metadata: {
+          role: user.role
+        },
+        ...auditContext
+      },
+      'Failed to write user audit log:'
+    )
+
     return NextResponse.json(user, { status: 201 })
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -111,6 +129,20 @@ export async function DELETE(request: NextRequest) {
     await prisma.user.delete({
       where: { id }
     })
+
+    const auditContext = getRequestAuditContext(request)
+    await recordAuditLogForUser(
+      prisma,
+      session.user.id,
+      {
+        action: 'DELETE',
+        entityType: 'User',
+        entityId: id,
+        description: `Deleted user ${id}`,
+        ...auditContext
+      },
+      'Failed to write user audit log:'
+    )
 
     return NextResponse.json({ message: 'User deleted successfully' })
   } catch (error) {
@@ -148,6 +180,24 @@ export async function PATCH(request: NextRequest) {
         role: true
       }
     })
+
+    const auditContext = getRequestAuditContext(request)
+    await recordAuditLogForUser(
+      prisma,
+      session.user.id,
+      {
+        action: 'UPDATE',
+        entityType: 'User',
+        entityId: updatedUser.id,
+        description: `Updated user ${updatedUser.email}`,
+        metadata: {
+          role: updatedUser.role,
+          changedPassword: Boolean(password)
+        },
+        ...auditContext
+      },
+      'Failed to write user audit log:'
+    )
 
     return NextResponse.json(updatedUser)
   } catch (error) {

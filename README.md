@@ -198,6 +198,7 @@ The application uses Prisma with the following main models:
 - `GET /api/dashboard` - Dashboard metrics
 - `GET /api/commissions` - Commission data
 - `GET /api/activities` - Activity logs
+- `GET /api/audit-logs` - Audit logs
 
 ## 🚀 Deployment
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import puppeteer from "puppeteer";
+import { getRequestAuditContext, recordAuditLogForUser } from "@/lib/audit";
 
 // ── CONSTANTS – swap as needed ──────────────────────────────────
 const COMPANY = {
@@ -451,6 +452,25 @@ export async function GET(request: NextRequest) {
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       const filename = `invoice-${safeFilename(lead.clientName)}-${timestamp}.pdf`;
+
+      const auditContext = getRequestAuditContext(request);
+      await recordAuditLogForUser(
+        prisma,
+        userId,
+        {
+          action: "DOWNLOAD",
+          entityType: "Invoice",
+          entityId: lead.id,
+          description: `Downloaded invoice ${invoiceNumber} for ${lead.clientName}`,
+          metadata: {
+            invoiceNumber,
+            invoiceAmount,
+            paymentStatus,
+          },
+          ...auditContext,
+        },
+        "Failed to write invoice download audit log:",
+      );
 
       return new NextResponse(Buffer.from(pdfBuffer), {
         status: 200,

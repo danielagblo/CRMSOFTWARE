@@ -3,6 +3,7 @@ import { createElement } from "react";
 import { prisma } from "@/lib/prisma";
 import { sendMail } from "@/lib/mail";
 import { InvoiceEmail } from "@/components/emails/InvoiceEmail";
+import { getRequestAuditContext, recordAuditLogForUser } from "@/lib/audit";
 
 function getUserIdFromRequest(request: NextRequest): string | null {
   return request.headers.get("X-User-Id");
@@ -120,6 +121,28 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       );
     }
+
+    const auditContext = getRequestAuditContext(request);
+    await recordAuditLogForUser(
+      prisma,
+      userId,
+      {
+        action: "ISSUE",
+        entityType: "Invoice",
+        entityId: lead.id,
+        description: `Issued invoice ${invoiceNumber} for ${lead.clientName}`,
+        metadata: {
+          invoiceNumber,
+          clientEmail,
+          invoiceAmount,
+          paymentStatus,
+          paymentDueDate,
+          providedEmail: email,
+        },
+        ...auditContext,
+      },
+      "Failed to write invoice audit log:",
+    );
 
     return NextResponse.json({
       success: true,

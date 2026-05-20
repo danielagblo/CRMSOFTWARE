@@ -56,6 +56,25 @@ model Activity {
   date        DateTime @default(now())
 }
 
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorId     String?
+  actorName   String?
+  actorEmail  String?
+  action      String
+  entityType  String
+  entityId    String?
+  description String?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@index([action])
+}
+
 model StageData {
   id        String   @id @default(cuid())
   leadId    String

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getRequestAuditContext, recordAuditLogForUser } from '@/lib/audit'
 
 const ASSIGN_ALL_USERS_VALUE = '__ALL_USERS__'
 
@@ -122,6 +123,25 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     })
 
+    const auditContext = getRequestAuditContext(request)
+    await recordAuditLogForUser(
+      prisma,
+      userId,
+      {
+        action: 'UPDATE',
+        entityType: 'Lead',
+        entityId: lead.id,
+        description: `Updated lead for ${lead.clientName}`,
+        metadata: {
+          stage: lead.stage,
+          assignedTo: lead.assignedTo,
+          visibleToAll: lead.visibleToAll
+        },
+        ...auditContext
+      },
+      'Failed to write lead audit log:'
+    )
+
     return NextResponse.json(lead)
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -161,6 +181,20 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     await prisma.lead.delete({
       where: { id: id }
     })
+
+    const auditContext = getRequestAuditContext(request)
+    await recordAuditLogForUser(
+      prisma,
+      userId,
+      {
+        action: 'DELETE',
+        entityType: 'Lead',
+        entityId: id,
+        description: `Deleted lead ${id}`,
+        ...auditContext
+      },
+      'Failed to write lead audit log:'
+    )
 
     return NextResponse.json({ success: true, message: 'Lead deleted successfully' })
   } catch (error) {

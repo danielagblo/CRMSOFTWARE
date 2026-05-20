@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getRequestAuditContext, recordAuditLogForUser } from '@/lib/audit'
 
 function getUserIdFromRequest(request: NextRequest): string | null {
   return request.headers.get('X-User-Id')
@@ -159,6 +160,24 @@ export async function GET(request: NextRequest) {
         content: buildUserDoc(userName, userEmail, userLeads)
       }
     })
+
+    const auditContext = getRequestAuditContext(request)
+    await recordAuditLogForUser(
+      prisma,
+      userId,
+      {
+        action: 'EXPORT',
+        entityType: 'PipelineExportBundle',
+        entityId: userId,
+        description: `Exported ${files.length} user pipeline file(s)`,
+        metadata: {
+          fileCount: files.length,
+          userCount: grouped.size
+        },
+        ...auditContext
+      },
+      'Failed to write grouped pipeline export audit log:',
+    )
 
     return NextResponse.json({ files })
   } catch (error) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getRequestAuditContext, recordAuditLogForUser } from '@/lib/audit'
 
 function getUserIdFromRequest(request: NextRequest): string | null {
   const userId = request.headers.get('X-User-Id')
@@ -152,6 +153,24 @@ export async function POST(request: NextRequest) {
         }
       })
     }
+
+    const auditContext = getRequestAuditContext(request)
+    await recordAuditLogForUser(
+      prisma,
+      userId,
+      {
+        action: stageDataId ? 'UPDATE' : 'CREATE',
+        entityType: 'StageData',
+        entityId: stageData.id,
+        description: `${stageDataId ? 'Updated' : 'Created'} stage data for ${stage}`,
+        metadata: {
+          leadId,
+          stage
+        },
+        ...auditContext
+      },
+      'Failed to write stage data audit log:'
+    )
 
     const paymentSummary = stage === 'PAYMENT'
       ? {
