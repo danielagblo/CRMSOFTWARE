@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { stages } from '@/lib/const'
+import { getRequestAuditContext, recordAuditLogForUser } from '@/lib/audit'
 
 const ASSIGN_ALL_USERS_VALUE = '__ALL_USERS__'
 
@@ -116,6 +117,25 @@ export async function POST(request: NextRequest) {
         assignedUser: true
       }
     })
+
+    const auditContext = getRequestAuditContext(request)
+    await recordAuditLogForUser(
+      prisma,
+      userId,
+      {
+        action: 'CREATE',
+        entityType: 'Lead',
+        entityId: lead.id,
+        description: `Created lead for ${lead.clientName}`,
+        metadata: {
+          stage: lead.stage,
+          assignedTo: lead.assignedTo,
+          visibleToAll: lead.visibleToAll
+        },
+        ...auditContext
+      },
+      'Failed to write lead audit log:'
+    )
 
     return NextResponse.json(lead)
   } catch {
