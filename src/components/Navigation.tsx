@@ -20,44 +20,37 @@ const navigation = [
     name: 'Dashboard',
     href: '/dashboard',
     icon: (
-      <img src={dashboardIcon.src} alt="" className="w-4 h-4" />
+      <img src={dashboardIcon.src} alt="Dashboard" className="w-4 h-4" />
     ),
   },
   {
     name: 'Pipeline',
     href: '/pipeline',
     icon: (
-      <img src={pipelineIcon.src} alt="" className="w-4 h-4" />
+      <img src={pipelineIcon.src} alt="Pipeline" className="w-4 h-4" />
     ),
   },
   {
     name: 'Task Board',
     href: '/task-board',
     icon: (
-      <img src={tasksIcon.src} alt="" className="w-4 h-4" />
+      <img src={tasksIcon.src} alt="Task Board" className="w-4 h-4" />
     ),
   },
   {
     name: 'Contact Book',
     href: '/contacts',
     icon: (
-      <img src={contactsIcon.src} alt="" className="w-4 h-4" />
+      <img src={contactsIcon.src} alt="Contact Book" className="w-4 h-4" />
     ),
   },
   {
     name: 'Leads',
     href: '/leads',
     icon: (
-      <img src={leadsIcon.src} alt="" className="w-4 h-4" />
+      <img src={leadsIcon.src} alt="Leads" className="w-4 h-4" />
     ),
-  },
-  {
-    name: 'Audit Logs',
-    href: '/audit-logs',
-    icon: (
-      <img src={auditIcon.src} alt="" className="w-4 h-4" />
-    ),
-  },
+  }
 ]
 
 export default function Navigation() {
