@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
 
 type AuditLogRow = {
   id: string
@@ -20,10 +19,6 @@ type AuditLogRow = {
 
 interface AuditLogsTableProps {
   logs: AuditLogRow[]
-  page: number
-  totalPages: number
-  prevHref: string
-  nextHref: string
 }
 
 function formatMetadata(metadata: unknown) {
@@ -163,10 +158,10 @@ function DetailsPopover({ log }: { log: AuditLogRow }) {
   )
 }
 
-export default function AuditLogsTable({ logs, page, totalPages, prevHref, nextHref }: AuditLogsTableProps) {
+export default function AuditLogsTable({ logs }: AuditLogsTableProps) {
   return (
     <>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-b-2xl shadow-sm">
         <table className="min-w-full divide-y divide-slate-100">
           <thead className="bg-slate-50">
             <tr>
@@ -216,36 +211,6 @@ export default function AuditLogsTable({ logs, page, totalPages, prevHref, nextH
             )}
           </tbody>
         </table>
-      </div>
-
-      <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <p className="text-sm text-slate-600">
-          Page {page} of {totalPages}
-        </p>
-        <div className="flex items-center gap-2">
-          <Link
-            href={prevHref}
-            aria-disabled={page <= 1}
-            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-              page <= 1
-                ? 'pointer-events-none border-slate-200 bg-slate-100 text-slate-400'
-                : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            Previous
-          </Link>
-          <Link
-            href={nextHref}
-            aria-disabled={page >= totalPages}
-            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-              page >= totalPages
-                ? 'pointer-events-none border-slate-200 bg-slate-100 text-slate-400'
-                : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            Next
-          </Link>
-        </div>
       </div>
     </>
   )
