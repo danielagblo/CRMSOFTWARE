@@ -5,6 +5,7 @@ import { fetchWithAuth } from '@/lib/fetchWithAuth'
 import FormModal from '@/lib/formModal'
 import PageHeader from '@/components/PageHeader'
 import SearchBar from '@/components/SearchBar'
+import { useAuditLogger } from '@/components/AuditLoggerProvider'
 import { 
   validateContactForm, 
   showFeedback, 
@@ -62,6 +63,7 @@ export default function ContactsPage() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [isPushingId, setIsPushingId] = useState<string | null>(null)
   const [isLoadingContacts, setIsLoadingContacts] = useState(true)
+  const { logAction } = useAuditLogger()
 
   useEffect(() => {
     const loadContacts = async () => {
@@ -147,12 +149,24 @@ export default function ContactsPage() {
             title: 'Contact Updated',
             description: `${data.name} has been updated.`
           })
+          await logAction({
+            action: 'contact.update',
+            entityType: 'contact',
+            entityId: data.id,
+            description: `Updated contact ${data.name}.`
+          })
         } else {
           setContacts((prev) => [data, ...prev])
           showFeedback({
             type: 'success',
             title: 'Contact Added',
             description: `${data.name} has been added to your contacts.`
+          })
+          await logAction({
+            action: 'contact.create',
+            entityType: 'contact',
+            entityId: data.id,
+            description: `Created contact ${data.name}.`
           })
         }
         resetForm()
@@ -189,6 +203,12 @@ export default function ContactsPage() {
           type: 'success',
           title: 'Contact Deleted',
           description: 'The contact has been removed from your list.'
+        })
+        await logAction({
+          action: 'contact.delete',
+          entityType: 'contact',
+          entityId: contactId,
+          description: 'Deleted contact.'
         })
       })
       .catch((error) => {
@@ -254,6 +274,12 @@ export default function ContactsPage() {
         type: 'success',
         title: 'Contact Pushed to Leads',
         description: `${contact.name} has been moved to your leads list.`
+      })
+      await logAction({
+        action: 'contact.push_to_leads',
+        entityType: 'contact',
+        entityId: contact.id,
+        description: `Pushed contact ${contact.name} to leads.`
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to push contact to leads.'

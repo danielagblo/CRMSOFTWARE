@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
+import { Providers } from "@/components/Providers";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
@@ -16,35 +17,37 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased bg-white min-h-screen">
-        <Navigation />
-        <main className="relative">
-          {children}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 3500,
-              style: {
-                borderRadius: '0.75rem',
-                background: 'var(--dark-blue)',
-                color: 'white',
-                boxShadow: '0 12px 30px rgba(15, 23, 42, 0.18)',
-                fontSize: '0.95rem',
-              },
-              success: {
+        <Providers>
+          <Navigation />
+          <main className="relative">
+            {children}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 3500,
                 style: {
-                  background: 'green',
+                  borderRadius: '0.75rem',
+                  background: 'var(--dark-blue)',
                   color: 'white',
+                  boxShadow: '0 12px 30px rgba(15, 23, 42, 0.18)',
+                  fontSize: '0.95rem',
                 },
-              },
-              error: {
-                style: {
-                  background: 'red',
-                  color: 'white',
+                success: {
+                  style: {
+                    background: 'green',
+                    color: 'white',
+                  },
                 },
-              },
-            }}
-          />
-        </main>
+                error: {
+                  style: {
+                    background: 'red',
+                    color: 'white',
+                  },
+                },
+              }}
+            />
+          </main>
+        </Providers>
       </body>
     </html>
   );

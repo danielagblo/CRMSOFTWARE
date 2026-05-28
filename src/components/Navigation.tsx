@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import { useAuditLogger } from '@/components/AuditLoggerProvider'
 
 import skytechLogo from '../assets/skytechLogo.png'
 import dashboardIcon from '../assets/dashboard.svg'
@@ -12,6 +13,7 @@ import contactsIcon from '../assets/contactbook.svg'
 import auditIcon from '../assets/note.svg'
 import leadsIcon from '../assets/leads.svg'
 import usersIcon from '../assets/users.svg'
+import logsIcon from '../assets/logs.svg'
 
 const navigation = [
   {
@@ -65,7 +67,7 @@ export default function Navigation() {
   const [loading, setLoading] = useState(true)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
-  const router = useRouter()
+  const { logAction } = useAuditLogger()
   const isProtectedRoute =
     pathname === '/dashboard' ||
     pathname === '/pipeline' ||
@@ -105,7 +107,7 @@ export default function Navigation() {
   // Keep header visible on protected pages while user data hydrates.
   if (loading && isProtectedRoute) {
     return (
-      <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
+      <nav className="shadow-lg border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -141,18 +143,16 @@ export default function Navigation() {
   })
 
   const handleSignOut = async () => {
+    await logAction({
+      action: 'auth.logout',
+      description: 'User signed out.'
+    })
     localStorage.removeItem('user')
     window.location.href = '/login'
   }
 
-  const handleNavigate = (href: string) => {
-    setUserMenuOpen(false)
-    setMobileMenuOpen(false)
-    router.push(href)
-  }
-
   return (
-    <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
+    <nav className="shadow-lg border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand */}
@@ -242,7 +242,16 @@ export default function Navigation() {
                     <div className="text-xs text-indigo-600 font-medium mt-1">{user?.role || 'Role has not been set'}</div>
                   </div>
                   <div className="py-1">
-                    {/* Future options like "Profile", "Settings", "Site Customization" can be added here. */}
+                    {isAdmin && (
+                      <Link
+                        href="/logs"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <img className="w-4 h-4 mr-3" src={logsIcon.src} alt="logs" />
+                        Site Logs
+                      </Link>
+                    )}
                   </div>
                   <div className="border-t border-gray-200 pt-1">
                     <button
@@ -295,10 +304,12 @@ export default function Navigation() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => {
+                    setMobileMenuOpen(false)
+                  }}
                   className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                     isActive
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
+                      ? 'bg-linear-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
                       : 'bg-white text-gray-700 hover:bg-gray-100 hover:text-indigo-600'
                   }`}
                 >
@@ -314,10 +325,12 @@ export default function Navigation() {
             {user?.role === 'ADMIN' && (
               <Link
                 href="/users"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                }}
                 className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                   pathname === '/users'
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
+                    ? 'bg-linear-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
                     : 'bg-white text-gray-700 hover:bg-gray-100 hover:text-indigo-600'
                 }`}
               >

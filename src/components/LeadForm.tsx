@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toast } from 'react-hot-toast'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
+import { useAuditLogger } from '@/components/AuditLoggerProvider'
 import userIcon from '@/assets/user.svg'
 import businessIcon from '@/assets/business.svg'
 import phoneIcon from '@/assets/hash.svg'
@@ -112,6 +113,7 @@ export default function LeadForm({
   const [loading, setLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [users, setUsers] = useState<User[]>([])
+  const { logAction } = useAuditLogger()
   const isReadOnly = mode === 'view'
   const { register, handleSubmit, formState: { errors }, reset } = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema)
@@ -190,11 +192,20 @@ export default function LeadForm({
       })
 
       if (res.ok) {
+        const payload = await res.json().catch(() => null)
         if (!isEdit) {
           reset()
         }
         onLeadAdded()
         toast.success(isEdit ? 'Lead updated successfully.' : 'Lead added successfully.')
+        await logAction({
+          action: isEdit ? 'lead.update' : 'lead.create',
+          entityType: 'lead',
+          entityId: payload?.id || lead?.id,
+          description: isEdit
+            ? `Updated lead ${payload?.clientName || lead?.clientName || 'lead'}.`
+            : `Created lead ${payload?.clientName || data.clientName}.`
+        })
       } else {
         const payload = await res.json().catch(() => null)
         toast.error(payload?.error || `Error ${isEdit ? 'updating' : 'adding'} lead`)

@@ -7,6 +7,7 @@ import skyTechLogo from '../../assets/skytechLogo.png'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
+import { useAuditLogger } from '@/components/AuditLoggerProvider'
 
 import { signIn, getSession } from 'next-auth/react'
 
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const { logAction } = useAuditLogger()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,6 +57,11 @@ export default function LoginPage() {
         }
         localStorage.setItem('user', JSON.stringify(userData))
       }
+      await logAction({
+        action: 'auth.login',
+        description: 'User signed in.',
+        metadata: { email }
+      })
       // Force a full browser reload so layout components (like Navigation) remount and re-read localStorage
       window.location.href = session?.user?.role === 'ADMIN' ? '/dashboard' : '/pipeline'
     } catch (err) {

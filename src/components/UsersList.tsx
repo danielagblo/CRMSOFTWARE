@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { toast } from 'react-hot-toast'
 import FormModal from '@/lib/formModal'
+import { useAuditLogger } from '@/components/AuditLoggerProvider'
 import userIcon from '@/assets/user.svg'
 import emailIcon from '@/assets/at-sign.svg'
 import padlockIcon from '@/assets/padlock.svg'
@@ -41,6 +42,7 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isXlUp, setIsXlUp] = useState(false)
+  const { logAction } = useAuditLogger()
   const [formData, setFormData] = useState<FormData>({ 
     name: '', 
     email: '', 
@@ -160,6 +162,14 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
         }
         closeForm()
         toast.success(selectedUser ? 'User updated successfully.' : 'User added successfully.')
+        await logAction({
+          action: selectedUser ? 'user.update' : 'user.create',
+          entityType: 'user',
+          entityId: updatedUser.id,
+          description: selectedUser
+            ? `Updated user ${updatedUser.name}.`
+            : `Created user ${updatedUser.name}.`
+        })
       } else {
         const err = await res.json()
         toast.error(err.error || 'Operation failed')
@@ -212,6 +222,12 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
     if (res.ok) {
       setUsers(users.filter((u) => u.id !== id))
       toast.success('User deleted successfully.')
+      await logAction({
+        action: 'user.delete',
+        entityType: 'user',
+        entityId: id,
+        description: `Deleted user ${name}.`
+      })
     } else {
       const err = await res.json()
       toast.error(err.error || 'Failed to delete user')
