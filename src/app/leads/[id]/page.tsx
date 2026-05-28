@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast'
 import LeadForm from '@/components/LeadForm'
 import type { LeadFormLead } from '@/components/LeadForm'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
+import { useAuditLogger } from '@/components/AuditLoggerProvider'
 
 interface Lead extends LeadFormLead {
   stage: string
@@ -20,6 +21,7 @@ export default function LeadDetailPage() {
   const [lead, setLead] = useState<Lead | null>(null)
   const [loading, setLoading] = useState(true)
   const [formMode, setFormMode] = useState<'view' | 'edit'>('view')
+  const { logAction } = useAuditLogger()
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user')
@@ -57,6 +59,12 @@ export default function LeadDetailPage() {
     const res = await fetchWithAuth(`/api/leads/${lead.id}`, { method: 'DELETE' })
     if (res.ok) {
       toast.success('Lead deleted successfully.')
+      await logAction({
+        action: 'lead.delete',
+        entityType: 'lead',
+        entityId: lead.id,
+        description: `Deleted lead ${lead.clientName}.`
+      })
       router.push('/leads')
       return
     }

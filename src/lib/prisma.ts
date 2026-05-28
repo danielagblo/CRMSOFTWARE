@@ -62,4 +62,12 @@ const adapter = new PrismaPg(
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
 
+export type PrismaWithAuditLog = PrismaClient & {
+  auditLog: {
+    findMany: (...args: any[]) => Promise<any[]>
+    count: (...args: any[]) => Promise<number>
+    create?: (...args: any[]) => Promise<any>
+  }
+}
+
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
