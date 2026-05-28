@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
         invoiceDate,
         paymentDueDate,
         serviceType: toText(lead.serviceType, "Service engagement"),
-        invoiceAmount: invoiceAmount.toLocaleString(),
+        invoiceAmount,
         amountReceived,
         paymentMethod,
         paymentStatus,

@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { formatCurrency } from "@/lib/siteSettings";
 import { DashboardData, ReminderItem } from "@/types/dashboard";
 import { stageLabels } from "@/lib/const";
 import { KpiCard } from "@/components/KpiCard";
@@ -148,7 +149,7 @@ export default function Dashboard() {
 
     {
       title: "Total Revenue",
-      value: `GHS ${data?.totalRevenue?.toFixed(2) || "0.00"}`,
+      value: formatCurrency(data?.totalRevenue || 0),
       gradientClass: "from-purple-50 to-white",
       icon: (
         <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">

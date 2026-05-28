@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { MouseEvent } from 'react'
 import { toast } from 'react-hot-toast'
+import { formatCurrency } from '@/lib/siteSettings'
 
 interface Lead {
   id: string
@@ -152,7 +153,7 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
     const isSelected = selectedLeadId === lead.id
     const dealValue = lead.dealValue === null || lead.dealValue === undefined
       ? '-'
-      : `GHS ${Number(lead.dealValue).toLocaleString()}`
+      : formatCurrency(lead.dealValue)
 
     return (
       <div

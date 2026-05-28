@@ -1,16 +1,17 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuditLogger } from '@/components/AuditLoggerProvider'
+import { useSiteSettings } from '@/components/SiteSettingsProvider'
 
 import skytechLogo from '../assets/skytechLogo.png'
 import dashboardIcon from '../assets/dashboard.svg'
 import pipelineIcon from '../assets/pipeline.svg'
 import tasksIcon from '../assets/taskboard.svg'
 import contactsIcon from '../assets/contactbook.svg'
-import auditIcon from '../assets/note.svg'
 import leadsIcon from '../assets/leads.svg'
 import usersIcon from '../assets/users.svg'
 import logsIcon from '../assets/logs.svg'
@@ -20,47 +21,54 @@ const navigation = [
     name: 'Dashboard',
     href: '/dashboard',
     icon: (
-      <img src={dashboardIcon.src} alt="Dashboard" className="w-4 h-4" />
+      <Image src={dashboardIcon} alt="Dashboard" className="w-4 h-4" width={16} height={16} />
     ),
   },
   {
     name: 'Pipeline',
     href: '/pipeline',
     icon: (
-      <img src={pipelineIcon.src} alt="Pipeline" className="w-4 h-4" />
+      <Image src={pipelineIcon} alt="Pipeline" className="w-4 h-4" width={16} height={16} />
     ),
   },
   {
     name: 'Task Board',
     href: '/task-board',
     icon: (
-      <img src={tasksIcon.src} alt="Task Board" className="w-4 h-4" />
+      <Image src={tasksIcon} alt="Task Board" className="w-4 h-4" width={16} height={16} />
     ),
   },
   {
     name: 'Contact Book',
     href: '/contacts',
     icon: (
-      <img src={contactsIcon.src} alt="Contact Book" className="w-4 h-4" />
+      <Image src={contactsIcon} alt="Contact Book" className="w-4 h-4" width={16} height={16} />
     ),
   },
   {
     name: 'Leads',
     href: '/leads',
     icon: (
-      <img src={leadsIcon.src} alt="Leads" className="w-4 h-4" />
+      <Image src={leadsIcon} alt="Leads" className="w-4 h-4" width={16} height={16} />
     ),
   }
 ]
 
+interface NavigationUser {
+  name?: string
+  email?: string
+  role?: string
+}
+
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<NavigationUser | null>(null)
   const [loading, setLoading] = useState(true)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const { logAction } = useAuditLogger()
+  const { settings, toggleTheme } = useSiteSettings()
   const isProtectedRoute =
     pathname === '/dashboard' ||
     pathname === '/pipeline' ||
@@ -68,16 +76,19 @@ export default function Navigation() {
     pathname === '/contacts' ||
     pathname === '/leads' ||
     pathname.startsWith('/leads/') ||
-    pathname === '/audit-logs' ||
+    pathname === '/logs' ||
+    pathname === '/site-customisation' ||
     pathname === '/users'
 
   // Load user from localStorage on mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
-    }
-    setLoading(false)
+    window.requestAnimationFrame(() => {
+      if (storedUser) {
+        setUser(JSON.parse(storedUser) as NavigationUser)
+      }
+      setLoading(false)
+    })
   }, [])
 
   // Handle click outside user menu to close it
@@ -105,11 +116,11 @@ export default function Navigation() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="w-10 h-10 flex items-center justify-center animate-pulse">
-                <img src="/skytechLogo.png" alt="Logo" className="w-4 h-4" />
+                  <Image src={settings.logoUrl || skytechLogo} alt="Logo" className="w-4 h-4 object-contain" width={40} height={40} />
               </div>
               <div className="hidden sm:block ml-3">
                 <h1 className="text-xl font-bold text-(--dark-blue) animate-pulse">
-                  CRM Pro
+                    {settings.companyName}
                 </h1>
                 <p className="text-xs text-gray-500 -mt-1">Loading...</p>
               </div>
@@ -152,11 +163,11 @@ export default function Navigation() {
           <div className="flex items-center">
             <Link href="/dashboard" className="flex items-center space-x-3 group">
               <div className="w-22 h-18 flex items-center justify-center">
-                <img src={skytechLogo.src} alt='Logo' className='min-w-22 w-full h-full' />
+                <Image src={settings.logoUrl || skytechLogo} alt="Logo" className="min-w-22 w-full h-full object-contain" width={88} height={72} />
               </div>
               <div className='hidden sm:block'>
                 <h1 className="text-xl font-bold text-(--dark-blue)">
-                  CRM Pro
+                  {settings.companyName}
                 </h1>
                 <p className="text-xs whitespace-nowrap text-gray-500 -mt-1">Sales Management</p>
               </div>
@@ -193,7 +204,7 @@ export default function Navigation() {
                 }`}
               >
                 <span className={pathname === '/users' ? 'text-white' : 'text-gray-500'}>
-                  <img src={usersIcon.src} alt="" className="w-6 h-6" />
+                  <Image src={usersIcon} alt="" className="w-6 h-6" width={24} height={24} />
                 </span>
                 <span className='whitespace-nowrap'>Users</span>
               </Link>
@@ -236,14 +247,39 @@ export default function Navigation() {
                   </div>
                   <div className="py-1">
                     {isAdmin && (
-                      <Link
-                        href="/logs"
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <img className="w-4 h-4 mr-3" src={logsIcon.src} alt="logs" />
-                        Site Logs
-                      </Link>
+                      <>
+                        <Link
+                          href="/logs"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <Image src={logsIcon} alt="logs" className="w-4 h-4 mr-3" width={16} height={16} />
+                          Site Logs
+                        </Link>
+                        <Link
+                          href="/site-customisation"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
+                          </svg>
+                          Site Customisation
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toggleTheme()
+                            setUserMenuOpen(false)
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646a9 9 0 1011.708 11.708z" />
+                          </svg>
+                          {settings.themeMode === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+                        </button>
+                      </>
                     )}
                   </div>
                   <div className="border-t border-gray-200 pt-1">

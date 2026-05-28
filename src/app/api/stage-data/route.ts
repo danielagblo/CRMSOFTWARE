@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getRequestAuditContext, recordAuditLogForUser } from '@/lib/audit'
+import { formatCurrency } from '@/lib/siteSettings'
 
 function getUserIdFromRequest(request: NextRequest): string | null {
   const userId = request.headers.get('X-User-Id')
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
       if (totalPaidToDate > lead.dealValue) {
         return NextResponse.json(
           {
-            error: `Total payments (GHS ${totalPaidToDate.toLocaleString()}) exceed agreed amount (GHS ${lead.dealValue.toLocaleString()}).`
+            error: `Total payments (${formatCurrency(totalPaidToDate)}) exceed agreed amount (${formatCurrency(lead.dealValue)}).`
           },
           { status: 400 }
         )

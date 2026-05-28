@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { X, Eye } from 'lucide-react'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
+import { formatCurrency } from '@/lib/siteSettings'
 
 interface Lead {
   id: string
@@ -17,7 +18,7 @@ interface StageData {
   id: string
   leadId: string
   stage: string
-  data: Record<string, any>
+  data: Record<string, unknown>
   createdAt: string
   updatedAt: string
 }
@@ -56,13 +57,7 @@ export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: L
   const [stageData, setStageData] = useState<StageData[]>([])
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    if (isOpen && lead) {
-      fetchStageData()
-    }
-  }, [isOpen, lead])
-
-  const fetchStageData = async () => {
+  const fetchStageData = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetchWithAuth(`/api/stage-data?leadId=${lead.id}`)
@@ -75,9 +70,19 @@ export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: L
     } finally {
       setLoading(false)
     }
-  }
+  }, [lead.id])
 
-  const formatValue = (key: string, value: any) => {
+  useEffect(() => {
+    if (isOpen && lead) {
+      const frameId = window.requestAnimationFrame(() => {
+        void fetchStageData()
+      })
+
+      return () => window.cancelAnimationFrame(frameId)
+    }
+  }, [isOpen, lead, fetchStageData])
+
+  const formatValue = (key: string, value: unknown) => {
     if (!value) return 'Not specified'
 
     // Format dates
@@ -87,7 +92,7 @@ export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: L
 
     // Format currency
     if (key.toLowerCase().includes('value') || key.toLowerCase().includes('amount') || key.toLowerCase().includes('contractvalue') || key === 'contractValue') {
-      return `GHS ${Number(value).toLocaleString()}`
+      return formatCurrency(value)
     }
 
     // Format ratings
@@ -235,7 +240,7 @@ export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: L
             <div>
               <div className="text-sm font-medium text-gray-600">Deal Value</div>
               <div className="text-sm text-gray-800">
-                {lead.dealValue ? `GHS ${lead.dealValue.toLocaleString()}` : 'Not set'}
+                {lead.dealValue ? formatCurrency(lead.dealValue) : 'Not set'}
               </div>
             </div>
             <div>

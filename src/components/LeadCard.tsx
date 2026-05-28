@@ -2,6 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { formatCurrency } from '@/lib/siteSettings'
 
 interface Lead {
   id: string
@@ -232,7 +233,7 @@ export default function LeadCard({
           <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
           </svg>
-          <span className="font-medium text-emerald-600">GHS {lead.dealValue?.toLocaleString() || '0'}</span>
+          <span className="font-medium text-emerald-600">{formatCurrency(lead.dealValue ?? 0)}</span>
         </div>
       </div>
 
@@ -242,15 +243,15 @@ export default function LeadCard({
           <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-md bg-white p-2 border border-emerald-200">
               <p className="text-gray-500">Paid</p>
-              <p className="font-bold text-emerald-700">GHS {paymentSnapshot.totalPaid.toLocaleString()}</p>
+              <p className="font-bold text-emerald-700">{formatCurrency(paymentSnapshot.totalPaid)}</p>
             </div>
             <div className="rounded-md bg-white p-2 border border-amber-200">
               <p className="text-gray-500">Remaining</p>
-              <p className="font-bold text-amber-700">GHS {paymentSnapshot.remainingBalance.toLocaleString()}</p>
+              <p className="font-bold text-amber-700">{formatCurrency(paymentSnapshot.remainingBalance)}</p>
             </div>
           </div>
           <p className="mt-2 text-[11px] text-gray-600">
-            Agreed Amount: <span className="font-semibold text-gray-800">GHS {paymentSnapshot.agreedAmount.toLocaleString()}</span>
+            Agreed Amount: <span className="font-semibold text-gray-800">{formatCurrency(paymentSnapshot.agreedAmount)}</span>
           </p>
           {paymentSnapshot.remainingBalance > 0.009 && (
             <div className={`mt-2 rounded-md p-2 ${
@@ -268,7 +269,7 @@ export default function LeadCard({
                 Installment: <span className="font-semibold">{paymentSnapshot.nextInstallmentNumber || 'N/A'}</span>
               </p>
               <p className="text-xs text-gray-700">
-                Expected Amount: <span className="font-semibold text-amber-700">GHS {paymentSnapshot.remainingBalance.toLocaleString()}</span>
+                Expected Amount: <span className="font-semibold text-amber-700">{formatCurrency(paymentSnapshot.remainingBalance)}</span>
               </p>
             </div>
           )}

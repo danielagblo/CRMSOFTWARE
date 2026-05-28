@@ -12,18 +12,16 @@
   --dark-brown: #b3926f;
 }
 
+html[data-theme="dark"] {
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: white;
-    --foreground: white;
-  }
 }
 
 html {
@@ -41,6 +39,19 @@ body {
 /* Fix for invisible input text in themed environments */
 input, textarea, select {
   color: #111827 !important; /* text-gray-900 */
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  color: #e2e8f0 !important;
+  background: #111827;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: #94a3b8 !important;
 }
 
 input::placeholder, textarea::placeholder {
@@ -66,6 +77,10 @@ input::placeholder, textarea::placeholder {
 
   .app-surface {
     @apply rounded-2xl border border-white/60 bg-white/90 shadow-sm backdrop-blur;
+  }
+
+  html[data-theme="dark"] .app-surface {
+    @apply border-slate-700/70 bg-slate-900/80 shadow-slate-950/20;
   }
 }
 

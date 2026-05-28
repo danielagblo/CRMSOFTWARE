@@ -23,6 +23,7 @@ import LeadCard from "@/components/LeadCard";
 import StageDataModal from "@/components/StageDataModal";
 import LeadDataViewer from "@/components/LeadDataViewer";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { formatCurrency } from "@/lib/siteSettings";
 import { toast } from "react-hot-toast";
 import {
   Lead,
@@ -643,17 +644,15 @@ export default function PipelinePage() {
         // Special message for CLOSE_DEAL stage
         if (payload.stage === "CLOSE_DEAL" && payload.data.contractValue) {
           toast.success(
-            `Stage data saved. Deal amount updated to GHS ${Number(
-              payload.data.contractValue,
-            ).toLocaleString()}`,
+            `Stage data saved. Deal amount updated to ${formatCurrency(payload.data.contractValue)}`,
           );
           // Refresh the leads to show updated dealValue
           fetchLeads();
         } else if (payload.stage === "PAYMENT" && result?.paymentSummary) {
           toast.success(
-            `Payment saved. Paid so far: GHS ${Number(result.paymentSummary.totalPaidToDate).toLocaleString()} / ` +
-              `GHS ${Number(result.paymentSummary.agreedAmount).toLocaleString()} ` +
-              `(Remaining: GHS ${Number(result.paymentSummary.remainingBalance).toLocaleString()})`,
+            `Payment saved. Paid so far: ${formatCurrency(result.paymentSummary.totalPaidToDate)} / ` +
+              `${formatCurrency(result.paymentSummary.agreedAmount)} ` +
+              `(Remaining: ${formatCurrency(result.paymentSummary.remainingBalance)})`,
           );
           fetchLeads();
         } else {
@@ -763,7 +762,7 @@ export default function PipelinePage() {
 
   return (
     <div className="min-h-screen overflow-y-auto bg-gray-50">
-      <div className="max-w-[1800px] mx-auto min-h-screen py-4 px-4 sm:px-6 lg:px-8 flex flex-col gap-4">
+      <div className="max-w-450 mx-auto min-h-screen py-4 px-4 sm:px-6 lg:px-8 flex flex-col gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
             Search Pipeline
