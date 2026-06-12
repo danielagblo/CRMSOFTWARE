@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
 import FormModal from '@/lib/formModal'
 import PageHeader from '@/components/PageHeader'
 import SearchBar from '@/components/SearchBar'
 import { useAuditLogger } from '@/components/AuditLoggerProvider'
+import { useSiteSettings } from '@/components/SiteSettingsProvider'
 import { 
   validateContactForm, 
   showFeedback, 
@@ -63,7 +65,9 @@ export default function ContactsPage() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [isPushingId, setIsPushingId] = useState<string | null>(null)
   const [isLoadingContacts, setIsLoadingContacts] = useState(true)
+  const { settings } = useSiteSettings()
   const { logAction } = useAuditLogger()
+  const iconFilter = settings.themeMode === 'dark' ? 'brightness(0) invert(1)' : 'none'
 
   useEffect(() => {
     const loadContacts = async () => {
@@ -314,8 +318,8 @@ export default function ContactsPage() {
   }, [contacts, searchQuery])
 
   const contactFormContent = (
-    <div className="bg-white px-4 py-3">
-      <div className="mb-4 border-b border-gray-200 pb-2">
+    <div className="theme-surface px-4 py-3">
+      <div className="mb-4 border-b theme-border pb-2">
         <PageHeader
           eyebrow={editingContactId ? 'Edit Contact' : '+ Add a New Contact'}
           title="Contacts"
@@ -323,60 +327,66 @@ export default function ContactsPage() {
         />
       </div>
       <div className='relative'>
-        <img className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={userIcon.src} alt="user" />
+        <Image className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={userIcon} alt="user" width={20} height={20} style={{ filter: iconFilter }} />
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Contact name *"
-          className="rounded-lg border pl-12 min-h-12 mb-2 w-full border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="rounded-lg border pl-12 min-h-12 mb-2 w-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 theme-text"
+          style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
         />
       </div>
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2 ">
         <div className='relative'>
-          <img className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={phoneIcon.src} alt="phone" />
+          <Image className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={phoneIcon} alt="phone" width={20} height={20} style={{ filter: iconFilter }} />
           <input
             value={phone}
             onChange={(e) => setPhone(filterPhoneInput(e.target.value))}
             placeholder="Number *"
-            className="rounded-lg border w-full pl-12 min-h-12 border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="rounded-lg border w-full pl-12 min-h-12 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 theme-text"
+            style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
           />
         </div>
         <div className='relative'>
-          <img className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={emailIcon.src} alt="email" />
+          <Image className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={emailIcon} alt="email" width={20} height={20} style={{ filter: iconFilter }} />
           <input
             value={email}
             onChange={(e) => setEmail(filterEmailInput(e.target.value))}
             placeholder="Email"
-            className="rounded-lg border w-full pl-12 min-h-12 border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="rounded-lg border w-full pl-12 min-h-12 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 theme-text"
+            style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
           />
         </div>
         <div className='relative'>
-          <img className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={locationIcon.src} alt="location" />
+          <Image className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={locationIcon} alt="location" width={20} height={20} style={{ filter: iconFilter }} />
           <input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="Location"
-            className="rounded-lg border w-full pl-12 min-h-12 border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="rounded-lg border w-full pl-12 min-h-12 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 theme-text"
+            style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
           />
         </div>
         <div className='relative'>
-          <img className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={businessIcon.src} alt="business" />
+          <Image className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5' src={businessIcon} alt="business" width={20} height={20} style={{ filter: iconFilter }} />
           <input
             value={businessType}
             onChange={(e) => setBusinessType(e.target.value)}
             placeholder="Business type"
-            className="rounded-lg border w-full pl-12 min-h-12 border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="rounded-lg border w-full pl-12 min-h-12 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 theme-text"
+            style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
           />
         </div>
       </div>
       <div className='relative'>
-        <img className='absolute left-3 top-5 h-5 w-5' src={noteIcon.src} alt="note" />
+        <Image className='absolute left-3 top-5 h-5 w-5' src={noteIcon} alt="note" width={20} height={20} style={{ filter: iconFilter }} />
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Note"
           rows={2}
-          className="mt-3 w-full rounded-lg border border-gray-300 pl-12 min-h-25 lg:min-h-40 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="mt-3 w-full rounded-lg border pl-12 min-h-25 lg:min-h-40 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 theme-text"
+          style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
         />
       </div>
       <div className="w-full flex cursor-pointer justify-end">
@@ -409,7 +419,7 @@ export default function ContactsPage() {
             action={(
               <button
                 onClick={() => setIsFormModalOpen(true)}
-                className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-(--dark-blue)/85"
+                className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-(--light-blue) shadow-sm transition-colors hover:bg-(--dark-blue)/85"
               >
                 Add Contact
               </button>
@@ -437,7 +447,7 @@ export default function ContactsPage() {
                 {searchQuery ? 'No contacts match your search.' : 'No contacts yet. Add your first business contact above.'}
               </div>
             ) : (
-              <div className="max-sm:flex md:grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 items-stretch flex-row flex-wrap max-lg:gap-3 items-center gap-3">
+              <div className="max-sm:flex md:grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 items-stretch flex-row flex-wrap max-lg:gap-3 gap-3">
                 {sortedAndFilteredContacts.map((contact) => {
                   const pushReadiness = getPushReadiness(contact)
                   const isPushBusy = isPushingId === contact.id
@@ -450,12 +460,12 @@ export default function ContactsPage() {
                   <div 
                     key={contact.id} 
                     onClick={() => openEditModal(contact)}
-                    className="w-full rounded-xl flex flex-col justify-between max-lg:px-3 border border-gray-200 bg-white p-3 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-300 transition-all"
+                    className="w-full rounded-xl flex flex-col justify-between max-lg:px-3 border p-3 shadow-sm cursor-pointer hover:shadow-md hover:border-indigo-300 transition-all theme-surface"
                   >
                     <div className="flex items-start  justify-between gap-2">
                       <div>
-                        <h2 className="text-base font-semibold text-(--dark-blue)">{contact.name}</h2>
-                        <p className="text-sm text-gray-500">{contact.businessType || ""}</p>
+                        <h2 className="text-base font-semibold theme-text">{contact.name}</h2>
+                        <p className="text-sm theme-text-muted">{contact.businessType || ""}</p>
                       </div>
                       {pushReadiness.isReady ? (
                         <span className="text-[10px] px-2 py-0.5 rounded-md bg-green-200 text-green-800 border border-green-800 font-medium">
@@ -464,11 +474,11 @@ export default function ContactsPage() {
                       ) : null}
                     </div>
 
-                    <div className="mt-2 space-y-1 text-base text-gray-700">
+                    <div className="mt-2 space-y-1 text-base theme-text-muted">
                       <p><span className="font-medium">Number:</span> {contact.phone || '-'}</p>
                       <p><span className="font-medium">Email:</span> {contact.email || '-'}</p>
                       <p><span className="font-medium">Location:</span> {contact.location || '-'}</p>
-                      <p className="break-words"><span className="font-medium">Note:</span> {contact.note || '-'}</p>
+                      <p className="wrap-break-word"><span className="font-medium">Note:</span> {contact.note || '-'}</p>
                     </div>
 
                     <div className="mt-3 flex gap-2">
@@ -479,7 +489,7 @@ export default function ContactsPage() {
                             handlePushToLeads(contact)
                           }}
                           disabled={isPushDisabled}
-                          className="w-full rounded-md cursor-pointer bg-(--dark-blue) px-3 py-2 text-sm text-white hover:bg-(--dark-blue)/85 disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+                          className="w-full rounded-md cursor-pointer bg-(--dark-blue) px-3 py-2 text-sm text-(--light-blue) hover:bg-(--dark-blue)/85 disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
                         >
                           {isPushBusy
                             ? 'Pushing...'

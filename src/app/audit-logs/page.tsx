@@ -123,35 +123,37 @@ export default async function AuditLogsPage({
     <div className="min-h-screen bg-(--light-blue)/45">
       <div className="max-w-full mx-auto py-6 sm:px-6 lg:px-8 2xl:px-12">
         <div className="px-4 sm:px-0 space-y-4">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-100">
+          <div className="theme-surface rounded-2xl shadow-sm border overflow-hidden">
+            <div className="px-6 py-5 border-b theme-border">
               <p className="text-sm font-medium text-indigo-600">Security</p>
-              <h1 className="text-2xl font-bold text-slate-900">Audit Logs</h1>
-              <p className="mt-1 text-sm text-slate-500">
+              <h1 className="text-2xl font-bold theme-text">Audit Logs</h1>
+              <p className="mt-1 text-sm theme-text-muted">
                 Filter, search, and inspect operational events across the CRM.
               </p>
             </div>
 
-            <form method="get" className="grid gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50 lg:grid-cols-5">
+            <form method="get" className="grid gap-3 px-6 py-4 border-b theme-border bg-(--surface-muted) lg:grid-cols-5">
               <div className="lg:col-span-2">
-                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                <label className="block text-xs font-semibold uppercase tracking-wide theme-text-subtle mb-1">
                   Search
                 </label>
                 <input
                   name="query"
                   defaultValue={query}
                   placeholder="Search actor, action, entity, description..."
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  style={{ background: 'var(--surface)', borderColor: 'var(--surface-border)' }}
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                <label className="block text-xs font-semibold uppercase tracking-wide theme-text-subtle mb-1">
                   Action
                 </label>
                 <select
                   name="action"
                   defaultValue={action}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  style={{ background: 'var(--surface)', borderColor: 'var(--surface-border)' }}
                 >
                   <option value="">All actions</option>
                   {ACTION_OPTIONS.map((item) => (
@@ -162,13 +164,14 @@ export default async function AuditLogsPage({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                <label className="block text-xs font-semibold uppercase tracking-wide theme-text-subtle mb-1">
                   Entity
                 </label>
                 <select
                   name="entityType"
                   defaultValue={entityType}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  style={{ background: 'var(--surface)', borderColor: 'var(--surface-border)' }}
                 >
                   <option value="">All entities</option>
                   {ENTITY_OPTIONS.map((item) => (
@@ -179,13 +182,14 @@ export default async function AuditLogsPage({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                <label className="block text-xs font-semibold uppercase tracking-wide theme-text-subtle mb-1">
                   Page size
                 </label>
                 <select
                   name="limit"
                   defaultValue={String(limit)}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  style={{ background: 'var(--surface)', borderColor: 'var(--surface-border)' }}
                 >
                   {LIMIT_OPTIONS.map((item) => (
                     <option key={item} value={item}>
@@ -208,7 +212,7 @@ export default async function AuditLogsPage({
                 >
                   Reset
                 </Link>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm theme-text-muted">
                   Showing {typedLogs.length} of {total} logs
                 </p>
               </div>
@@ -259,7 +263,7 @@ export default async function AuditLogsPage({
                             <div className="mt-3 space-y-3 text-xs text-slate-600">
                               <div>
                                 <div className="font-semibold text-slate-700">User Agent</div>
-                                <div className="mt-1 break-words">{log.userAgent || 'n/a'}</div>
+                                <div className="mt-1 wrap-break-word">{log.userAgent || 'n/a'}</div>
                               </div>
                               {log.metadata ? (
                                 <div>

@@ -111,15 +111,40 @@ export function saveSiteSettings(settings: SiteSettings) {
 }
 
 export function buildCssVariables(settings: SiteSettings) {
-  const colors = settings.themeMode === 'dark' ? {
-    ...settings.colors,
-    background: DARK_THEME_COLORS.background,
-    foreground: DARK_THEME_COLORS.foreground,
-  } : settings.colors
+  const colors = settings.themeMode === 'dark' ? DARK_THEME_COLORS : settings.colors
+  const surface = settings.themeMode === 'dark'
+    ? {
+        surface: '#0f172a',
+        surfaceMuted: '#111827',
+        surfaceStrong: '#1e293b',
+        surfaceOverlay: 'rgba(15, 23, 42, 0.96)',
+        surfaceBorder: '#334155',
+        textPrimary: '#e2e8f0',
+        textSecondary: '#94a3b8',
+        textTertiary: '#64748b',
+      }
+    : {
+        surface: '#ffffff',
+        surfaceMuted: '#f8fafc',
+        surfaceStrong: '#eef2f7',
+        surfaceOverlay: 'rgba(255, 255, 255, 0.96)',
+        surfaceBorder: '#dbe4ef',
+        textPrimary: '#0f172a',
+        textSecondary: '#475569',
+        textTertiary: '#64748b',
+      }
 
   return {
     '--background': colors.background,
     '--foreground': colors.foreground,
+    '--surface': surface.surface,
+    '--surface-muted': surface.surfaceMuted,
+    '--surface-strong': surface.surfaceStrong,
+    '--surface-overlay': surface.surfaceOverlay,
+    '--surface-border': surface.surfaceBorder,
+    '--text-primary': surface.textPrimary,
+    '--text-secondary': surface.textSecondary,
+    '--text-tertiary': surface.textTertiary,
     '--dark-blue': colors.darkBlue,
     '--light-blue': colors.lightBlue,
     '--lighter-blue': colors.lighterBlue,

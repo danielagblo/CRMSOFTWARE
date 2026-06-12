@@ -20,37 +20,27 @@ const navigation = [
   {
     name: 'Dashboard',
     href: '/dashboard',
-    icon: (
-      <Image src={dashboardIcon} alt="Dashboard" className="w-4 h-4" width={16} height={16} />
-    ),
+    icon: dashboardIcon,
   },
   {
     name: 'Pipeline',
     href: '/pipeline',
-    icon: (
-      <Image src={pipelineIcon} alt="Pipeline" className="w-4 h-4" width={16} height={16} />
-    ),
+    icon: pipelineIcon,
   },
   {
     name: 'Task Board',
     href: '/task-board',
-    icon: (
-      <Image src={tasksIcon} alt="Task Board" className="w-4 h-4" width={16} height={16} />
-    ),
+    icon: tasksIcon,
   },
   {
     name: 'Contact Book',
     href: '/contacts',
-    icon: (
-      <Image src={contactsIcon} alt="Contact Book" className="w-4 h-4" width={16} height={16} />
-    ),
+    icon: contactsIcon,
   },
   {
     name: 'Leads',
     href: '/leads',
-    icon: (
-      <Image src={leadsIcon} alt="Leads" className="w-4 h-4" width={16} height={16} />
-    ),
+    icon: leadsIcon,
   }
 ]
 
@@ -69,6 +59,7 @@ export default function Navigation() {
   const pathname = usePathname()
   const { logAction } = useAuditLogger()
   const { settings, toggleTheme } = useSiteSettings()
+  const iconFilter = settings.themeMode === 'dark' ? 'brightness(0) invert(1)' : 'none'
   const isProtectedRoute =
     pathname === '/dashboard' ||
     pathname === '/pipeline' ||
@@ -111,21 +102,21 @@ export default function Navigation() {
   // Keep header visible on protected pages while user data hydrates.
   if (loading && isProtectedRoute) {
     return (
-      <nav className="shadow-lg border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
+      <nav className="theme-nav shadow-lg border-b sticky top-0 z-50 backdrop-blur-sm">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="w-10 h-10 flex items-center justify-center animate-pulse">
-                  <Image src={settings.logoUrl || skytechLogo} alt="Logo" className="w-4 h-4 object-contain" width={40} height={40} />
+                  <Image src={settings.logoUrl || skytechLogo} alt="Logo" className="w-4 h-4 object-contain" width={40} height={40} style={{ filter: iconFilter }} />
               </div>
               <div className="hidden sm:block ml-3">
-                <h1 className="text-xl font-bold text-(--dark-blue) animate-pulse">
+                <h1 className="text-xl font-bold theme-text animate-pulse">
                     {settings.companyName}
                 </h1>
-                <p className="text-xs text-gray-500 -mt-1">Loading...</p>
+                <p className="text-xs theme-text-muted -mt-1">Loading...</p>
               </div>
             </div>
-            <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+            <div className="w-8 h-8 rounded-full animate-pulse" style={{ background: 'var(--surface-muted)' }}></div>
           </div>
         </div>
       </nav>
@@ -156,20 +147,20 @@ export default function Navigation() {
   }
 
   return (
-    <nav className="shadow-lg border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
+    <nav className="theme-nav shadow-lg border-b sticky top-0 z-50 backdrop-blur-sm">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand */}
           <div className="flex items-center">
             <Link href="/dashboard" className="flex items-center space-x-3 group">
               <div className="w-22 h-18 flex items-center justify-center">
-                <Image src={settings.logoUrl || skytechLogo} alt="Logo" className="min-w-22 w-full h-full object-contain" width={88} height={72} />
+                <Image src={settings.logoUrl || skytechLogo} alt="Logo" className="min-w-22 w-full h-full object-contain" width={88} height={72} style={{ filter: iconFilter }} />
               </div>
               <div className='hidden sm:block'>
-                <h1 className="text-xl font-bold text-(--dark-blue)">
+                <h1 className="text-xl font-bold theme-text">
                   {settings.companyName}
                 </h1>
-                <p className="text-xs whitespace-nowrap text-gray-500 -mt-1">Sales Management</p>
+                <p className="text-xs whitespace-nowrap theme-text-muted -mt-1">Sales Management</p>
               </div>
             </Link>
           </div>
@@ -184,11 +175,13 @@ export default function Navigation() {
                   href={item.href}
                   className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-medium ${
                     isActive
-                      ? 'bg-(--dark-brown) text-white shadow-lg'
-                      : 'text-(--dark-blue) hover:text-(--dark-brown) transition'
+                      ? 'bg-(--surface-muted) text-(--dark-brown) shadow-sm border border-(--surface-border)'
+                      : 'theme-text hover:text-(--dark-brown) transition'
                   }`}
                 >
-                  <span className={isActive ? 'text-white' : 'text-gray-500'}>{item.icon}</span>
+                  <span className={isActive ? 'text-(--dark-brown)' : 'theme-text-muted'}>
+                    <Image src={item.icon} alt={item.name} className="w-4 h-4" width={16} height={16} style={{ filter: iconFilter }} />
+                  </span>
                   <span className='whitespace-nowrap'>{item.name}</span>
                 </Link>
               )
@@ -199,12 +192,12 @@ export default function Navigation() {
                 href="/users"
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   pathname === '/users'
-                    ? 'bg-(--dark-brown) text-white shadow-lg'
-                    : 'text-(--dark-blue) hover:text-(--dark-brown) transition'
+                    ? 'bg-(--surface-muted) text-(--dark-brown) shadow-sm border border-(--surface-border)'
+                    : 'theme-text hover:text-(--dark-brown) transition'
                 }`}
               >
-                <span className={pathname === '/users' ? 'text-white' : 'text-gray-500'}>
-                  <Image src={usersIcon} alt="" className="w-6 h-6" width={24} height={24} />
+                <span className={pathname === '/users' ? 'text-(--dark-brown)' : 'theme-text-muted'}>
+                  <Image src={usersIcon} alt="" className="w-6 h-6" width={24} height={24} style={{ filter: iconFilter }} />
                 </span>
                 <span className='whitespace-nowrap'>Users</span>
               </Link>
@@ -217,19 +210,19 @@ export default function Navigation() {
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center space-x-3 bg-gray-100 hover:bg-gray-200 rounded-lg px-3 py-2 transition-all duration-200"
+                className="flex items-center space-x-3 theme-surface hover:bg-(--surface-muted) rounded-lg px-3 py-2 transition-all duration-200 border theme-border shadow-sm"
               >
-                <div className="w-8 h-8 bg-(--dark-blue)  rounded-lg flex items-center justify-center shadow-md">
-                  <span className="text-white text-sm font-semibold">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-md" style={{ background: 'var(--surface-muted)' }}>
+                  <span className="theme-text text-sm font-semibold">
                     {user?.name?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className="text-sm font-medium text-(--dark-blue)">{user?.name || 'User'}</div>
-                  <div className="text-xs text-gray-500">{user?.role || 'ADMIN'}</div>
+                  <div className="text-sm font-medium theme-text">{user?.name || 'User'}</div>
+                  <div className="text-xs theme-text-muted">{user?.role || 'ADMIN'}</div>
                 </div>
                 <svg
-                  className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
+                  className={`w-4 h-4 theme-text-muted transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -239,11 +232,11 @@ export default function Navigation() {
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white text-gray-900 rounded-xl shadow-xl border border-gray-200 py-2 z-50">
-                  <div className="px-4 py-3 border-b border-gray-200">
-                    <div className="text-sm font-medium text-gray-900">{user?.name || 'User'}</div>
-                    <div className="text-sm text-gray-500">{user?.email || 'Email has not been set'}</div>
-                    <div className="text-xs text-indigo-600 font-medium mt-1">{user?.role || 'Role has not been set'}</div>
+                <div className="theme-nav-popover absolute right-0 mt-2 w-56 rounded-xl shadow-xl border py-2 z-50">
+                  <div className="px-4 py-3 border-b theme-border">
+                    <div className="text-sm font-medium theme-text">{user?.name || 'User'}</div>
+                    <div className="text-sm theme-text-muted">{user?.email || 'Email has not been set'}</div>
+                    <div className="text-xs text-(--dark-brown) font-medium mt-1">{user?.role || 'Role has not been set'}</div>
                   </div>
                   <div className="py-1">
                     {isAdmin && (
@@ -251,15 +244,15 @@ export default function Navigation() {
                         <Link
                           href="/logs"
                           onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-4 py-2 text-sm theme-text-muted hover:bg-(--surface-muted)"
                         >
-                          <Image src={logsIcon} alt="logs" className="w-4 h-4 mr-3" width={16} height={16} />
+                          <Image src={logsIcon} alt="logs" className="w-4 h-4 mr-3" width={16} height={16} style={{ filter: iconFilter }} />
                           Site Logs
                         </Link>
                         <Link
                           href="/site-customisation"
                           onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-4 py-2 text-sm theme-text-muted hover:bg-(--surface-muted)"
                         >
                           <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
@@ -272,7 +265,7 @@ export default function Navigation() {
                             toggleTheme()
                             setUserMenuOpen(false)
                           }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-4 py-2 text-sm theme-text-muted hover:bg-(--surface-muted)"
                         >
                           <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646a9 9 0 1011.708 11.708z" />
@@ -282,7 +275,7 @@ export default function Navigation() {
                       </>
                     )}
                   </div>
-                  <div className="border-t border-gray-200 pt-1">
+                  <div className="border-t theme-border pt-1">
                     <button
                       onClick={handleSignOut}
                       className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
@@ -301,7 +294,8 @@ export default function Navigation() {
             <div className="md:hidden">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="bg-gray-100 inline-flex items-center justify-center p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors duration-200"
+                className="inline-flex items-center justify-center p-2 rounded-lg theme-text-muted hover:theme-text focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors duration-200"
+                style={{ background: 'var(--surface-muted)' }}
               >
                 <span className="sr-only">Open main menu</span>
                 <svg
@@ -325,7 +319,7 @@ export default function Navigation() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white text-gray-900 border-t border-gray-200 shadow-lg">
+        <div className="md:hidden theme-nav-popover border-t shadow-lg">
           <div className="px-2 pt-2 pb-3 space-y-1">
             {visibleNavigation.map((item) => {
               const isActive = pathname === item.href
@@ -338,11 +332,13 @@ export default function Navigation() {
                   }}
                   className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                     isActive
-                      ? 'bg-linear-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                      : 'bg-white text-gray-700 hover:bg-gray-100 hover:text-indigo-600'
+                      ? 'bg-(--surface-muted) text-(--dark-brown) shadow-sm border border-(--surface-border)'
+                      : 'bg-(--surface) theme-text-muted hover:bg-(--surface-muted) hover:text-indigo-600'
                   }`}
                 >
-                  <span className={isActive ? 'text-white' : 'text-gray-500'}>{item.icon}</span>
+                  <span className={isActive ? 'text-(--dark-brown)' : 'theme-text-muted'}>
+                    <Image src={item.icon} alt={item.name} className="w-4 h-4" width={16} height={16} style={{ filter: iconFilter }} />
+                  </span>
                   <span>{item.name}</span>
                   {isActive && (
                     <div className="w-2 h-2 bg-white rounded-full animate-pulse ml-auto"></div>
@@ -359,14 +355,12 @@ export default function Navigation() {
                 }}
                 className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                   pathname === '/users'
-                    ? 'bg-linear-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 hover:text-indigo-600'
+                    ? 'bg-(--surface-muted) text-(--dark-brown) shadow-sm border border-(--surface-border)'
+                    : 'bg-(--surface) theme-text-muted hover:bg-(--surface-muted) hover:text-indigo-600'
                 }`}
               >
-                <span className={pathname === '/users' ? 'text-white' : 'text-gray-500'}>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                  </svg>
+                <span className={pathname === '/users' ? 'text-(--dark-brown)' : 'theme-text-muted'}>
+                  <Image src={usersIcon} alt="Users" className="w-5 h-5" width={20} height={20} style={{ filter: iconFilter }} />
                 </span>
                 <span>Users</span>
               </Link>

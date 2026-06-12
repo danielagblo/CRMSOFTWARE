@@ -51,7 +51,8 @@ export default function FormModal({
           aria-modal="true"
           aria-label={title}
           onClick={(e) => e.stopPropagation()}
-          className={`relative w-full no-scrollbar bg-white shadow-2xl max-h-[92vh] overflow-y-auto rounded-t-2xl border border-slate-200 md:max-w-3xl md:rounded-2xl ${panelClassName}`}
+          className={`relative w-full no-scrollbar shadow-2xl max-h-[92vh] overflow-y-auto rounded-t-2xl md:max-w-3xl md:rounded-2xl ${panelClassName}`}
+          style={{ background: 'var(--surface-strong)', color: 'var(--text-primary)', border: '1px solid var(--surface-border)' }}
         >
           <button
             ref={closeButtonRef}
