@@ -172,7 +172,7 @@ export default function SiteCustomisationClient() {
                     type="file"
                     accept="image/*"
                     onChange={(event) => onLogoSelect(event.target.files?.[0] || null)}
-                    className="block text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-(--dark-blue) file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-(--dark-blue)/85"
+                    className="block text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-(--dark-blue) file:px-4 file:py-2 file:text-sm file:font-medium file:text-(--white) hover:file:bg-(--dark-blue)/85"
                   />
                 </div>
               </label>
@@ -181,7 +181,7 @@ export default function SiteCustomisationClient() {
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="rounded-xl bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-(--dark-blue)/85"
+                  className="rounded-xl bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-(--white) shadow-sm transition-colors hover:bg-(--dark-blue)/85"
                 >
                   Save Settings
                 </button>

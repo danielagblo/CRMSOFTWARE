@@ -393,7 +393,7 @@ export default function ContactsPage() {
         <button
           onClick={handleCreateContact}
           disabled={isSubmitting}
-          className="rounded-lg cursor-pointer bg-indigo-600 px-3 py-2 text-white hover:bg-indigo-700 disabled:opacity-60"
+          className="rounded-lg cursor-pointer bg-indigo-600 px-3 py-2 text-(--white) hover:bg-indigo-700 disabled:opacity-60"
         >
           {isSubmitting ? (editingContactId ? 'Updating...' : 'Adding...') : (editingContactId ? 'Update Contact' : 'Add Contact')}
         </button>
@@ -489,7 +489,7 @@ export default function ContactsPage() {
                             handlePushToLeads(contact)
                           }}
                           disabled={isPushDisabled}
-                          className="w-full rounded-md cursor-pointer bg-(--dark-blue) px-3 py-2 text-sm text-(--light-blue) hover:bg-(--dark-blue)/85 disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+                          className="w-full rounded-md cursor-pointer bg-(--push-bg) px-3 py-2 text-sm text-(--light-blue) hover:bg-(--dark-blue)/85 disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
                         >
                           {isPushBusy
                             ? 'Pushing...'

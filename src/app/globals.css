@@ -18,6 +18,9 @@
   --lighter-blue: #f0f0dc;
   --light-brown: #f0d8b6;
   --dark-brown: #b3926f;
+
+  --white: white;
+  --push-bg: var(--dark-blue);
 }
 
 html[data-theme="dark"] {
@@ -37,6 +40,9 @@ html[data-theme="dark"] {
   --text-primary: #e2e8f0;
   --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
+
+  --white: #032a42;
+  --push-bg: #00a2ff7d;
 }
 
 @theme inline {
@@ -159,6 +165,10 @@ input::placeholder, textarea::placeholder {
     background: var(--surface);
     color: var(--text-primary);
     border-color: var(--surface-border);
+  }
+
+  html[data-theme="dark"] .lead-view-icon {
+    filter: invert(1) brightness(1.6);
   }
 }
 

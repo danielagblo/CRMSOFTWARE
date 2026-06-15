@@ -464,7 +464,7 @@ export default function LeadForm({
             <button
               type="button"
               onClick={onEditRequest}
-              className="rounded-lg w-1/2 cursor-pointer bg-(--dark-blue) px-4 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+              className="rounded-lg w-1/2 cursor-pointer bg-(--dark-blue) px-4 py-3 text-sm font-medium text-(--white) hover:bg-indigo-700"
             >
               Edit
             </button>
@@ -472,7 +472,7 @@ export default function LeadForm({
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg w-1/2 bg-(--dark-blue) px-5 py-3 text-sm cursor-pointer font-medium text-white hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
+              className="rounded-lg w-1/2 bg-(--dark-blue) px-5 py-3 text-sm cursor-pointer font-medium text-(--white) hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
             >
               {loading ? (mode === 'edit' ? 'Saving...' : 'Creating...') : (mode === 'edit' ? 'Save Changes' : 'Create Lead')}
             </button>

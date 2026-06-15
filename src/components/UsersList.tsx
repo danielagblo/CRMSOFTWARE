@@ -441,7 +441,7 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
             <button
               type="button"
               onClick={() => setFormMode('edit')}
-              className="flex-1 bg-green-600 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]"
+              className="flex-1 bg-green-600 text-(--white) px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]"
             >
               Edit
             </button>
@@ -456,9 +456,9 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
       <div className="xl:grid xl:grid-cols-12 xl:gap-6">
         {/* Table Section */}
         <div className={`${isFormOpen ? 'xl:col-span-8' : 'xl:col-span-12'} 2xl:col-span-8`}>
-            <div className="theme-surface rounded-2xl shadow-xl overflow-hidden border" style={{ borderColor: 'rgba(148, 163, 184, 0.16)' }}>
+            <div className="theme-surface rounded-2xl shadow-xl overflow-hidden border">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y" style={{ divideColor: 'rgba(148, 163, 184, 0.16)' }}>
+              <table className="min-w-full divide-y">
                 <thead className="bg-(--surface-muted)/70">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-bold theme-text-subtle uppercase tracking-wider">Name</th>
@@ -467,14 +467,14 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
                     <th className="px-6 py-4 text-right text-xs font-bold theme-text-subtle uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="theme-surface divide-y" style={{ divideColor: 'rgba(148, 163, 184, 0.16)' }}>
+                <tbody className="theme-surface divide-y divide-(--surface-border)">
                   {filteredUsers.map((user) => (
                     <tr 
                       key={user.id}
                       onClick={() => openViewForm(user)}
                       className={`hover:bg-(--surface-muted)/70 transition-colors cursor-pointer ${
                         selectedUser?.id === user.id 
-                          ? 'xl:border-indigo-500 xl:ring-1 xl:ring-indigo-200 xl:bg-indigo-50/40' 
+                          ? 'xl:border-gray-200 xl:ring-1 xl:ring-indigo-200 xl:bg-indigo-50/60' 
                           : ''
                       }`}
                     >
@@ -497,7 +497,7 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
                   <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-sm ${
                       user.role === 'ADMIN' 
-                        ? 'bg-(--dark-blue) text-white' 
+                        ? 'bg-(--dark-blue) text-(--white)' 
                         : 'bg-(--light-blue) text-(--dark-blue)'
                     }`}>
                       {user.role}

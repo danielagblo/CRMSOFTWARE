@@ -198,7 +198,7 @@ export default async function LogsPage({
               <div className="lg:col-span-5 flex items-center gap-3">
                 <button
                   type="submit"
-                  className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-(--dark-blue)/85"
+                  className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-(--white) shadow-sm transition-colors hover:bg-(--dark-blue)/85"
                 >
                   Apply Filters
                 </button>

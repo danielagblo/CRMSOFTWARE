@@ -166,7 +166,7 @@ export default function LeadCard({
           {canMoveNext && (
             <button
               onClick={handleMoveToNext}
-              className="text-xs text-white px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105"
+              className="text-xs text-(--white) px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105"
               style={{ background: 'linear-gradient(90deg, #3b82f6, #2563eb)' }}
               title={`Move to ${stages[currentStageIndex + 1].replace('_', ' ').toLowerCase()}`}
             >
@@ -182,7 +182,7 @@ export default function LeadCard({
                 e.stopPropagation()
                 onViewData(lead)
               }}
-              className="text-xs text-white px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105"
+              className="text-xs text-(--white) px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105"
               style={{ background: 'linear-gradient(90deg, #10b981, #059669)' }}
               title="View all stage data"
             >
@@ -199,7 +199,7 @@ export default function LeadCard({
                 onIssueInvoice(lead.id)
               }}
               disabled={isIssuingInvoice}
-              className="text-xs text-white px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105 disabled:opacity-60"
+              className="text-xs text-(--white) px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105 disabled:opacity-60"
               style={{ background: 'linear-gradient(90deg, #8b5cf6, #7c3aed)' }}
               title="Issue invoice and send to client email"
             >
@@ -216,7 +216,7 @@ export default function LeadCard({
                 onDownloadInvoice(lead.id)
               }}
               disabled={isDownloadingInvoice}
-              className="text-xs text-white px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105 disabled:opacity-60"
+              className="text-xs text-(--white) px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105 disabled:opacity-60"
               style={{ background: 'linear-gradient(90deg, #475569, #334155)' }}
               title="Download invoice document"
             >

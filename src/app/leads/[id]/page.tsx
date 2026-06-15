@@ -95,7 +95,7 @@ export default function LeadDetailPage() {
             <div className="flex items-center">
               <button
                 onClick={handleDelete}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                className="bg-red-600 hover:bg-red-700 text-(--white) px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 Delete
               </button>

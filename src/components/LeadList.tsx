@@ -167,11 +167,10 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
             ? `w-full hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer ${isSelected ? 'xl:border-(--dark-blue) xl:ring-1 xl:ring-(--light-blue)' : ''}`
             : 'w-[min(90vw,24rem)] shadow-lg'
         }`}
-        style={{ borderColor: 'rgba(148, 163, 184, 0.16)' }}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-sm flex items-center justify-center border theme-border" style={{ background: 'var(--surface-muted)' }}>
+            <div className="h-10 w-10 rounded-sm flex items-center justify-center border theme-border" >
               <span className="text-sm font-bold theme-text">
                 {lead.clientName.charAt(0).toUpperCase()}
               </span>
@@ -251,8 +250,8 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
           </div>
         </div>
       ) : (
-          <div  className="theme-surface shadow-sm border overflow-hidden rounded-xl" style={{ borderColor: 'rgba(148, 163, 184, 0.16)' }}>
-          <ul className="divide-y" style={{ divideColor: 'rgba(148, 163, 184, 0.16)' }}>
+          <div  className="theme-surface divide-y divide-(--surface-border) shadow-sm border overflow-hidden rounded-xl">
+          <ul>
             {leads.map((lead) => {
               const phoneNumbers = parsePhoneNumbers(lead.phone)
               const isSelected = selectedLeadId === lead.id
@@ -283,13 +282,13 @@ export default function LeadList({ leads, onLeadUpdated, viewMode, onEditLead, o
                 >
                   <div className={`px-4 py-5 sm:px-6 transition-colors ${
                     isSelected
-                      ? 'hover:bg-indigo-50/60 xl:border xl:border-(--dark-blue) rounded-xl xl:bg-(--light-blue)/45'
-                        : 'hover:bg-(--surface-muted) xl:border xl:border-transparent'
+                      ? 'rounded-xl xl:bg-(--light-blue)/45 xl:ring-1 xl:ring-(--dark-blue) hover:bg-gray-200/10'
+                      : 'hover:bg-gray-200/10 hover:rounded-xl'
                   }`}>
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                       <div className="flex items-center min-w-0">
                         <div className="flex-none h-10 w-10">
-                          <div className="h-10 w-10 rounded-sm flex items-center justify-center border theme-border" style={{ background: 'var(--surface-muted)' }}>
+                          <div className="h-10 w-10 rounded-sm flex items-center justify-center border theme-border">
                             <span className="text-sm font-bold theme-text">
                               {lead.clientName.charAt(0).toUpperCase()}
                             </span>
