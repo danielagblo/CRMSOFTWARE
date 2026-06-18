@@ -2,6 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { formatCurrency } from '@/lib/siteSettings'
 
 interface Lead {
   id: string
@@ -66,11 +67,6 @@ export default function LeadCard({
     isDragging,
   } = useSortable({ id: lead.id, disabled: !isDraggable })
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-
   const currentStageIndex = stages.indexOf(lead.stage)
   const canMoveNext = currentStageIndex < stages.length - 1
 
@@ -112,16 +108,22 @@ export default function LeadCard({
     paymentSnapshot.remainingBalance > 0.009 &&
     isDueDateReached(paymentSnapshot.nextDuePaymentDate)
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    ...(hasReachedDueDate ? {} : { borderColor: 'rgba(148, 163, 184, 0.16)' }),
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-white p-4 rounded-xl shadow-sm border transition-all duration-200 transform hover:-translate-y-1 ${
+      className={`theme-surface p-4 rounded-xl shadow-sm border transition-all duration-200 transform hover:-translate-y-1 ${
         hasReachedDueDate
           ? 'border-2 border-red-500 hover:border-red-600'
-          : 'border-gray-200 hover:border-indigo-300'
+          : 'theme-border hover:border-indigo-300'
         } ${isDraggable ? 'cursor-move' : 'cursor-default'
         } ${isDragging ? 'opacity-50 rotate-2 scale-105' : ''
         }`}
@@ -144,10 +146,13 @@ export default function LeadCard({
               title="Select lead for export"
             />
           )}
-          <div className="w-8 h-8 shrink-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+          <div
+            className="w-8 h-8 flex-none rounded-full flex items-center justify-center text-sm font-semibold shadow-sm border theme-border"
+            style={{ background: 'var(--surface-muted)', color: 'var(--surface-text)' }}
+          >
             {lead.clientName.charAt(0).toUpperCase()}
           </div>
-          <h3 className="font-semibold text-gray-900 text-sm truncate min-w-0 flex-1">{lead.clientName}</h3>
+          <h3 className="font-semibold theme-text text-sm truncate min-w-0 flex-1">{lead.clientName}</h3>
           {hasStageData && (
             <span className="shrink-0 text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-medium flex items-center gap-1" title="Has stage data">
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -161,7 +166,8 @@ export default function LeadCard({
           {canMoveNext && (
             <button
               onClick={handleMoveToNext}
-              className="text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105"
+              className="text-xs text-(--white) px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105"
+              style={{ background: 'linear-gradient(90deg, #3b82f6, #2563eb)' }}
               title={`Move to ${stages[currentStageIndex + 1].replace('_', ' ').toLowerCase()}`}
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,7 +182,8 @@ export default function LeadCard({
                 e.stopPropagation()
                 onViewData(lead)
               }}
-              className="text-xs bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105"
+              className="text-xs text-(--white) px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105"
+              style={{ background: 'linear-gradient(90deg, #10b981, #059669)' }}
               title="View all stage data"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +199,8 @@ export default function LeadCard({
                 onIssueInvoice(lead.id)
               }}
               disabled={isIssuingInvoice}
-              className="text-xs bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-600 hover:to-violet-700 disabled:opacity-60 text-white px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105"
+              className="text-xs text-(--white) px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105 disabled:opacity-60"
+              style={{ background: 'linear-gradient(90deg, #8b5cf6, #7c3aed)' }}
               title="Issue invoice and send to client email"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,7 +216,8 @@ export default function LeadCard({
                 onDownloadInvoice(lead.id)
               }}
               disabled={isDownloadingInvoice}
-              className="text-xs bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 disabled:opacity-60 text-white px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105"
+              className="text-xs text-(--white) px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1 shadow-sm hover:shadow-md transform hover:scale-105 disabled:opacity-60"
+              style={{ background: 'linear-gradient(90deg, #475569, #334155)' }}
               title="Download invoice document"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,17 +231,17 @@ export default function LeadCard({
 
       {/* Contact Information */}
       <div className="space-y-2 mb-3">
-        <div className="flex items-center text-sm text-gray-600 min-w-0">
-          <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex items-center text-sm theme-text-muted min-w-0">
+          <svg className="w-4 h-4 mr-2 theme-text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
           </svg>
           <span className="truncate">{lead.phone}</span>
         </div>
-        <div className="flex items-center text-sm text-gray-600">
-          <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex items-center text-sm theme-text-muted">
+          <svg className="w-4 h-4 mr-2 theme-text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
           </svg>
-          <span className="font-medium text-emerald-600">GHS {lead.dealValue?.toLocaleString() || '0'}</span>
+          <span className="font-medium text-emerald-600">{formatCurrency(lead.dealValue ?? 0)}</span>
         </div>
       </div>
 
@@ -240,17 +249,17 @@ export default function LeadCard({
         <div className="mb-3 rounded-lg border-2 border-emerald-200 bg-emerald-50 p-3">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-800">Payment Progress</p>
           <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-            <div className="rounded-md bg-white p-2 border border-emerald-200">
-              <p className="text-gray-500">Paid</p>
-              <p className="font-bold text-emerald-700">GHS {paymentSnapshot.totalPaid.toLocaleString()}</p>
+            <div className="rounded-md theme-surface p-2 border border-emerald-200">
+              <p className="theme-text-muted">Paid</p>
+              <p className="font-bold text-emerald-700">{formatCurrency(paymentSnapshot.totalPaid)}</p>
             </div>
-            <div className="rounded-md bg-white p-2 border border-amber-200">
-              <p className="text-gray-500">Remaining</p>
-              <p className="font-bold text-amber-700">GHS {paymentSnapshot.remainingBalance.toLocaleString()}</p>
+            <div className="rounded-md theme-surface p-2 border border-amber-200">
+              <p className="theme-text-muted">Remaining</p>
+              <p className="font-bold text-amber-700">{formatCurrency(paymentSnapshot.remainingBalance)}</p>
             </div>
           </div>
-          <p className="mt-2 text-[11px] text-gray-600">
-            Agreed Amount: <span className="font-semibold text-gray-800">GHS {paymentSnapshot.agreedAmount.toLocaleString()}</span>
+          <p className="mt-2 text-[11px] theme-text-muted">
+            Agreed Amount: <span className="font-semibold theme-text">{formatCurrency(paymentSnapshot.agreedAmount)}</span>
           </p>
           {paymentSnapshot.remainingBalance > 0.009 && (
             <div className={`mt-2 rounded-md p-2 ${
@@ -261,14 +270,14 @@ export default function LeadCard({
               <p className={`text-[11px] font-semibold uppercase tracking-wide ${
                 hasReachedDueDate ? 'text-red-700' : 'text-amber-800'
               }`}>Next Due Payment</p>
-              <p className="text-xs text-gray-700 mt-1">
+              <p className="text-xs theme-text-muted mt-1">
                 Date: <span className="font-semibold">{formatDueDate(paymentSnapshot.nextDuePaymentDate)}</span>
               </p>
-              <p className="text-xs text-gray-700">
+              <p className="text-xs theme-text-muted">
                 Installment: <span className="font-semibold">{paymentSnapshot.nextInstallmentNumber || 'N/A'}</span>
               </p>
-              <p className="text-xs text-gray-700">
-                Expected Amount: <span className="font-semibold text-amber-700">GHS {paymentSnapshot.remainingBalance.toLocaleString()}</span>
+              <p className="text-xs theme-text-muted">
+                Expected Amount: <span className="font-semibold text-amber-700">{formatCurrency(paymentSnapshot.remainingBalance)}</span>
               </p>
             </div>
           )}
@@ -276,7 +285,7 @@ export default function LeadCard({
       )}
 
       {/* Stage and Assignment */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t theme-border" style={{ borderTopColor: 'rgba(148, 163, 184, 0.16)' }}>
         <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${lead.stage === 'FIND_LEADS' ? 'bg-blue-100 text-blue-700' :
             lead.stage === 'CONTACT_CLIENT' ? 'bg-yellow-100 text-yellow-700' :
               lead.stage === 'CLOSE_DEAL' ? 'bg-green-100 text-green-700' :
@@ -285,11 +294,11 @@ export default function LeadCard({
           }`}>
           {lead.stage.replace(/_/g, ' ').toLowerCase()}
         </span>
-        <div className="flex items-center text-xs text-gray-500">
+        <div className="flex items-center text-xs theme-text-muted">
           <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          <span className="truncate max-w-[10rem]">{lead.assignedUser.name}</span>
+          <span className="truncate" style={{ maxWidth: '10rem' }}>{lead.assignedUser.name}</span>
         </div>
       </div>
 

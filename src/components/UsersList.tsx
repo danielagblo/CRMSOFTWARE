@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { toast } from 'react-hot-toast'
 import FormModal from '@/lib/formModal'
 import { useAuditLogger } from '@/components/AuditLoggerProvider'
+import { useSiteSettings } from '@/components/SiteSettingsProvider'
 import userIcon from '@/assets/user.svg'
 import emailIcon from '@/assets/at-sign.svg'
 import padlockIcon from '@/assets/padlock.svg'
@@ -42,7 +43,9 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isXlUp, setIsXlUp] = useState(false)
+  const { settings } = useSiteSettings()
   const { logAction } = useAuditLogger()
+  const iconFilter = settings.themeMode === 'dark' ? 'brightness(0) invert(1)' : 'none'
   const [formData, setFormData] = useState<FormData>({ 
     name: '', 
     email: '', 
@@ -273,30 +276,31 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
 
   const renderForm = () => (
     <>
-      <div className="border-b border-gray-100 px-5 py-4">
+      <div className="border-b theme-border px-5 py-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-(--dark-brown)">
           {formMode === 'view' ? 'User Details' : formMode === 'edit' ? 'Edit User' : '+ Add a New User'}
         </p>
-        <h3 className="text-lg font-semibold text-(--dark-blue)">
+        <h3 className="text-lg font-semibold theme-text">
           {selectedUser?.name || 'New User'}
         </h3>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm theme-text-muted">
           {formMode === 'view' ? 'Read-only view' : formMode === 'edit' ? 'Update user details' : 'Enter user information to create a new user'}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="p-5 space-y-5">
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium theme-text">
             <span className="text-red-500 mr-1">*</span>
             Full Name
           </label>
           <div className="relative">
-            <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={userIcon.src} alt="Name" />
+            <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={userIcon.src} alt="Name" />
             <input
               disabled={isReadOnly}
               required
-              className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+              className="block w-full rounded-lg border py-2 pl-12 pr-3 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+              style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
               placeholder="John Doe"
               value={formData.name}
               onChange={handleNameChange}
@@ -305,17 +309,18 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
         </div>
 
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium theme-text">
             <span className="text-red-500 mr-1">*</span>
             Email Address
           </label>
           <div className="relative">
-            <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={emailIcon.src} alt="Email" />
+            <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={emailIcon.src} alt="Email" />
             <input
               type="email"
               disabled={isReadOnly}
               required
-              className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+              className="block w-full rounded-lg border py-2 pl-12 pr-3 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+              style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
               placeholder="john@example.com"
               value={formData.email}
               onChange={handleEmailChange}
@@ -326,15 +331,16 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
         {!isReadOnly && (
           <>
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium theme-text">
                 {selectedUser ? 'New Password (leave blank to keep)' : <><span className="text-red-500 mr-1">*</span>Initial Password</>}
               </label>
               <div className="relative">
-                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={padlockIcon.src} alt="Password" />
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={padlockIcon.src} alt="Password" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required={!selectedUser}
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-10 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                  className="block w-full rounded-lg border py-2 pl-12 pr-10 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+                  style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
                   placeholder="*****"
                   value={formData.password}
                   onChange={handlePasswordChange}
@@ -342,12 +348,12 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 theme-text-subtle hover:theme-text"
                 >
                   {!showPassword ? (
-                    <img className="w-5 h-5" title='Show Password' src={eyeClosedIcon.src} alt="hide" />
+                    <img className="w-5 h-5" title='Show Password' src={eyeClosedIcon.src} alt="hide" style={{ filter: iconFilter }} />
                   ) : (
-                    <img className="w-5 h-5" title='Hide Password' src={eyeOpenIcon.src} alt="show" />
+                    <img className="w-5 h-5" title='Hide Password' src={eyeOpenIcon.src} alt="show" style={{ filter: iconFilter }} />
                   )}
                 </button>
               </div>
@@ -357,15 +363,16 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium theme-text">
                 {selectedUser ? 'Confirm New Password' : <><span className="text-red-500 mr-1">*</span>Confirm Password</>}
               </label>
               <div className="relative">
-                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={padlockIcon.src} alt="Confirm password" />
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={padlockIcon.src} alt="Confirm password" />
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   required={!selectedUser && !formData.password ? false : formData.password ? true : false}
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-10 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                  className="block w-full rounded-lg border py-2 pl-12 pr-10 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+                  style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
                   placeholder="*****"
                   value={formData.confirmPassword}
                   onChange={handleConfirmPasswordChange}
@@ -373,12 +380,12 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 theme-text-subtle hover:theme-text"
                 >
                   {!showConfirmPassword ? (
-                    <img className="w-5 h-5" title='Show Password' src={eyeClosedIcon.src} alt="hide" />
+                    <img className="w-5 h-5" title='Show Password' src={eyeClosedIcon.src} alt="hide" style={{ filter: iconFilter }} />
                   ) : (
-                    <img className="w-5 h-5" title='Hide Password' src={eyeOpenIcon.src} alt="show" />
+                    <img className="w-5 h-5" title='Hide Password' src={eyeOpenIcon.src} alt="show" style={{ filter: iconFilter }} />
                   )}
                 </button>
               </div>
@@ -390,10 +397,11 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
         )}
 
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">System Role</label>
+          <label className="block text-sm font-medium theme-text">System Role</label>
           <select
             disabled={isReadOnly}
-            className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 px-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+            className="block w-full rounded-lg border py-2 px-3 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+            style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
             value={formData.role}
             onChange={handleRoleChange}
           >
@@ -407,14 +415,14 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
             <button
               type="button"
               onClick={closeForm}
-              className="flex-1 px-4 py-3 border border-(--dark-blue)/50 text-(--dark-blue) rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 border border-(--dark-blue)/50 text-(--dark-blue) rounded-xl font-semibold hover:bg-(--surface-muted) transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-(--dark-blue) text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] disabled:opacity-70"
+              className="flex-1 bg-(--dark-brown) text-(--light-brown) px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] disabled:opacity-70"
             >
               {loading ? 'Processing...' : (selectedUser ? 'Update User' : 'Create User')}
             </button>
@@ -426,14 +434,14 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
             <button
               type="button"
               onClick={closeForm}
-              className="flex-1 px-4 py-3 border border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 border theme-border theme-text-muted rounded-xl font-semibold hover:bg-(--surface-muted) transition-colors"
             >
               Close
             </button>
             <button
               type="button"
               onClick={() => setFormMode('edit')}
-              className="flex-1 bg-green-600 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]"
+              className="flex-1 bg-green-600 text-(--white) px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]"
             >
               Edit
             </button>
@@ -448,48 +456,48 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
       <div className="xl:grid xl:grid-cols-12 xl:gap-6">
         {/* Table Section */}
         <div className={`${isFormOpen ? 'xl:col-span-8' : 'xl:col-span-12'} 2xl:col-span-8`}>
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div className="theme-surface rounded-2xl shadow-xl overflow-hidden border">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50/50">
+              <table className="min-w-full divide-y">
+                <thead className="bg-(--surface-muted)/70">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Name</th>
-                    <th className="hidden sm:table-cell px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="hidden lg:table-cell px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold theme-text-subtle uppercase tracking-wider">Name</th>
+                    <th className="hidden sm:table-cell px-6 py-4 text-left text-xs font-bold theme-text-subtle uppercase tracking-wider">Email</th>
+                    <th className="hidden lg:table-cell px-6 py-4 text-left text-xs font-bold theme-text-subtle uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold theme-text-subtle uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
+                <tbody className="theme-surface divide-y divide-(--surface-border)">
                   {filteredUsers.map((user) => (
                     <tr 
                       key={user.id}
                       onClick={() => openViewForm(user)}
-                      className={`hover:bg-gray-50/50 transition-colors cursor-pointer ${
+                      className={`hover:bg-(--surface-muted)/70 transition-colors cursor-pointer ${
                         selectedUser?.id === user.id 
-                          ? 'xl:border-indigo-500 xl:ring-1 xl:ring-indigo-200 xl:bg-indigo-50/40' 
+                          ? 'xl:border-gray-200 xl:ring-1 xl:ring-indigo-200 xl:bg-indigo-50/60' 
                           : ''
                       }`}
                     >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 flex-shrink-0">
-                        <div className="h-10 w-10 rounded-full bg-(--dark-blue) text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                      <div className="h-10 w-10 flex-none">
+                        <div className="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm theme-surface border" style={{ background: 'var(--surface-muted)', color: 'var(--surface-text)', borderColor: 'rgba(148, 163, 184, 0.16)' }}>
                           {user.name.charAt(0).toUpperCase()}
                         </div>
                       </div>
                       <div>
-                        <div className="text-sm font-semibold text-(--dark-blue)">{user.name}</div>
-                        <div className="text-xs text-gray-500 sm:hidden">{user.role}</div>
+                        <div className="text-sm font-semibold theme-text">{user.name}</div>
+                        <div className="text-xs theme-text-muted sm:hidden">{user.role}</div>
                       </div>
                     </div>
                   </td>
                   <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600">{user.email}</div>
+                    <div className="text-sm theme-text-muted">{user.email}</div>
                   </td>
                   <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-sm ${
                       user.role === 'ADMIN' 
-                        ? 'bg-(--dark-blue) text-white' 
+                        ? 'bg-(--dark-blue) text-(--white)' 
                         : 'bg-(--light-blue) text-(--dark-blue)'
                     }`}>
                       {user.role}
@@ -529,7 +537,7 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
                           data-action-button
                           type="button"
                           onClick={() => setActiveActionMenu(activeActionMenu === user.id ? null : user.id)}
-                          className="inline-flex items-center justify-center p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="inline-flex items-center justify-center p-2 theme-text-subtle hover:theme-text hover:bg-(--surface-muted) rounded-lg transition-colors"
                         >
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10.5 1.5H9.5V3.5H10.5V1.5ZM10.5 8.5H9.5V10.5H10.5V8.5ZM10.5 15.5H9.5V17.5H10.5V15.5Z" />
@@ -538,26 +546,26 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
                         {activeActionMenu === user.id && (
                           <div
                             data-action-menu
-                            className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50 flex flex-col"
+                            className="absolute right-0 mt-1 w-40 theme-nav-popover rounded-lg shadow-lg border py-2 z-50 flex flex-col"
                           >
                             <button
                               type="button"
                               onClick={() => openViewForm(user)}
-                              className="w-full text-left px-4 py-2 text-sm text-indigo-600 hover:bg-gray-50 transition-colors"
+                              className="w-full text-left px-4 py-2 text-sm text-indigo-600 hover:bg-(--surface-muted) transition-colors"
                             >
                               View
                             </button>
                             <button
                               type="button"
                               onClick={() => openEditForm(user)}
-                              className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-gray-50 transition-colors"
+                              className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-(--surface-muted) transition-colors"
                             >
                               Edit
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDelete(user.id, user.name)}
-                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
+                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-(--surface-muted) transition-colors"
                             >
                               Delete
                             </button>
@@ -577,7 +585,7 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
         {/* Sidebar for xl screens (when form is open) */}
         {isFormOpen ? (
           <aside className="hidden xl:block 2xl:hidden xl:col-span-4">
-            <div className="sticky top-6 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div className="sticky top-6 theme-surface rounded-2xl shadow-xl overflow-hidden border">
               {renderForm()}
             </div>
           </aside>
@@ -585,7 +593,7 @@ export default function UsersList({ initialUsers, searchQuery = '' }: { initialU
 
         {/* Sidebar for 2xl screens (always visible) */}
         <aside className="hidden 2xl:block 2xl:col-span-4">
-          <div className="sticky top-6 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+          <div className="sticky top-6 theme-surface rounded-2xl shadow-xl overflow-hidden border">
             {renderForm()}
           </div>
         </aside>

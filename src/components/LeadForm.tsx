@@ -7,6 +7,7 @@ import * as z from 'zod'
 import { toast } from 'react-hot-toast'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
 import { useAuditLogger } from '@/components/AuditLoggerProvider'
+import { useSiteSettings } from '@/components/SiteSettingsProvider'
 import userIcon from '@/assets/user.svg'
 import businessIcon from '@/assets/business.svg'
 import phoneIcon from '@/assets/hash.svg'
@@ -113,6 +114,7 @@ export default function LeadForm({
   const [loading, setLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [users, setUsers] = useState<User[]>([])
+  const { settings } = useSiteSettings()
   const { logAction } = useAuditLogger()
   const isReadOnly = mode === 'view'
   const { register, handleSubmit, formState: { errors }, reset } = useForm<LeadFormData>({
@@ -164,6 +166,7 @@ export default function LeadForm({
   }, [lead, reset])
 
   const isAdmin = user?.role === 'ADMIN'
+  const iconFilter = settings.themeMode === 'dark' ? 'brightness(0) invert(1)' : 'none'
 
   const fetchUsers = async () => {
     try {
@@ -247,27 +250,28 @@ export default function LeadForm({
   }, [lead?.clientName, mode])
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-      <div className="border-b border-gray-100 px-5 py-4">
+    <div className="overflow-hidden rounded-xl border shadow-sm theme-surface">
+      <div className="border-b theme-border px-5 py-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-(--dark-brown)">{heading.eyebrow}</p>
-        <h3 className="text-lg font-semibold text-(--dark-blue)">{heading.title}</h3>
-        <p className="text-sm text-gray-500">{heading.description}</p>
+        <h3 className="text-lg font-semibold theme-text">{heading.title}</h3>
+        <p className="text-sm theme-text-muted">{heading.description}</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="p-5 space-y-5">
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium theme-text">
                 <span className="text-red-500 mr-1">*</span>
                 Client Name
               </label>
               <div className="relative">
-                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={userIcon.src} alt="Client name" />
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={userIcon.src} alt="Client name" />
                 <input
                   {...register('clientName')}
                   disabled={isReadOnly}
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                  className="block w-full rounded-lg border py-2 pl-12 pr-3 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+                  style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
                 />
               </div>
               {errors.clientName && (
@@ -276,28 +280,30 @@ export default function LeadForm({
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Company Name</label>
+              <label className="block text-sm font-medium theme-text">Company Name</label>
               <div className="relative">
-                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={businessIcon.src} alt="Company name" />
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={businessIcon.src} alt="Company name" />
                 <input
                   {...register('companyName')}
                   disabled={isReadOnly}
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                  className="block w-full rounded-lg border py-2 pl-12 pr-3 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+                  style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium theme-text">
                 <span className="text-red-500 mr-1">*</span>
                 Phone
               </label>
               <div className="relative">
-                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={phoneIcon.src} alt="Phone number" />
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={phoneIcon.src} alt="Phone number" />
                 <input
                   {...register('phone')}
                   disabled={isReadOnly}
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                  className="block w-full rounded-lg border py-2 pl-12 pr-3 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+                  style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
                 />
               </div>
               {errors.phone && (
@@ -306,14 +312,15 @@ export default function LeadForm({
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Email (Optional)</label>
+              <label className="block text-sm font-medium theme-text">Email (Optional)</label>
               <div className="relative">
-                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={emailIcon.src} alt="Email" />
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={emailIcon.src} alt="Email" />
                 <input
                   {...register('email')}
                   type="email"
                   disabled={isReadOnly}
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                  className="block w-full rounded-lg border py-2 pl-12 pr-3 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+                  style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
                 />
               </div>
               {errors.email && (
@@ -326,13 +333,14 @@ export default function LeadForm({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Service Type</label>
+              <label className="block text-sm font-medium theme-text">Service Type</label>
               <div className="relative">
-                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={businessIcon.src} alt="Service type" />
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={businessIcon.src} alt="Service type" />
                 <select
                   {...register('serviceType')}
                   disabled={isReadOnly}
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                  className="block w-full rounded-lg border py-2 pl-12 pr-3 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+                  style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
                 >
                   <option value="">Select service type</option>
                   {serviceTypeOptions.map((option) => (
@@ -343,13 +351,14 @@ export default function LeadForm({
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Service Category</label>
+              <label className="block text-sm font-medium theme-text">Service Category</label>
               <div className="relative">
-                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={filterIcon.src} alt="Service category" />
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={filterIcon.src} alt="Service category" />
                 <select
                   {...register('serviceCategory')}
                   disabled={isReadOnly}
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                  className="block w-full rounded-lg border py-2 pl-12 pr-3 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+                  style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
                 >
                   <option value="">Select category</option>
                   {serviceCategoryOptions.map((option) => (
@@ -360,13 +369,14 @@ export default function LeadForm({
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Lead Source</label>
+              <label className="block text-sm font-medium theme-text">Lead Source</label>
               <div className="relative">
-                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={filterIcon.src} alt="Lead source" />
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={filterIcon.src} alt="Lead source" />
                 <select
                   {...register('leadSource')}
                   disabled={isReadOnly}
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                  className="block w-full rounded-lg border py-2 pl-12 pr-3 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+                  style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
                 >
                   <option value="">Select lead source</option>
                   {leadSourceOptions.map((option) => (
@@ -377,27 +387,29 @@ export default function LeadForm({
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Deal Value (GHS)</label>
+              <label className="block text-sm font-medium theme-text">Deal Value (GHS)</label>
                 <div className='relative'>
-                  <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={DollarIcon.src} alt="Deal value" />
+                  <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={DollarIcon.src} alt="Deal value" />
                   <input
                     {...register('dealValue')}
                     type="number"
                     step="0.01"
                     disabled={isReadOnly}
-                    className="block w-full pl-12 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
+                    className="block w-full pl-12 pr-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+                    style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
                   />
                   </div>
             </div>
 
             <div className="space-y-1 md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Service Notes (Optional)</label>
+              <label className="block text-sm font-medium theme-text">Service Notes (Optional)</label>
               <div className="relative">
-                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" src={noteIcon.src} alt="Service notes" />
+                <img className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ filter: iconFilter }} src={noteIcon.src} alt="Service notes" />
                 <input
                   {...register('serviceInterested')}
                   disabled={isReadOnly}
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+                  className="block w-full rounded-lg border py-2 pl-12 pr-3 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+                  style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
                 />
               </div>
             </div>
@@ -406,11 +418,12 @@ export default function LeadForm({
 
         {isAdmin && (
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Assign To</label>
+            <label className="block text-sm font-medium theme-text">Assign To</label>
             <select
               {...register('assignedTo')}
               disabled={isReadOnly}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-600"
+              className="block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+              style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
             >
               <option value="">Select a user (leave empty to assign to yourself)</option>
               <option value="__ALL_USERS__">All Users</option>
@@ -424,24 +437,25 @@ export default function LeadForm({
         )}
 
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">Additional Notes</label>
+          <label className="block text-sm font-medium theme-text">Additional Notes</label>
           <div className="relative">
-            <img className="absolute left-3 top-3 h-5 w-5" src={noteIcon.src} alt="Additional notes" />
+            <img className="absolute left-3 top-3 h-5 w-5" style={{ filter: iconFilter }} src={noteIcon.src} alt="Additional notes" />
             <textarea
               {...register('notes')}
               rows={4}
               disabled={isReadOnly}
-              className="block w-full resize-none rounded-lg border border-gray-300 bg-gray-50 py-2 pl-12 pr-3 shadow-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600"
+              className="block w-full resize-none rounded-lg border py-2 pl-12 pr-3 shadow-sm focus:ring-2 focus:ring-indigo-500 disabled:opacity-70"
+              style={{ background: 'var(--surface-muted)', borderColor: 'var(--surface-border)' }}
             />
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
+        <div className="flex items-center justify-end gap-3 border-t theme-border pt-4">
           {onCancel && mode !== 'view' ? (
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-lg border w-1/2 border-(--dark-blue)/50 px-4 py-3 text-sm font-medium text-(--dark-blue) hover:bg-gray-50"
+              className="rounded-lg border w-1/2 border-(--dark-blue)/50 px-4 py-3 text-sm font-medium text-(--dark-blue) hover:bg-(--surface-muted)"
             >
               Cancel
             </button>
@@ -450,7 +464,7 @@ export default function LeadForm({
             <button
               type="button"
               onClick={onEditRequest}
-              className="rounded-lg w-1/2 cursor-pointer bg-(--dark-blue) px-4 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+              className="rounded-lg w-1/2 cursor-pointer bg-(--dark-blue) px-4 py-3 text-sm font-medium text-(--white) hover:bg-indigo-700"
             >
               Edit
             </button>
@@ -458,7 +472,7 @@ export default function LeadForm({
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg w-1/2 bg-(--dark-blue) px-5 py-3 text-sm cursor-pointer font-medium text-white hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
+              className="rounded-lg w-1/2 bg-(--dark-blue) px-5 py-3 text-sm cursor-pointer font-medium text-(--white) hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
             >
               {loading ? (mode === 'edit' ? 'Saving...' : 'Creating...') : (mode === 'edit' ? 'Save Changes' : 'Create Lead')}
             </button>

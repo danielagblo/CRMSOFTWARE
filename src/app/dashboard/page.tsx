@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import { formatCurrency } from "@/lib/siteSettings";
 import { DashboardData, ReminderItem } from "@/types/dashboard";
 import { stageLabels } from "@/lib/const";
 import { KpiCard } from "@/components/KpiCard";
@@ -119,7 +120,7 @@ export default function Dashboard() {
       gradientClass: "from-blue-50 to-white",
       icon: (
         <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-          <span className="text-white text-sm font-medium">L</span>
+          <span className="text-(--white) text-sm font-medium">L</span>
         </div>
       ),
     },
@@ -130,7 +131,7 @@ export default function Dashboard() {
       gradientClass: "from-amber-50 to-white",
       icon: (
         <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-          <span className="text-white text-sm font-medium">P</span>
+          <span className="text-(--white) text-sm font-medium">P</span>
         </div>
       ),
     },
@@ -141,18 +142,18 @@ export default function Dashboard() {
       gradientClass: "from-green-50 to-white",
       icon: (
         <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-          <span className="text-white text-sm font-medium">C</span>
+          <span className="text-(--white) text-sm font-medium">C</span>
         </div>
       ),
     },
 
     {
       title: "Total Revenue",
-      value: `GHS ${data?.totalRevenue?.toFixed(2) || "0.00"}`,
+      value: formatCurrency(data?.totalRevenue || 0),
       gradientClass: "from-purple-50 to-white",
       icon: (
         <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-          <span className="text-white text-sm font-medium">$</span>
+          <span className="text-(--white) text-sm font-medium">$</span>
         </div>
       ),
     },
@@ -182,7 +183,7 @@ export default function Dashboard() {
           <button
             type="button"
             onClick={() => fetchDashboardData()}
-            className="mt-4 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+            className="mt-4 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-(--white) hover:bg-indigo-700 transition-colors"
           >
             Retry
           </button>
@@ -240,13 +241,13 @@ export default function Dashboard() {
               <div className="space-y-4">
                 <Link
                   href="/pipeline"
-                  className="block w-full bg-indigo-600 text-white text-center py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                  className="block w-full bg-indigo-600 text-(--white) text-center py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
                 >
                   View Pipeline
                 </Link>
                 <Link
                   href="/leads"
-                  className="block w-full bg-emerald-600 text-white text-center py-2.5 px-4 rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                  className="block w-full bg-emerald-600 text-(--white) text-center py-2.5 px-4 rounded-lg hover:bg-emerald-700 transition-colors font-medium"
                 >
                   Manage Leads
                 </Link>

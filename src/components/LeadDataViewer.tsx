@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { X, Eye } from 'lucide-react'
 import { fetchWithAuth } from '@/lib/fetchWithAuth'
+import { formatCurrency } from '@/lib/siteSettings'
 
 interface Lead {
   id: string
@@ -17,7 +18,7 @@ interface StageData {
   id: string
   leadId: string
   stage: string
-  data: Record<string, any>
+  data: Record<string, unknown>
   createdAt: string
   updatedAt: string
 }
@@ -56,13 +57,7 @@ export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: L
   const [stageData, setStageData] = useState<StageData[]>([])
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    if (isOpen && lead) {
-      fetchStageData()
-    }
-  }, [isOpen, lead])
-
-  const fetchStageData = async () => {
+  const fetchStageData = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetchWithAuth(`/api/stage-data?leadId=${lead.id}`)
@@ -75,27 +70,46 @@ export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: L
     } finally {
       setLoading(false)
     }
-  }
+  }, [lead.id])
 
-  const formatValue = (key: string, value: any) => {
-    if (!value) return 'Not specified'
+  useEffect(() => {
+    if (isOpen && lead) {
+      const frameId = window.requestAnimationFrame(() => {
+        void fetchStageData()
+      })
+
+      return () => window.cancelAnimationFrame(frameId)
+    }
+  }, [isOpen, lead, fetchStageData])
+
+  const formatValue = (key: string, value: unknown): string => {
+    if (value === null || value === undefined || value === '') return 'Not specified'
 
     // Format dates
-    if (key.toLowerCase().includes('date') && value) {
-      return new Date(value).toLocaleDateString()
+    if (key.toLowerCase().includes('date')) {
+      if (typeof value === 'string' || typeof value === 'number' || value instanceof Date) {
+        const parsed = new Date(value)
+        if (!Number.isNaN(parsed.getTime())) {
+          return parsed.toLocaleDateString()
+        }
+      }
+      return 'Not specified'
     }
 
     // Format currency
     if (key.toLowerCase().includes('value') || key.toLowerCase().includes('amount') || key.toLowerCase().includes('contractvalue') || key === 'contractValue') {
-      return `GHS ${Number(value).toLocaleString()}`
+      if (typeof value === 'number' || typeof value === 'string') {
+        return formatCurrency(value)
+      }
+      return 'Not specified'
     }
 
     // Format ratings
     if (key.toLowerCase().includes('rating') || key.toLowerCase().includes('satisfaction')) {
-      return `${value}/5`
+      return `${String(value)}/5`
     }
 
-    return value
+    return String(value)
   }
 
   const getFieldLabel = (key: string): string => {
@@ -235,7 +249,7 @@ export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: L
             <div>
               <div className="text-sm font-medium text-gray-600">Deal Value</div>
               <div className="text-sm text-gray-800">
-                {lead.dealValue ? `GHS ${lead.dealValue.toLocaleString()}` : 'Not set'}
+                {lead.dealValue ? formatCurrency(lead.dealValue) : 'Not set'}
               </div>
             </div>
             <div>
@@ -272,7 +286,7 @@ export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: L
         <div className="flex justify-end mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            className="px-4 py-2 bg-gray-600 text-(--white) rounded-md hover:bg-gray-700"
           >
             Close
           </button>

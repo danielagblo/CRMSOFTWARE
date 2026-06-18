@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { formatCurrency } from "@/lib/siteSettings";
 
 const BRAND = {
   companyName: "CRM Software",
@@ -20,37 +21,25 @@ export type InvoiceEmailProps = {
   invoiceDate: string;
   paymentDueDate: string;
   serviceType: string;
-  invoiceAmount: string;
-  amountReceived: string;
+  invoiceAmount: number | string;
+  amountReceived: number | string;
   paymentMethod: string;
   paymentStatus: string;
   senderName: string;
 };
 
-function cleanAmount(value: string): number | null {
-  const numeric = Number(String(value).replace(/,/g, ""));
+function cleanAmount(value: number | string): number | null {
+  const numeric = typeof value === "number" ? value : Number(String(value).replace(/,/g, ""));
   return Number.isFinite(numeric) ? numeric : null;
 }
 
-function formatAmount(value: string): string {
-  const numeric = cleanAmount(value);
-  if (numeric === null) return value || "0";
-  return numeric.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function formatBalance(total: string, received: string): string {
+function formatBalance(total: number | string, received: number | string): string {
   const totalValue = cleanAmount(total);
   const receivedValue = cleanAmount(received);
 
   if (totalValue === null || receivedValue === null) return "N/A";
 
-  return (totalValue - receivedValue).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return formatCurrency(totalValue - receivedValue, BRAND.currency);
 }
 
 function isPaid(status: string): boolean {
@@ -86,8 +75,8 @@ export function InvoiceEmail({
   senderName,
 }: InvoiceEmailProps) {
   const balanceDue = formatBalance(invoiceAmount, amountReceived);
-  const amountDisplay = formatAmount(invoiceAmount);
-  const receivedDisplay = formatAmount(amountReceived);
+  const amountDisplay = formatCurrency(invoiceAmount, BRAND.currency);
+  const receivedDisplay = formatCurrency(amountReceived, BRAND.currency);
   const paid = isPaid(paymentStatus);
 
   return (
@@ -170,7 +159,7 @@ export function InvoiceEmail({
                   </td>
                   <td style={styles.rightAlign}>
                     <div style={styles.lineItemAmount}>
-                      {BRAND.currency} {amountDisplay}
+                      {amountDisplay}
                     </div>
                   </td>
                 </tr>
@@ -184,11 +173,11 @@ export function InvoiceEmail({
             <tbody>
               <Row
                 label="Invoice Amount"
-                value={`${BRAND.currency} ${amountDisplay}`}
+                value={amountDisplay}
               />
               <Row
                 label="Amount Received"
-                value={`${BRAND.currency} ${receivedDisplay}`}
+                value={receivedDisplay}
               />
             </tbody>
           </table>
@@ -201,7 +190,7 @@ export function InvoiceEmail({
                 </td>
                 <td style={styles.rightAlign}>
                   <div style={styles.balanceValue}>
-                    {BRAND.currency} {balanceDue}
+                    {balanceDue}
                   </div>
                 </td>
               </tr>

@@ -113,7 +113,7 @@ function DetailsPopover({ log }: { log: AuditLogRow }) {
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+        className="inline-flex items-center rounded-md border theme-surface px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors hover:bg-(--surface-muted)"
       >
         View details
       </button>
@@ -123,29 +123,29 @@ function DetailsPopover({ log }: { log: AuditLogRow }) {
           {!isDesktop ? <div className="fixed inset-0 z-40 bg-slate-950/20" aria-hidden="true" /> : null}
           <div
             ref={popoverRef}
-            className={isDesktop ? 'fixed z-50 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5' : 'fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border-t border-slate-200 bg-white shadow-[0_-12px_32px_rgba(15,23,42,0.22)]'}
+            className={isDesktop ? 'theme-nav-popover fixed z-50 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border shadow-2xl ring-1 ring-black/5' : 'theme-nav-popover fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border-t shadow-[0_-12px_32px_rgba(15,23,42,0.22)]'}
             style={isDesktop ? { top: position.top, left: position.left } : undefined}
           >
-            <div className={isDesktop ? 'border-b border-slate-100 px-4 py-3' : 'border-b border-slate-100 px-4 pb-3 pt-4'}>
-              <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-slate-300 lg:hidden" />
-              <div className="text-sm font-semibold text-slate-900">{log.action}</div>
-              <div className="mt-1 text-xs text-slate-500">
+            <div className={isDesktop ? 'border-b theme-border px-4 py-3' : 'border-b theme-border px-4 pb-3 pt-4'}>
+              <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-(--surface-border) lg:hidden" />
+              <div className="text-sm font-semibold theme-text">{log.action}</div>
+              <div className="mt-1 text-xs theme-text-muted">
                 {log.entityType}{log.entityId ? ` • ${log.entityId}` : ''}
               </div>
             </div>
-            <div className={isDesktop ? 'space-y-3 px-4 py-4 text-sm text-slate-700' : 'max-h-[70vh] space-y-3 overflow-y-auto px-4 py-4 text-sm text-slate-700'}>
+            <div className={isDesktop ? 'space-y-3 px-4 py-4 text-sm theme-text-muted' : 'max-h-[70vh] space-y-3 overflow-y-auto px-4 py-4 text-sm theme-text-muted'}>
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Summary</div>
-                <div className="mt-1 text-slate-900">{log.description || 'No description provided.'}</div>
+                <div className="text-xs font-semibold uppercase tracking-wide theme-text-subtle">Summary</div>
+                <div className="mt-1 theme-text">{log.description || 'No description provided.'}</div>
               </div>
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">User Agent</div>
-                <div className="mt-1 wrap-break-word text-xs text-slate-600">{log.userAgent || 'n/a'}</div>
+                <div className="text-xs font-semibold uppercase tracking-wide theme-text-subtle">User Agent</div>
+                <div className="mt-1 wrap-break-word text-xs theme-text-muted">{log.userAgent || 'n/a'}</div>
               </div>
               {log.metadata ? (
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Metadata</div>
-                  <pre className="mt-1 max-h-48 overflow-auto rounded-xl bg-slate-50 p-3 text-[11px] leading-5 text-slate-600">
+                  <div className="text-xs font-semibold uppercase tracking-wide theme-text-subtle">Metadata</div>
+                  <pre className="mt-1 max-h-48 overflow-auto rounded-xl bg-(--surface-muted) p-3 text-[11px] leading-5 theme-text-muted">
                     {formatMetadata(log.metadata)}
                   </pre>
                 </div>
@@ -162,48 +162,48 @@ export default function AuditLogsTable({ logs }: AuditLogsTableProps) {
   return (
     <>
       <div className="overflow-x-auto rounded-b-2xl shadow-sm">
-        <table className="min-w-full divide-y divide-slate-100">
-          <thead className="bg-slate-50">
+        <table className="min-w-full divide-y divide-(--surface-border)">
+          <thead className="bg-(--surface-muted)">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Time</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Actor</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Action</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Entity</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Summary</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Details</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide theme-text-subtle">Time</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide theme-text-subtle">Actor</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide theme-text-subtle">Action</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide theme-text-subtle">Entity</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide theme-text-subtle">Summary</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide theme-text-subtle">Details</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 bg-white">
+          <tbody className="divide-y divide-(--surface-border) theme-surface">
             {logs.length === 0 ? (
               <tr>
-                <td className="px-6 py-10 text-sm text-slate-500" colSpan={6}>
+                <td className="px-6 py-10 text-sm theme-text-muted" colSpan={6}>
                   No audit logs matched the current filters.
                 </td>
               </tr>
             ) : (
               logs.map((log) => (
                 <tr key={log.id} className="align-top">
-                  <td className="px-6 py-4 text-sm text-(--dark-blue) whitespace-nowrap">
+                  <td className="px-6 py-4 text-sm theme-text whitespace-nowrap">
                     <div>{log.createdAt.toLocaleString()}</div>
-                    <div className="mt-1 text-xs text-slate-400">{log.ipAddress || 'No IP'}</div>
+                    <div className="mt-1 text-xs theme-text-subtle">{log.ipAddress || 'No IP'}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-(--dark-blue)">
+                  <td className="px-6 py-4 text-sm theme-text">
                     <div className="font-medium">{log.actorName || 'System'}</div>
-                    <div className="text-xs text-slate-500">{log.actorEmail || log.actorId || 'n/a'}</div>
+                    <div className="text-xs theme-text-muted">{log.actorEmail || log.actorId || 'n/a'}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium text-(--dark-blue) whitespace-nowrap">
+                  <td className="px-6 py-4 text-sm font-medium theme-text whitespace-nowrap">
                     {log.action}
                   </td>
-                  <td className="px-6 py-4 text-sm text-(--dark-blue)">
+                  <td className="px-6 py-4 text-sm theme-text">
                     <div className="font-medium">{log.entityType}</div>
-                    <div className="text-xs text-slate-500">{log.entityId || 'n/a'}</div>
+                    <div className="text-xs theme-text-muted">{log.entityId || 'n/a'}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-(--dark-blue)">
+                  <td className="px-6 py-4 text-sm theme-text">
                     <div className="max-w-sm truncate" title={log.description || 'No description provided.'}>
                       {log.description || 'No description provided.'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-(--dark-blue)">
+                  <td className="px-6 py-4 text-sm theme-text">
                     <DetailsPopover log={log} />
                   </td>
                 </tr>

@@ -483,7 +483,7 @@ export default function LeadsClient() {
             action={(
               <button
                 onClick={() => (isFormOpen ? closeForm() : openCreateForm())}
-                className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-(--dark-blue)/85"
+                className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-(--white) shadow-sm transition-colors hover:bg-(--dark-blue)/85"
               >
                 {isFormOpen ? 'Close Form' : 'Add Lead'}
               </button>
@@ -504,7 +504,7 @@ export default function LeadsClient() {
                 <button
                   type="button"
                   onClick={saveCurrentView}
-                  className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-(--dark-blue)/85"
+                  className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-(--white) shadow-sm transition-colors hover:bg-(--dark-blue)/85"
                 >
                   Save View
                 </button>
@@ -529,7 +529,7 @@ export default function LeadsClient() {
                         onClick={() => applySavedView(view)}
                         className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                           activeSavedView?.id === view.id
-                            ? 'border-(--dark-blue) bg-(--dark-blue) text-white'
+                            ? 'border-(--dark-blue) bg-(--dark-blue) text-(--white)'
                             : 'border-gray-200 bg-white text-gray-600 hover:border-(--dark-blue)/40 hover:text-(--dark-blue)'
                         }`}
                       >
@@ -543,14 +543,14 @@ export default function LeadsClient() {
                 <button
                 type="button"
                 onClick={handleImportClick}
-                className="rounded-lg border border-(--dark-blue) bg-white px-4 py-2.5 text-sm font-medium text-(--dark-blue) shadow-sm transition-colors hover:bg-gray-50"
+                className="rounded-lg border border-(--dark-blue) bg-white px-4 py-2.5 text-sm font-medium text-(--white) theme-text shadow-sm transition-colors hover:bg-gray-50"
               >
                 Import CSV
               </button>
               <button
                 type="button"
                 onClick={handleExportLeads}
-                className="rounded-lg border border-(--dark-blue) bg-white px-4 py-2.5 text-sm font-medium text-(--dark-blue) shadow-sm transition-colors hover:bg-gray-50"
+                className="rounded-lg border border-(--dark-blue) bg-white px-4 py-2.5 text-sm font-medium text-(--white) theme-text shadow-sm transition-colors hover:bg-gray-50"
               >
                 Export CSV
               </button>
@@ -563,7 +563,7 @@ export default function LeadsClient() {
                     leadView === 'list' ? 'bg-(--light-blue) text-indigo-600' : 'text-gray-500 hover:bg-(--light-blue)/45 hover:text-indigo-600'
                   }`}
                 >
-                  <img src={listIcon.src} alt="List view" className="h-6 w-6" />
+                  <img src={listIcon.src} alt="List view" className="h-6 w-6 lead-view-icon" />
                 </button>
                 <button
                   type="button"
@@ -573,7 +573,7 @@ export default function LeadsClient() {
                     leadView === 'card' ? 'bg-(--light-blue) text-indigo-600' : 'text-gray-500 hover:bg-(--light-blue)/45 hover:text-indigo-600'
                   }`}
                 >
-                  <img src={gridIcon.src} alt="Card view" className="h-6 w-6 cursor-pointer" />
+                  <img src={gridIcon.src} alt="Card view" className="h-6 w-6 lead-view-icon cursor-pointer" />
                 </button>
               </div>
               </div>
@@ -609,7 +609,7 @@ export default function LeadsClient() {
                 <button
                   type="button"
                   onClick={handleSaveViewConfirm}
-                  className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-(--dark-blue)/85"
+                  className="rounded-lg bg-(--dark-blue) px-4 py-2.5 text-sm font-medium text-(--white) shadow-sm transition-colors hover:bg-(--dark-blue)/85"
                 >
                   Save
                 </button>

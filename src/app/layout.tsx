@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased bg-white min-h-screen">
+      <body className="antialiased bg-(--background) text-(--foreground) min-h-screen">
         <Providers>
           <Navigation />
           <main className="relative">

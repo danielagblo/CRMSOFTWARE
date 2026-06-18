@@ -639,7 +639,7 @@ export default function TaskBoardPage() {
                       }
                       openCreateTaskForm();
                     }}
-                    className="whitespace-nowrap px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+                    className="whitespace-nowrap px-3 py-2 rounded-lg bg-indigo-600 text-(--white) text-sm font-medium hover:bg-indigo-700"
                   >
                     {showTaskForm ? "Close Task Form" : "Create New Task"}
                   </button>
@@ -768,7 +768,7 @@ export default function TaskBoardPage() {
                   <button
                     type="button"
                     onClick={upsertTask}
-                    className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700"
+                    className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-medium text-(--white) shadow-sm hover:bg-indigo-700"
                   >
                     {editingTaskId ? "Update Task" : "Add Task"}
                   </button>
@@ -817,7 +817,7 @@ export default function TaskBoardPage() {
                       {day.dateLabel}
                     </p>
                     {day.isToday ? (
-                      <p className="mt-1 inline-flex rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white">
+                      <p className="mt-1 inline-flex rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-(--white)">
                         Today
                       </p>
                     ) : null}

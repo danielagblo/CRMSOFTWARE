@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import puppeteer from "puppeteer";
 import { getRequestAuditContext, recordAuditLogForUser } from "@/lib/audit";
+import { formatCurrency } from "@/lib/siteSettings";
 
 // ── CONSTANTS – swap as needed ──────────────────────────────────
 const COMPANY = {
@@ -11,6 +12,7 @@ const COMPANY = {
   email: "hello@acmestudio.co",
   phone: "+233 20 000 0000",
   tin: "C000XXXXXXX",
+  currency: "GHS",
   accent: "#1A1A2E",
   gold: "#C9A84C",
 };
@@ -38,13 +40,6 @@ function safeFilename(value: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9-_]+/g, "-")
     .replace(/-+/g, "-");
-}
-
-function fmt(n: number) {
-  return n.toLocaleString("en-GH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 }
 
 export async function GET(request: NextRequest) {
@@ -372,7 +367,7 @@ export async function GET(request: NextRequest) {
               <div class="item-sub">${toText(lead.serviceCategory ?? "", "")}</div>
             </td>
             <td>${toText(lead.serviceCategory ?? "", "General")}</td>
-            <td>GHS ${fmt(invoiceAmount)}</td>
+            <td>${formatCurrency(invoiceAmount, COMPANY.currency)}</td>
           </tr>
         </tbody>
       </table>
@@ -382,20 +377,20 @@ export async function GET(request: NextRequest) {
         <div class="totals-box">
           <div class="total-line">
             <span class="lbl">Invoice Amount</span>
-            <span class="val">GHS ${fmt(invoiceAmount)}</span>
+            <span class="val">${formatCurrency(invoiceAmount, COMPANY.currency)}</span>
           </div>
           ${
             amountReceived > 0
               ? `
           <div class="total-line credit">
             <span class="lbl">Amount Received</span>
-            <span class="val">- GHS ${fmt(amountReceived)}</span>
+            <span class="val">- ${formatCurrency(amountReceived, COMPANY.currency)}</span>
           </div>`
               : ""
           }
           <div class="total-line balance">
             <span class="lbl">Balance Due</span>
-            <span class="val">GHS ${fmt(amountDue)}</span>
+            <span class="val">${formatCurrency(amountDue, COMPANY.currency)}</span>
           </div>
         </div>
       </div>
