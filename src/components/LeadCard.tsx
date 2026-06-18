@@ -67,11 +67,6 @@ export default function LeadCard({
     isDragging,
   } = useSortable({ id: lead.id, disabled: !isDraggable })
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-
   const currentStageIndex = stages.indexOf(lead.stage)
   const canMoveNext = currentStageIndex < stages.length - 1
 
@@ -113,6 +108,12 @@ export default function LeadCard({
     paymentSnapshot.remainingBalance > 0.009 &&
     isDueDateReached(paymentSnapshot.nextDuePaymentDate)
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    ...(hasReachedDueDate ? {} : { borderColor: 'rgba(148, 163, 184, 0.16)' }),
+  }
+
   return (
     <div
       ref={setNodeRef}
@@ -126,7 +127,6 @@ export default function LeadCard({
         } ${isDraggable ? 'cursor-move' : 'cursor-default'
         } ${isDragging ? 'opacity-50 rotate-2 scale-105' : ''
         }`}
-      style={{ borderColor: 'rgba(148, 163, 184, 0.16)' }}
       onClick={handleCardClick}
     >
       {/* Header with name and badges */}

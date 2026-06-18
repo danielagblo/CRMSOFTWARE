@@ -82,25 +82,34 @@ export default function LeadDataViewer({ lead, isOpen, onClose, onEditEntry }: L
     }
   }, [isOpen, lead, fetchStageData])
 
-  const formatValue = (key: string, value: unknown) => {
-    if (!value) return 'Not specified'
+  const formatValue = (key: string, value: unknown): string => {
+    if (value === null || value === undefined || value === '') return 'Not specified'
 
     // Format dates
-    if (key.toLowerCase().includes('date') && value) {
-      return new Date(value).toLocaleDateString()
+    if (key.toLowerCase().includes('date')) {
+      if (typeof value === 'string' || typeof value === 'number' || value instanceof Date) {
+        const parsed = new Date(value)
+        if (!Number.isNaN(parsed.getTime())) {
+          return parsed.toLocaleDateString()
+        }
+      }
+      return 'Not specified'
     }
 
     // Format currency
     if (key.toLowerCase().includes('value') || key.toLowerCase().includes('amount') || key.toLowerCase().includes('contractvalue') || key === 'contractValue') {
-      return formatCurrency(value)
+      if (typeof value === 'number' || typeof value === 'string') {
+        return formatCurrency(value)
+      }
+      return 'Not specified'
     }
 
     // Format ratings
     if (key.toLowerCase().includes('rating') || key.toLowerCase().includes('satisfaction')) {
-      return `${value}/5`
+      return `${String(value)}/5`
     }
 
-    return value
+    return String(value)
   }
 
   const getFieldLabel = (key: string): string => {
